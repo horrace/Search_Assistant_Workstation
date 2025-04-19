@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pattern Tumbler</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Simple, clean styling to avoid layout issues */
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: transparent;
+      overflow: hidden;
+    }
+    
+    /* Clear positioning that might affect layout */
+    .tumbler-container {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Drag indicator */
+    .drag-indicator {
+      color: #888;
+      font-size: 14px;
+      margin-right: 5px;
+      opacity: 0.6;
+    }
+
+    .tumbler-header:hover .drag-indicator {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="tumbler-container">
+    <div class="tumbler-header">
+	  <div class="tumbler-header-left">
+      </div>
+
+      <div class="tumbler-header-right">
+          <span id="tumbler-counter" class="tumbler-counter">1/10</span>
+          <div id="tumbler-timer" class="tumbler-timer">0:00</div>
+          <div class="tumbler-font-controls">
+            <span id="decrease-font" class="font-button">-</span>
+            <span id="increase-font" class="font-button">+</span>
+          </div>
+          <span id="help-icon" class="tumbler-help" title="Use → or ↓ arrow keys to advance">?</span>
+          <span id="close-button" class="tumbler-close">x</span>
+      </div>
+    </div>
+    
+    <div class="tumbler-content">
+      <div id="tumbler-abbr" class="tumbler-abbr"></div>
+      <div id="tumbler-strategy" class="tumbler-strategy"></div>
+      
+      <div id="tumbler-chunk" class="tumbler-chunk" style="display: none;">
+        <!-- Chunk items will be rendered here -->
+      </div>
+    </div>
+  </div>
+  
+  <script src="tumbler.js"></script>
+</body>
+</html> 

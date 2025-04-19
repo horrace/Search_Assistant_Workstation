@@ -1,0 +1,837 @@
+/* Global styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #303030;
+  color: #FFFFFF;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 20px;
+}
+
+header {
+  margin-bottom: 16px;
+}
+
+header h1 {
+  font-size: 24px;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+header p {
+  color: #BBBBBB;
+}
+
+main {
+  flex: 1;
+  overflow: auto;
+}
+
+footer {
+  margin-top: 10px;
+  padding-bottom: 8px;
+}
+
+/* Footer content container */
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Controls section */
+.controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+/* Right justify edit button */
+#edit-button {
+  margin-left: auto;
+  background-color: #102da2;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+#edit-button:hover {
+  background-color: #2b39f6;
+}
+
+/* Settings toggle button */
+.settings-toggle {
+  background-color: transparent;
+  color: #ebebeb;
+  border: none;
+  padding: 0px 0px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.settings-toggle:hover {
+  background-color: transparent;
+}
+
+/* Settings wrapper and menu */
+.settings-wrapper {
+  position: relative;
+}
+
+.settings-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #3a3a3a;
+  border-radius: 4px;
+  padding: 10px;
+  width: 320px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  z-index: 100;
+  margin-top: 5px;
+}
+
+.settings-item {
+  margin-bottom: 10px;
+}
+
+.settings-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Pattern list - grid layout */
+.pattern-list {
+  height: 100%;
+  overflow-y: auto;
+}
+
+#pattern-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.pattern-item {
+  background-color: #424242;
+  padding: 15px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 50px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border: 1px solid #505050;
+}
+
+.pattern-item:hover {
+  background-color: #505050;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pattern-item h2 {
+  font-size: 18px;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+.loading-indicator {
+  text-align: center;
+  padding: 20px;
+  color: #FFFFFF;
+}
+
+.loading-indicator.error {
+  color: #FF6B6B;
+}
+
+.retry-button {
+  background-color: #424242;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+  transition: background-color 0.2s;
+}
+
+.retry-button:hover {
+  background-color: #505050;
+}
+
+/* Buttons */
+.btn {
+  background-color: #424242;
+  color: #FFFFFF;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s;
+  -webkit-app-region: no-drag;
+}
+
+.btn:hover {
+  background-color: #505050;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+/* Transparency control */
+.transparency-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px; /* Reduce margin at the bottom */
+  padding: 3px; /* Reduce padding around the control */
+  width: 100%; /* Ensure it takes full width of container */
+}
+
+.transparency-control label {
+  color: #BBBBBB;
+  min-width: 90px; /* Ensure label has minimum width */
+}
+
+.transparency-control input {
+  flex: 1;
+  min-width: 100px; /* Ensure slider has minimum width */
+}
+
+.transparency-control span {
+  width: 40px;
+  text-align: right;
+  color: #BBBBBB;
+}
+
+/* Editor styles */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 50px);
+  padding-bottom: 20px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-left: 20px;
+  padding-right: 20px;
+  -webkit-app-region: drag;
+}
+
+.editor-header h1 {
+  font-size: 18px;
+  margin-right: 10px;
+}
+
+.editor-content {
+  display: flex;
+  flex: 1;
+  background-color: #252525;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pattern-editor {
+  flex: 2;
+  padding: 10px;
+  min-width: 550px;
+  margin-bottom: 10px;
+  border-right: 1px solid #444;
+}
+
+.parts-bank {
+  flex: 1;
+  padding: 10px;
+}
+
+/* Tumbler styles */
+.tumbler-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background-color: rgba(48, 48, 48, 0.8); /* Semi-transparent background */
+  user-select: none;
+  transition: background-color 0.3s ease;
+  backdrop-filter: blur(5px); /* Add a blur effect to the background */
+  z-index: 1000; /* Ensure tumbler is above other content */
+  overflow: visible; /* Allow content to be visible outside container */
+  -webkit-app-region: drag; /* Make the whole container draggable */
+}
+
+.tumbler-container.no-background {
+  background-color: transparent;
+  backdrop-filter: none;
+}
+
+.tumbler-header {
+  display: flex;
+  justify-content: space-between; /* Space out counter, timer, and right group */
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  user-select: none; /* Prevent text selection during dragging */
+  z-index: 1001; /* Ensure header is above other content */
+}
+
+.tumbler-counter {
+  color: #4c4c4c;
+  font-size: 12px;
+  /* margin-right: auto; /* Removed */
+  flex-shrink: 0; /* Prevent counter from shrinking */
+  padding-top: 2px;
+  margin-right: 1px;
+}
+
+.tumbler-timer { /* Timer is now in the header */
+  color: #555555;
+  font-size: 12px;
+  /* -webkit-app-region: no-drag; /* Timer is likely not interactive */
+  /* Add margin if needed to center it more precisely, e.g., margin: 0 auto; */
+  /* flex-grow: 1; /* Allow timer to take up space */
+  text-align: center; /* Center the timer text */
+  margin-right: 8px; /* Give it some minimum space */
+  padding-top: 2px;
+}
+
+.tumbler-header-left {
+    display: flex;
+    align-items: center;
+    gap: 1px; /* Adjust gap between font controls, help, and close */
+}
+
+.tumbler-header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Adjust gap between font controls, help, and close */
+}
+
+.tumbler-font-controls { /* Font controls now in header */
+  display: flex;
+  gap: 4px;
+  -webkit-app-region: no-drag; /* Make parent container non-draggable */
+}
+
+.font-button {
+  color: #555555;
+  font-size: 16px;
+  cursor: pointer;
+  /* Individual buttons don't need no-drag if parent has it */
+}
+.font-button:hover {
+	color: #777777;
+  }
+
+.tumbler-help {
+  color: #FFFFFF;
+  font-size: 12px;
+  padding-top: 6px;
+  padding-left: 8px;
+  cursor: pointer;
+  font-family: sans-serif;
+  -webkit-app-region: no-drag; /* IMPORTANT: Make close button clickable */
+}
+
+.tumbler-help:hover {
+  color: #999999;
+}
+  
+.tumbler-close {
+  color: #FFFFFF;
+  font-size: 16px;
+  cursor: pointer;
+  -webkit-app-region: no-drag; /* IMPORTANT: Make close button clickable */
+}
+
+.tumbler-close:hover {
+  color: #999999;
+}
+
+.tumbler-content {
+  flex: 0.4;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  z-index: 1001; /* Ensure content is above other elements */
+}
+
+.tumbler-abbr {
+  color: #FFFFFF;
+  font-size: 24px;
+  font-weight: bold;
+  padding: 8px;
+  background-color: rgba(48, 48, 48, 0.95); /* Almost opaque background */
+  border-radius: 4px;
+  display: inline-block;
+  z-index: 1002; /* Ensure text is above other elements */
+}
+
+.tumbler-strategy {
+  color: #AAAAAA;
+  font-size: 14px;
+  padding: 8px;
+  background-color: rgba(48, 48, 48, 0.95); /* Almost opaque background */
+  border-radius: 4px;
+  display: inline-block;
+  z-index: 1002; /* Ensure text is above other elements */
+}
+
+.tumbler-chunk {
+  margin-top: 15px;
+  padding: 8px;
+  background-color: rgba(48, 48, 48, 0.95); /* Almost opaque background */
+  border-radius: 4px;
+  z-index: 1002; /* Ensure content is above other elements */
+}
+
+.chunk-item {
+  margin-bottom: 8px;
+}
+
+.chunk-item-abbr {
+  color: #FFFFFF;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.chunk-item-strategy {
+  color: #AAAAAA;
+  font-size: 14px;
+  font-style: italic;
+  margin-top: 5px;
+}
+
+/* Draggable list item */
+.draggable-item {
+  width: 100%;
+  background-color: #424242;
+  border-radius: 4px;
+  margin-bottom: 4px;
+  padding: 8px;
+  border-left: 5px solid rgb(153, 153, 153);
+  cursor: default;
+  position: relative;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  will-change: transform, opacity;
+}
+
+.draggable-item:not(.chunk-container) {
+  height: 40px;
+}
+
+.draggable-item.selected {
+  background-color: #3949AB;
+}
+
+/* Remove the old chunk styling */
+.draggable-item.in-chunk {
+  background-color: #2E4057;
+}
+
+.draggable-item.in-chunk::before {
+  content: none;
+}
+
+/* New chunk container styles */
+.chunk-container {
+  background-color: #2E4057;
+  border-left: 5px solid #4FC3F7;
+  padding: 8px;  /* Match padding with regular draggable items */
+  position: relative; /* For absolute positioning of the drag handle */
+}
+
+.chunk-header {
+  font-size: 12px;
+  color: #3e7f9d;
+  margin-bottom: 8px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  padding-left: 16px; /* Make space for the drag handle that will be positioned absolutely */
+}
+
+.chunk-header span {
+  margin-left: 0; /* Remove left margin since we're positioning the drag handle absolutely */
+}
+
+/* Ensure consistent positioning for drag handles */
+.drag-handle {
+  width: 16px;
+  cursor: grab;
+  opacity: 0.5;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  color: #888;
+  display: flex;
+  justify-content: center;
+  margin-right: 11px;
+  position: relative;
+  flex-shrink: 0; /* Prevent the handle from shrinking */
+  height: 100%; /* Take full height of parent */
+  z-index: 10; /* Ensure handle is above other content */
+}
+
+/* Special positioning for chunk container drag handle */
+.chunk-container .drag-handle {
+  position: absolute;
+  left: 8px; /* Align with padding */
+  top: 50%; /* Position at 50% of the chunk container height */
+  transform: translateY(-50%); /* Center it vertically */
+  height: auto; /* Override the height: 100% for proper positioning */
+  z-index: 2; /* Ensure it's above other content */
+}
+
+/* Apply consistent positioning for all drag handles */
+.item-content {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  padding-left: 0; /* Remove any default padding */
+}
+
+.chunk-items {
+  display: flex;
+  flex-direction: column;
+  padding-left: 24px; /* Match the padding-left of chunk-header for alignment */
+}
+
+.chunk-item-part {
+  display: flex;
+  margin-bottom: 6px;
+  margin-left:   3px;
+  border-bottom: 1px solid rgba(79, 195, 247, 0.3);
+  padding-bottom: 8px;
+}
+
+.chunk-item-part:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.chunk-item-part .item-abbr {
+  min-width: 120px;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-right: 16px;
+}
+
+.chunk-item-part .item-strategy {
+  flex: 1;
+  color: #AAAAAA;
+  font-size: 14px;
+}
+
+.item-abbr {
+  min-width: 120px;
+  font-weight: bold;
+  color: #FFFFFF;
+  margin-right: 16px;
+}
+
+.item-strategy {
+  flex: 1;
+  color: #AAAAAA;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 14px;
+}
+
+/* Context menu */
+.context-menu {
+  position: fixed;
+  z-index: 1000;
+  background-color: #424242;
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  min-width: 150px;
+}
+
+.context-menu-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.context-menu-item:hover {
+  background-color: #505050;
+}
+
+.context-menu-item.disabled {
+  color: #888888;
+  cursor: default;
+}
+
+.context-menu-item.disabled:hover {
+  background-color: #424242;
+}
+
+/* Settings menu styles */
+.settings-container {
+  position: relative;
+  margin-right: auto;
+  margin-left: 20px;
+}
+
+.settings-button {
+  cursor: pointer;
+  font-size: 16px;
+  padding: 5px;
+}
+
+/* Make text content visible in no-background mode */
+.tumbler-container.no-background .tumbler-abbr {
+  color: #DDDDDD;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.tumbler-container.no-background .tumbler-strategy {
+  color: #AAAAAA;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.tumbler-container.no-background .chunk-item-abbr {
+  color: #FFFFFF;
+  background-color: transparent;
+}
+
+.tumbler-container.no-background .chunk-item-strategy {
+  color: #AAAAAA;
+  background-color: transparent;
+}
+
+.tumbler-container.no-background .tumbler-chunk {
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.tumbler-container.no-background .tumbler-counter,
+.tumbler-container.no-background .tumbler-timer,
+.tumbler-container.no-background .tumbler-instructions,
+.tumbler-container.no-background .font-button,
+.tumbler-container.no-background .tumbler-help,
+.tumbler-container.no-background .tumbler-close,
+.tumbler-container.no-background .settings-button {
+  color: #AAAAAA;
+}
+
+/* Make sure all UI elements remain visible */
+.tumbler-container.no-background .settings-menu {
+  background-color: rgba(66, 66, 66, 0.9);
+}
+
+.tumbler-container.no-background .settings-item {
+  color: #FFFFFF;
+}
+
+.pattern-items {
+  height: calc(100%)+30; /* Fills the full height of pattern-editor */
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  padding: 10px;
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: rgba(79, 195, 247, 0.5) transparent; /* For Firefox */
+}
+
+/* Modern scrollbar styling */
+.pattern-items::-webkit-scrollbar {
+  width: 8px;
+  background-color: transparent;
+}
+
+.pattern-items::-webkit-scrollbar-thumb {
+  background-color: rgba(79, 195, 247, 0);
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.pattern-items:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(79, 195, 247, 0.5);
+}
+
+.pattern-items::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(79, 195, 247, 0.8);
+}
+
+.pattern-items::-webkit-scrollbar-track {
+  background-color: transparent;
+  border-radius: 4px;
+}
+
+/* Modern pattern selector */
+.pattern-selector {
+  appearance: none;
+  background-color: #424242;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s, box-shadow 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23ffffff' d='M2.5 4L6 7.5 9.5 4 11 5.5 6 10.5 1 5.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding-right: 30px;
+  -webkit-app-region: no-drag;
+}
+
+.pattern-selector:hover {
+  background-color: #505050;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.pattern-selector:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.5);
+}
+
+/* Make drag handles more visible */
+.drag-handle:hover {
+  opacity: 1;
+  color: #4FC3F7;
+  background-color: rgba(79, 195, 247, 0.1);
+  border-radius: 3px;
+}
+
+.drag-handle::before {
+  content: "≡";
+  font-size: 20px;
+  line-height: 1;
+}
+
+.drag-handle:hover::before {
+  animation: wiggle 0.5s ease;
+}
+
+/* SortableJS Styles */
+.sortable-ghost {
+  opacity: 0.4;
+  background-color: #4FC3F7;
+  border: 1px dashed #ffffff;
+}
+
+.sortable-chosen {
+  opacity: 0.8;
+  background-color: #3949AB; /* Similar to selected */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transform: scale(1.03);
+  cursor: grabbing;
+}
+
+/* Optional: Style added to the body during drag */
+.sortable-drag {
+  /* You could add styles here if needed, e.g., change cursor globally */
+}
+
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 0.8; }
+  100% { opacity: 0.5; }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* First chunk item should have the drag handle */
+.chunk-container .chunk-header {
+  display: flex;
+  align-items: center;
+}
+
+/* Drag animations and placeholder */
+.draggable-item {
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  will-change: transform, opacity;
+}
+
+/* Make sure items align properly inside chunk container */
+.chunk-container .drag-handle {
+  margin-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Ensure drag handles in chunk and non-chunk items align horizontally */
+.draggable-item .item-content .drag-handle,
+.chunk-container .drag-handle {
+	font-size: 20px;
+	font-weight: bold;
+}
+
+/* Custom Window Header/Controls */
+.window-header {
+  position: relative; /* Needed for absolute positioning of buttons */
+  height: 20px; /* Adjust height as needed */
+  margin-bottom: 10px;
+  margin-top: 10px;
+  background-color: transparent; /* Or any desired background */
+  width: 100%;
+  -webkit-app-region: drag; /* Make the header draggable */
+  -webkit-user-select: none; /* Prevent text selection */
+}
+
+.window-close-btn {
+  position: absolute;
+  top: 3px;
+  right: 0;
+  height: 100%; /* Match header height */
+  background: transparent;
+  border: none;
+  color: #ccc;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  display: flex; /* Center the 'X' */
+  align-items: center;
+  justify-content: center;
+  -webkit-app-region: no-drag; /* Make button clickable */
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.window-close-btn:hover {
+  background-color: transparent; /* Red background on hover */
+  color: #ffffff; /* White 'X' on hover */
+}

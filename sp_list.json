@@ -1,0 +1,242 @@
+{
+  "CT Head": [
+    {
+      "abbr": "Scout",
+      "full_name": "Topogram",
+      "strategy": "C-spine, jaw, Foreign object",
+      "window_level": "",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "Quick Scroll, Chart Hx",
+      "full_name": "",
+      "strategy": "",
+      "window_level": "brain",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "LDA, surg",
+      "full_name": "Lines, Drains, Accessories + Surgical changes",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "Scalp, Periorb.ST, Orbit",
+      "full_name": "Scalp, Periorbital Soft Tissues, Orbits",
+      "strategy": "Scalp hematomas",
+      "window_level": "bone",
+      "best_seen_on": "ax, cor, sag",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "Exclude Hemorrhage",
+      "full_name": "Exclude Hemorrhage",
+      "strategy": "quadrants, down the middle",
+      "window_level": "brain",
+      "best_seen_on": "ax, sag",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "dSAH",
+      "full_name": "Dependent Subarachnoid Hemorrhage",
+      "strategy": "OccHorns,SylvF,IPfoss, lat QdCist",
+      "window_level": "brain",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "Falx/Tent",
+      "full_name": "Falx/Tentorium",
+      "strategy": "Subtle Subdural or layering SAH",
+      "window_level": "brain",
+      "best_seen_on": "cor",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "IRIC + BG",
+      "full_name": "Insular Ribbons, Internal Capsule, Basal Ganglia",
+      "strategy": "",
+      "window_level": "infarct",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 2
+    },
+    {
+      "abbr": "GWdiff",
+      "full_name": "Grey-White DIFFerentiation",
+      "strategy": "zoom out, ant/post halves symmetry, Cbellum",
+      "window_level": "infarct",
+      "best_seen_on": "ax, cor",
+      "groupID": 0,
+      "chunkID": 2
+    },
+    {
+      "abbr": "MCA/ACA HD, sup Cisterns",
+      "full_name": "MCA/ACA HyperDensities, Superior Cisterns",
+      "strategy": "SupS+Qdr cisterns",
+      "window_level": "brain",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 1
+    },
+    {
+      "abbr": "Bas/PCA HD, inf Cisterns",
+      "full_name": "Basilar Hyperdensities, Inferior Cisterns",
+      "strategy": "PrePont cisterns",
+      "window_level": "brain",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 1
+    },
+    {
+      "abbr": "BS/CS/CC",
+      "full_name": "BasiSphenoid, Cavernous Sinuses + Carotid Canals",
+      "strategy": "looking for fx",
+      "window_level": "bone",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "CbHmsphr/CPA/FM",
+      "full_name": "Cerebellar hemispheres, Brainstem, CerebelloPontine Angles, Foramen Magnum",
+      "strategy": "old Cbellar strokes",
+      "window_level": "brain",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "OccCond, Dens, C1arch",
+      "full_name": "OccCond, Dens, C1 arch",
+      "strategy": "",
+      "window_level": "bone",
+      "best_seen_on": "ax, sag",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "IAC,VCF,Oss",
+      "full_name": "Internal Auditory Canal, VestibuloCochlearFacialnerve, Ossicles",
+      "strategy": "",
+      "window_level": "bone",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "MsH, L+3v",
+      "full_name": "Midline Shift / herniation, Lateral + 3rd ventricles",
+      "strategy": "",
+      "window_level": "brain",
+      "best_seen_on": "ax,cor",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "pCCp 3A4",
+      "full_name": "Pituitary, Corpus Callosum, Pineal;  3rd vent, Aqueduct, 4th vent",
+      "strategy": "",
+      "window_level": "brain",
+      "best_seen_on": "sag",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "PetrApex-Mast",
+      "full_name": "Petrous Apex, Mastoids",
+      "strategy": "",
+      "window_level": "bone",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "NOP,F.Rmuller, WR, RP/PPnodes",
+      "full_name": "Naso/OroPharynx, F. Rosenmuller, Waldeyer Ring, Retro/Para-pharyngeal nodes",
+      "strategy": "quick look",
+      "window_level": "ST",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 0
+    }
+  ],
+  "MR Brain": [
+    {
+      "abbr": "T1 ax",
+      "full_name": "",
+      "strategy": "",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "T1 sag",
+      "full_name": "",
+      "strategy": "midline anat, tonsils, orbits, NOP, upper Cspine / cord",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "FLAIR",
+      "full_name": "",
+      "strategy": "edema, SAH, WM lesions (by lobe), skull marrow",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "DWI",
+      "full_name": "",
+      "strategy": "watershed, bstem, inf Pfoss",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "SWI",
+      "full_name": "",
+      "strategy": "clot in prox vessels; Ca, hemosiderin",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "Postcon",
+      "full_name": "",
+      "strategy": "",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "T2",
+      "full_name": "",
+      "strategy": "orbits, opticNerves, PNS/mastoids, IAC/vestibCoch, flow voids (incl strght/trans/sigm, carotids into skull base), GWdiff",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    },
+    {
+      "abbr": "Chart Hx to compare finding",
+      "full_name": "",
+      "strategy": "",
+      "window_level": "brain",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0
+    }
+  ]
+}

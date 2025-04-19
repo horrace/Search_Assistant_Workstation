@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'; img-src 'self' data:">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pattern Editor</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+  </style>
+</head>
+<body>
+  <div class="window-header">
+  </div>
+  <div class="editor-header">
+	<h1>Edit Pattern:</h1>
+	<select id="pattern-selector" class="pattern-selector"></select>
+	
+	<div style="flex: 1;"></div>
+	<div class="editor-header-right">
+	  <button id="new-pattern-btn" class="btn">New Pattern</button>
+	  <button id="undo-btn" class="btn" disabled>Undo</button>
+	  <button id="back-btn" class="btn">Back to Main</button>
+	</div>
+  </div>
+  <div class="editor-container">
+    
+    <div class="editor-content">
+      <!-- Left side - Pattern Editor -->
+      <div class="pattern-editor">
+        <div id="pattern-items" class="pattern-items">
+          <!-- Pattern items will be loaded here -->
+          <div class="loading-indicator">Loading pattern...</div>
+        </div>
+      </div>
+      
+      <!-- Right side - Parts Bank -->
+      <div class="parts-bank">
+        <h2 class="editor-section-header">Parts Bank</h2>
+        
+        <div id="parts-bank-items" class="parts-bank-items">
+          <!-- Parts bank items will be loaded here -->
+          <div class="loading-indicator">Loading parts bank...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Context Menu -->
+  <div id="context-menu" class="context-menu" style="display: none;"></div>
+  
+  <!-- New Pattern Dialog -->
+  <div id="new-pattern-dialog" class="dialog" style="display: none;">
+    <div class="dialog-content">
+      <h2>Create New Pattern</h2>
+      <input type="text" id="new-pattern-name" placeholder="Pattern Name">
+      <div class="dialog-buttons">
+        <button id="dialog-cancel-btn" class="btn">Cancel</button>
+        <button id="dialog-ok-btn" class="btn">OK</button>
+      </div>
+    </div>
+  </div>
+  
+  <script src="vendor/Sortable.min.js"></script>
+  <script src="editor.js"></script>
+</body>
+</html> 

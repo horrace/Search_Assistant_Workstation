@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; style-src-elem 'self' 'unsafe-inline'">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Assistant</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding-bottom: 20px;
+			padding-left: 20px;
+			padding-right: 20px;
+            background-color: #303030;
+            color: #f0f0f0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        h1 {
+            margin: 0 0 20px 0;
+            text-align: center;
+            font-size: 24px;
+        }
+		
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            padding-bottom: 5px;
+			-webkit-user-select: none;
+        }
+        
+        .pattern-list {
+            flex: 1;
+            overflow-y: auto;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #40404000;
+            height: calc(95vh - 130px);
+        }
+        
+        .pattern-item {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #505050;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .pattern-item:hover {
+            background-color: #606060;
+        }
+        
+        .pattern-item h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #f0f0f0;
+        }
+        
+        .loading-indicator {
+            text-align: center;
+            padding: 20px;
+            color: #a0a0a0;
+        }
+        
+        .loading-indicator.error {
+            color: #ff6b6b;
+        }
+        
+        .retry-button {
+            display: block;
+            margin: 10px auto;
+            padding: 8px 16px;
+            background-color: #505050;
+            color: #f0f0f0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .retry-button:hover {
+            background-color: #606060;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 8px;
+        }
+        
+        button {
+            padding: 10px 15px;
+            background-color: #153ee3;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+
+        }
+        
+        button:hover {
+            background-color: #2b39f6;
+        }
+        
+        button:active {
+            background-color: #2b39f6;
+            transform: translateY(1px);
+        }
+        
+        .transparency-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 5px;
+            margin-bottom: 8px;
+            background-color: #40404000;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .transparency-control .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex: 1;
+        }
+        
+        .transparency-control label {
+            min-width: 100px;
+        }
+        
+        .transparency-control input {
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        #transparency-value {
+            min-width: 40px;
+            text-align: right;
+			margin-right: 10px;
+        }
+        
+        .hide-bg-control {
+            display: flex;
+            align-items: center;
+            padding: 5px;
+            margin-bottom: 8px;
+            background-color: #40404000;
+            border-radius: 5px;
+        }
+        
+        .hide-bg-control label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .hide-bg-control input[type="checkbox"] {
+            margin-right: 8px;
+        }
+        
+        #error-message {
+            background-color: #ff5555;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="window-header">
+    <button class="window-close-btn" id="close-main-btn">&#x2715;</button> <!-- Close button -->
+  </div>
+  <div class="main-container">        
+        <div class="footer-content">
+            <div class="controls">
+                <div class="settings-wrapper">
+                    <button id="settings-button" class="settings-toggle">⛯</button>
+                    <div id="settings-menu" class="settings-menu" style="display: none;">
+                        <div class="settings-item transparency-control">
+                            <div class="slider-container">
+                                <label for="transparency-slider">Transparency:</label>
+                                <input type="range" id="transparency-slider" min="0.2" max="1" step="0.05" value="1">
+                                <span id="transparency-value">100%</span>
+                            </div>
+                        </div>
+                        
+                        <div class="settings-item hide-bg-control">
+                            <label for="hide-background">
+                                <input type="checkbox" id="hide-background"> Pattern Reviewer: Text Only
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <button id="edit-button">Edit Patterns</button>
+            </div>
+        </div>
+
+		<div id="pattern-list" class="pattern-list">
+            <div class="loading-indicator">Loading patterns...</div>
+        </div>
+        
+        <div id="error-message"></div>
+    </div>
+    
+    <script src="renderer.js"></script>
+</body>
+</html> 
