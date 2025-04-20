@@ -206,7 +206,10 @@ function loadPattern(patternName) {
           }
           seenAbbrs.add(abbr);
           return true;
-        });
+        }).map(item => ({
+          ...item,
+          view: item.view || 'ax' // Add default view if missing
+        }));
         
         renderPatternItems();
         unsubscribe();
@@ -294,7 +297,6 @@ function renderPatternItems() {
       itemIndexCounter += chunkItems.length;
     } else {
       // Regular single item
-      // Use data-item-index to store the index of this item in currentPatternItems
       html += `
         <div
           class="draggable-item ${isSelected ? 'selected' : ''}"
@@ -304,6 +306,13 @@ function renderPatternItems() {
           >
           <div class="item-content">
             <div class="drag-handle" data-handle="true"></div>
+            <div class="item-view">
+              <select class="item-view-select" data-index="${itemIndexCounter}">
+                <option value="ax" ${item.view === 'ax' ? 'selected' : ''}>ax</option>
+                <option value="cor" ${item.view === 'cor' ? 'selected' : ''}>cor</option>
+                <option value="sag" ${item.view === 'sag' ? 'selected' : ''}>sag</option>
+              </select>
+            </div>
             <div class="item-abbr" contenteditable="true" data-field="abbr">${item.abbr || ''}</div>
             <div class="item-strategy" contenteditable="true" data-field="strategy">${item.strategy || ''}</div>
           </div>
@@ -457,11 +466,14 @@ function renderPatternItems() {
   document.querySelectorAll('.draggable-item').forEach(item => {
     // Right-click context menu only
     item.addEventListener('contextmenu', handleContextMenu);
+    // Add click listener for selection (handle single/multi select)
+    item.addEventListener('click', (e) => handleItemClick(e, item));
   });
 
   // Prevent selection and dragging from contenteditable fields
   document.querySelectorAll('[contenteditable]').forEach(editableField => {
     editableField.addEventListener('blur', handleFieldEdit);
+    editableField.addEventListener('keydown', handleFieldKeydown); // Added for Enter/Escape
 
     // Prevent SortableJS from initiating drag from contenteditable fields
     editableField.addEventListener('mousedown', (e) => {
@@ -470,6 +482,14 @@ function renderPatternItems() {
      editableField.addEventListener('touchstart', (e) => { // Also for touch devices
         e.stopPropagation();
     });
+  });
+
+  // Add change listener for the new view dropdowns
+  document.querySelectorAll('.item-view-select').forEach(selectElement => {
+    selectElement.addEventListener('change', handleViewChange);
+    // Prevent sortable drag starting from select
+    selectElement.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    selectElement.addEventListener('touchstart', (e) => { e.stopPropagation(); });
   });
 }
 
@@ -587,22 +607,20 @@ function hideContextMenu() {
 function handleContextMenuAction(e) {
   const action = e.currentTarget.getAttribute('data-action');
   
-  switch (action) {
-    case 'create_chunk_first':
-      setChunkFirstItem();
-      break;
-    case 'create_chunk_last':
-      createChunkWithRange();
-      break;
-    case 'remove_from_chunk':
-      removeFromChunk();
-      break;
-    case 'disband_chunk':
-      disbandChunk();
-      break;
-  }
-  
   hideContextMenu();
+
+  if (action === 'create_chunk_first') {
+    setChunkFirstItem();
+  } else if (action === 'create_chunk_last') {
+    createChunkWithRange(); // Will call save internally
+  } else if (action === 'remove_from_chunk') {
+    removeFromChunk(); // Will call save internally
+  } else if (action === 'disband_chunk') {
+    disbandChunk(); // Will call save internally
+  } else if (action === 'delete_item') { // Assuming you might add delete later
+      // deleteItem(contextMenuTargetIndex); // Would need save call
+  }
+  // No explicit save call needed here IF the action functions call saveCurrentPattern
 }
 
 // Set the first item for chunk creation
@@ -637,114 +655,120 @@ function setChunkFirstItem() {
 
 // Create a chunk with a range of items
 function createChunkWithRange() {
-  if (chunkFirstItemIndex < 0) return;
-  
-  const startIndex = Math.min(chunkFirstItemIndex, contextMenuTargetIndex);
-  const endIndex = Math.max(chunkFirstItemIndex, contextMenuTargetIndex);
-  
-  // Check that no items in the range are already in chunks
-  for (let i = startIndex; i <= endIndex; i++) {
-    if (currentPatternItems[i].chunkID > 0) {
-      alert('Cannot create chunk because some items in the range are already in chunks.');
-      chunkFirstItemIndex = -1; // Reset first item
-      return;
+  if (chunkFirstItemIndex >= 0 && contextMenuTargetIndex >= 0 && chunkFirstItemIndex !== contextMenuTargetIndex) {
+    const startIndex = Math.min(chunkFirstItemIndex, contextMenuTargetIndex);
+    const endIndex = Math.max(chunkFirstItemIndex, contextMenuTargetIndex);
+
+    // Check for existing chunks in range before calling API
+    let hasChunksInRange = false;
+    for (let i = startIndex; i <= endIndex; i++) {
+        if (currentPatternItems[i].chunkID > 0) {
+            hasChunksInRange = true;
+            break;
+        }
     }
+    if (hasChunksInRange) {
+         alert("Cannot create a chunk that overlaps with an existing chunk.");
+         resetChunkSelection();
+         renderPatternItems(); // Re-render to remove highlights etc.
+         return;
+    }
+
+    // Generate a simple unique chunk ID (e.g., based on timestamp or a counter)
+    const newChunkID = Date.now(); // Simple example
+
+    // Update local state first
+    for (let i = startIndex; i <= endIndex; i++) {
+      currentPatternItems[i].chunkID = newChunkID;
+    }
+
+    console.log(`Creating chunk ${newChunkID} from index ${startIndex} to ${endIndex}`);
+    resetChunkSelection(); // Clear selection state
+    saveCurrentPattern(); // Save the updated pattern data
+    renderPatternItems(); // Re-render to show the new chunk visually
   }
-  
-  // Send chunk creation request to backend
-  window.electronAPI.callAPI('create_chunk', {
-    pattern_name: currentPattern,
-    start_index: startIndex,
-    end_index: endIndex
-  });
-  
-  // Listen for response and reload the pattern if successful
-  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'create_chunk') {
-      unsubscribe();
-      if (data.result && data.result.success) {
-        // Reset first item selection
-        chunkFirstItemIndex = -1;
-        loadPattern(currentPattern);
-      } else if (data.error) {
-        console.error('Error creating chunk:', data.error);
-        // Add error handling here if needed
-      }
-    }
-  });
 }
 
 // Remove an item from its chunk
 function removeFromChunk() {
-  window.electronAPI.callAPI('remove_from_chunk', {
-    pattern_name: currentPattern,
-    index: contextMenuTargetIndex
-  });
-  
-  // Listen for response and reload the pattern if successful
-  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'remove_from_chunk') {
-      unsubscribe();
-      if (data.result && data.result.success) {
-        loadPattern(currentPattern);
-      } else if (data.error) {
-        console.error('Error removing from chunk:', data.error);
-        // Add error handling here if needed
-      }
-    }
-  });
+  if (contextMenuTargetIndex >= 0 && currentPatternItems[contextMenuTargetIndex].chunkID > 0) {
+    const itemIndex = contextMenuTargetIndex;
+    console.log(`Removing item at index ${itemIndex} from chunk ${currentPatternItems[itemIndex].chunkID}`);
+
+    // Update local state
+    const oldChunkID = currentPatternItems[itemIndex].chunkID;
+    currentPatternItems[itemIndex].chunkID = 0; // Set chunkID to 0 or null/undefined
+
+     // Check if this was the last item in the chunk, if so, disband others?
+     // For now, just removes this one item. Consider auto-disband if < 2 items left.
+     const remainingInChunk = currentPatternItems.filter(item => item.chunkID === oldChunkID).length;
+     console.log(`Remaining items in chunk ${oldChunkID}: ${remainingInChunk}`);
+     if (remainingInChunk < 2) {
+         console.log(`Auto-disbanding chunk ${oldChunkID} as fewer than 2 items remain.`);
+         currentPatternItems.forEach(item => {
+             if (item.chunkID === oldChunkID) {
+                 item.chunkID = 0;
+             }
+         });
+     }
+
+
+    saveCurrentPattern(); // Save the updated pattern data
+    renderPatternItems(); // Re-render to show the change
+  }
 }
 
 // Disband a chunk
 function disbandChunk() {
-  const chunkID = currentPatternItems[contextMenuTargetIndex].chunkID;
-  
-  window.electronAPI.callAPI('disband_chunk', {
-    pattern_name: currentPattern,
-    chunk_id: chunkID
-  });
-  
-  // Listen for response and reload the pattern if successful
-  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'disband_chunk') {
-      unsubscribe();
-      if (data.result && data.result.success) {
-        loadPattern(currentPattern);
-      } else if (data.error) {
-        console.error('Error disbanding chunk:', data.error);
-        // Add error handling here if needed
+  if (contextMenuTargetIndex >= 0 && currentPatternItems[contextMenuTargetIndex].chunkID > 0) {
+    const chunkIDToDisband = currentPatternItems[contextMenuTargetIndex].chunkID;
+    console.log(`Disbanding chunk ${chunkIDToDisband}`);
+
+    // Update local state
+    currentPatternItems.forEach(item => {
+      if (item.chunkID === chunkIDToDisband) {
+        item.chunkID = 0; // Set chunkID to 0 or null/undefined
       }
-    }
-  });
+    });
+
+    saveCurrentPattern(); // Save the updated pattern data
+    renderPatternItems(); // Re-render to show the change
+  }
 }
 
 // Handle field edit
 function handleFieldEdit(e) {
-  const field = e.target.getAttribute('data-field');
-  const value = e.target.textContent.trim();
-  const index = parseInt(e.target.getAttribute('data-index'));
-  
-  if (isNaN(index) || field === null || currentPattern === null) {
-    return;
-  }
-  
-  // Send update request to backend
-  window.electronAPI.callAPI('update_item', {
-    pattern_name: currentPattern,
-    index: index,
-    field: field,
-    value: value
-  });
-  
-  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'update_item') {
-      unsubscribe();
-      
-      if (data.error) {
-        console.error('Error updating item:', data.error);
-      }
+  const fieldElement = e.target;
+  const fieldName = fieldElement.getAttribute('data-field');
+  const itemIndex = parseInt(fieldElement.getAttribute('data-index'));
+  const newValue = fieldElement.textContent.trim(); // Trim whitespace
+
+  // Find the correct item (handle items within chunks)
+  let actualItemIndex = -1;
+  if (!isNaN(itemIndex)) {
+     // Check if the element is part of a chunk or a single item
+    const parentDraggable = fieldElement.closest('.draggable-item');
+    if (parentDraggable && parentDraggable.dataset.isChunk === 'true') {
+        // It's inside a chunk, use the chunk-index
+         actualItemIndex = parseInt(fieldElement.closest('.chunk-item-part')?.dataset.chunkIndex);
+    } else if (parentDraggable && parentDraggable.dataset.isChunk === 'false') {
+        // It's a single item, use the item-index directly
+         actualItemIndex = itemIndex; // This should match parentDraggable.dataset.itemIndex
     }
-  });
+  }
+
+  if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && fieldName && currentPatternItems[actualItemIndex][fieldName] !== newValue) {
+    console.log(`Field Edit: Index=${actualItemIndex}, Field=${fieldName}, NewValue='${newValue}'`);
+    currentPatternItems[actualItemIndex][fieldName] = newValue;
+
+    // Debounce save operation
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      saveCurrentPattern();
+    }, 300); // Save after 300ms of inactivity
+  } else if (isNaN(actualItemIndex) || actualItemIndex === -1) {
+     console.error("Could not determine valid index for field edit from:", fieldElement);
+  }
 }
 
 // Show new pattern dialog
@@ -786,7 +810,183 @@ function createNewPattern() {
   });
 }
 
-// Initialize the application
+// Handler for view dropdown change
+function handleViewChange(e) {
+  const selectElement = e.target;
+  const itemIndex = parseInt(selectElement.getAttribute('data-index'));
+  const newView = selectElement.value;
+
+  if (!isNaN(itemIndex) && itemIndex >= 0 && itemIndex < currentPatternItems.length) {
+    // Update the local state immediately for responsiveness
+    currentPatternItems[itemIndex].view = newView;
+    console.log(`Updated item ${itemIndex} view to ${newView}`);
+
+    // Debounce save operation slightly
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => {
+      saveCurrentPattern();
+    }, 300); // Save after 300ms of inactivity
+  } else {
+    console.error('Invalid index or view value from change event:', e.target);
+  }
+}
+
+// --- Save Function ---
+let saveTimeout; // For debouncing saves
+
+async function saveCurrentPattern() {
+  clearTimeout(saveTimeout); // Clear any pending timeout
+
+  // Ensure view is included when saving
+  const patternDataToSave = currentPatternItems.map(item => ({
+    abbr: item.abbr || '',
+    strategy: item.strategy || '',
+    chunkID: item.chunkID || 0,
+    view: item.view || 'ax' // Ensure view is saved
+  }));
+
+  console.log(`Saving pattern ${currentPattern} with data:`, patternDataToSave);
+
+  // Call backend API
+  window.electronAPI.callAPI('save_pattern', {
+    pattern_name: currentPattern,
+    items: patternDataToSave
+  });
+
+  // Listen for save response (optional, for confirmation/error handling)
+   const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'save_pattern') {
+      unsubscribe();
+      if (data.result && data.result.success) {
+        console.log('Pattern saved successfully.');
+        // Optionally provide user feedback
+      } else if (data.error) {
+        console.error('Error saving pattern:', data.error);
+        // Optionally provide user feedback (e.g., alert)
+        alert(`Failed to save pattern: ${data.error}`);
+      } else {
+          console.error('Unknown error saving pattern. Response:', data);
+          alert('An unknown error occurred while saving the pattern.');
+      }
+    }
+  });
+}
+
+// --- Add Parts Bank Logic ---
+// ... (Assuming parts bank logic exists and uses `saveCurrentPattern` or similar on changes) ...
+// Make sure parts dragged from the bank are added with a default 'view: 'ax''
+
+// Function to add item from parts bank
+function addItemFromBank(partData) {
+    const newItem = {
+        abbr: partData.abbr || '',
+        strategy: partData.strategy || '',
+        chunkID: 0, // New items are not in chunks initially
+        view: 'ax' // Default view for new items
+    };
+
+    // Add to the end of the current pattern list
+    currentPatternItems.push(newItem);
+
+    console.log('Added item from bank:', newItem);
+    saveCurrentPattern(); // Save the updated pattern
+    renderPatternItems(); // Re-render the list
+}
+
+// Load parts bank items
+async function loadPartsBank() {
+    partsBankItems.innerHTML = '<div class="loading-indicator">Loading parts bank...</div>';
+    window.electronAPI.callAPI('get_parts_bank', {});
+
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+        if (data && data.responseFor === 'get_parts_bank') {
+            unsubscribe();
+            if (data.result && Array.isArray(data.result)) {
+                partsBankList = data.result.map(item => ({ ...item, view: item.view || 'ax' })); // Add default view
+                renderPartsBank();
+            } else if (data.error) {
+                console.error('Error loading parts bank:', data.error);
+                partsBankItems.innerHTML = `<div class="loading-indicator error">Error loading parts bank: ${data.error}</div>`;
+            } else {
+                 console.error('Unknown error loading parts bank. Response:', data);
+                 partsBankItems.innerHTML = '<div class="loading-indicator error">Unknown error loading parts bank.</div>';
+            }
+        }
+    });
+}
+
+// Render parts bank items
+function renderPartsBank() {
+    if (!partsBankList || partsBankList.length === 0) {
+        partsBankItems.innerHTML = '<div class="loading-indicator">No parts in bank</div>';
+        return;
+    }
+
+    let html = '';
+    partsBankList.forEach((part, index) => {
+        html += `
+            <div class="part-bank-item" draggable="true" data-index="${index}">
+                <span class="part-bank-abbr">${part.abbr}</span>
+                <span class="part-bank-strategy">${part.strategy || ''}</span>
+            </div>
+        `;
+    });
+    partsBankItems.innerHTML = html;
+
+    // Add drag start listeners
+    document.querySelectorAll('.part-bank-item').forEach(item => {
+        item.addEventListener('dragstart', handlePartBankDragStart);
+    });
+}
+
+// Handle drag start from parts bank
+function handlePartBankDragStart(e) {
+    const index = parseInt(e.target.getAttribute('data-index'));
+    if (!isNaN(index) && index < partsBankList.length) {
+        const partData = partsBankList[index];
+        // Set data to be transferred (e.g., JSON string of the part)
+        e.dataTransfer.setData('application/json', JSON.stringify(partData));
+        e.dataTransfer.effectAllowed = 'copy'; // Indicate copying
+        console.log('Dragging part from bank:', partData);
+    } else {
+        console.error('Invalid index for parts bank drag start');
+        e.preventDefault(); // Prevent drag if data is invalid
+    }
+}
+
+// --- Setup Drag and Drop for Pattern Items Area ---
+function setupPatternDropZone() {
+    patternItems.addEventListener('dragover', (e) => {
+        e.preventDefault(); // Necessary to allow dropping
+        e.dataTransfer.dropEffect = 'copy'; // Visual cue
+        patternItems.classList.add('drag-over'); // Add visual feedback
+    });
+
+    patternItems.addEventListener('dragleave', (e) => {
+        patternItems.classList.remove('drag-over'); // Remove visual feedback
+    });
+
+    patternItems.addEventListener('drop', (e) => {
+        e.preventDefault();
+        patternItems.classList.remove('drag-over');
+        const partDataString = e.dataTransfer.getData('application/json');
+
+        if (partDataString) {
+            try {
+                const partData = JSON.parse(partDataString);
+                console.log('Dropped part data:', partData);
+                // TODO: Determine drop position if needed, or just add to end
+                addItemFromBank(partData);
+            } catch (error) {
+                console.error('Error parsing dropped data:', error);
+            }
+        } else {
+            console.log('Drop event without expected data type.');
+        }
+    });
+}
+
+// Initialize
 function init() {
   // Add global error handler for all errors including ReferenceErrors
   window.addEventListener('error', function(event) {
@@ -914,6 +1114,43 @@ function init() {
   } else {
     console.error('Could not find editor window close button');
   }
+
+  loadPartsBank();
+  setupPatternDropZone(); // Add drop zone setup
+
+  // Debounce save pattern changes
+  // Moved saveTimeout declaration outside saveCurrentPattern
+
+  // Event listeners
+  patternSelector.addEventListener('change', () => {
+    loadPattern(patternSelector.value);
+  });
+
+  backBtn.addEventListener('click', () => {
+    window.electronAPI.closeEditor();
+  });
+
+  newPatternBtn.addEventListener('click', showNewPatternDialog);
+  dialogOkBtn.addEventListener('click', createNewPattern);
+  dialogCancelBtn.addEventListener('click', hideNewPatternDialog);
+
+  // Close context menu on click outside
+  document.addEventListener('click', (e) => {
+    if (!contextMenu.contains(e.target)) {
+      hideContextMenu();
+    }
+     // Also handle deselection if clicking outside items
+    if (!patternItems.contains(e.target) && !e.target.closest('.draggable-item')) {
+        if (selectedIndex !== -1 || selectedIndices.length > 0) {
+            console.log('Clicked outside, deselecting.');
+            deselectAllItems(); // Deselect if clicking outside pattern items area
+        }
+    }
+  });
+
+   // Keyboard listeners for multi-select etc.
+  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keyup', handleKeyUp);
 }
 
 // Initialize when the DOM is ready

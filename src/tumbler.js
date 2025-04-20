@@ -152,6 +152,12 @@ function updateFontSizes() {
   tumblerAbbr.style.fontSize = `${abbrBaseFontSize * fontScaleFactor}px`;
   tumblerStrategy.style.fontSize = `${strategyBaseFontSize * fontScaleFactor}px`;
   
+  // Ensure view font size is also updated (make it slightly smaller than abbr)
+  const tumblerView = document.getElementById('tumbler-view');
+  if (tumblerView) {
+      tumblerView.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`; // Adjust base size as needed
+  }
+  
   // Update chunk item font sizes if visible
   document.querySelectorAll('.chunk-item-abbr').forEach(el => {
     el.style.fontSize = `${chunkItemAbbrBaseFontSize * fontScaleFactor}px`;
@@ -175,52 +181,54 @@ function displayCurrentItem() {
   
   // Check if current item is part of a chunk
   const chunkID = item.chunkID || 0;
+  const itemAbbr = item.abbr || '';
+  const itemStrategy = item.strategy || '';
+  const itemView = item.view || 'ax'; // Get the view, default to 'ax'
+  
+  // Get the view display element (or create if it doesn't exist)
+  let tumblerView = document.getElementById('tumbler-view');
+  if (!tumblerView) {
+    tumblerView = document.createElement('div');
+    tumblerView.id = 'tumbler-view';
+    tumblerView.className = 'tumbler-view';
+    // Insert it before the abbreviation
+    tumblerAbbr.parentNode.insertBefore(tumblerView, tumblerAbbr);
+  }
   
   if (chunkID > 0) {
     // --- Chunk Item Display ---
-    // Hide the main abbreviation and strategy elements
     tumblerAbbr.style.display = 'none';
     tumblerStrategy.style.display = 'none';
+    tumblerView.style.display = 'none'; // Hide view for chunks
     
-    // Find all items in this chunk
     const chunkItems = patternItems.filter(i => (i.chunkID || 0) === chunkID);
-    
-    // Render chunk items
     let html = '';
     chunkItems.forEach(chunkItem => {
+      // Include view in chunk display if needed later
       html += `
         <div class="chunk-item">
-          <div class="chunk-item-abbr">${chunkItem.abbr || ''}</div>
+          <div class="chunk-item-abbr">${chunkItem.abbr || ''}</div> 
           ${chunkItem.strategy ? `<div class="chunk-item-strategy">${chunkItem.strategy}</div>` : ''}
         </div>
       `;
     });
     
     tumblerChunk.innerHTML = html;
-    tumblerChunk.style.display = 'block'; // Show the chunk container
-    
-    // Apply current background visibility to newly created chunk items
-    if (hideBackground) {
-      const chunkElements = document.querySelectorAll('.chunk-item-abbr, .chunk-item-strategy');
-      chunkElements.forEach(el => {
-        el.style.backgroundColor = 'transparent';
-      });
-    }
+    tumblerChunk.style.display = 'block';
   } else {
     // --- Single Item Display ---
-    // Show the main abbreviation and strategy elements
+    tumblerChunk.style.display = 'none'; // Hide chunk container
+    
+    tumblerAbbr.textContent = itemAbbr;
+    tumblerStrategy.textContent = itemStrategy;
+    tumblerView.textContent = itemView; // Display the view text
+    
     tumblerAbbr.style.display = 'block';
-    tumblerStrategy.style.display = 'block';
-    
-    // Update abbreviation and strategy text
-    tumblerAbbr.textContent = item.abbr || '';
-    tumblerStrategy.textContent = item.strategy || '';
-    
-    // Hide the chunk container
-    tumblerChunk.style.display = 'none';
+    tumblerStrategy.style.display = itemStrategy ? 'block' : 'none';
+    tumblerView.style.display = 'block'; // Show the view element
   }
   
-  // Update font sizes (now applies to either main or chunk elements based on visibility)
+  // Ensure font sizes are updated after content change
   updateFontSizes();
 }
 

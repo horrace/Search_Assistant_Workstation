@@ -57,10 +57,11 @@ document.addEventListener('DOMContentLoaded', function() {
         settingsMenu.style.display = isVisible ? 'none' : 'block';
       });
       
-      // Close menu when clicking outside
+      // Close menu when clicking outside the button AND outside the menu itself
       document.addEventListener('click', (event) => {
-        const settingsWrapper = document.querySelector('.settings-wrapper');
-        if (settingsWrapper && !settingsWrapper.contains(event.target) && settingsMenu.style.display === 'block') {
+        if (settingsMenu.style.display === 'block' && 
+            !settingsButton.contains(event.target) && 
+            !settingsMenu.contains(event.target)) {
           settingsMenu.style.display = 'none';
         }
       });
@@ -68,16 +69,31 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Transparency slider
     if (transparencySlider) {
-      transparencySlider.addEventListener('input', () => {
+      // Stop propagation on mousedown to prevent closing menu prematurely
+      transparencySlider.addEventListener('mousedown', (event) => {
+        event.stopPropagation();
+      });
+      transparencySlider.addEventListener('input', () => { 
+        // No stopPropagation here, let document listener handle clicks outside
         currentTransparency = parseFloat(transparencySlider.value);
         updateTransparencyDisplay();
         window.electronAPI.setTransparency(currentTransparency);
+        // Consider saving on 'change' event instead if 'input' saves too often
+      });
+      transparencySlider.addEventListener('change', () => { 
+          // Save setting when user finishes interacting with slider
+          saveSettings(); 
       });
     }
     
     // Hide background checkbox
     if (hideBackgroundCheckbox) {
+       // Stop propagation on mousedown to prevent closing menu prematurely
+       hideBackgroundCheckbox.addEventListener('mousedown', (event) => {
+        event.stopPropagation();
+      });
       hideBackgroundCheckbox.addEventListener('change', () => {
+        // No stopPropagation here
         hideBackground = hideBackgroundCheckbox.checked;
         saveSettings();
       });

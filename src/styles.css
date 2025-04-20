@@ -314,7 +314,7 @@ footer {
   font-size: 12px;
   /* margin-right: auto; /* Removed */
   flex-shrink: 0; /* Prevent counter from shrinking */
-  padding-top: 2px;
+  padding-top: 3px;
   margin-right: 1px;
 }
 
@@ -326,7 +326,7 @@ footer {
   /* flex-grow: 1; /* Allow timer to take up space */
   text-align: center; /* Center the timer text */
   margin-right: 8px; /* Give it some minimum space */
-  padding-top: 2px;
+  padding-top: 3px;
 }
 
 .tumbler-header-left {
@@ -618,12 +618,14 @@ footer {
   color: #DDDDDD;
   background-color: transparent;
   box-shadow: none;
+  margin-left: 2px;
 }
 
 .tumbler-container.no-background .tumbler-strategy {
-  color: #AAAAAA;
+  color: #7a7a7a;
   background-color: transparent;
   box-shadow: none;
+  margin-left: 5px;
 }
 
 .tumbler-container.no-background .chunk-item-abbr {
@@ -834,4 +836,64 @@ footer {
 .window-close-btn:hover {
   background-color: transparent; /* Red background on hover */
   color: #ffffff; /* White 'X' on hover */
+}
+
+/* === Editor View Dropdown === */
+.draggable-item .item-content {
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Vertically align items */
+  gap: 8px; /* Space between elements */
+}
+
+.item-view {
+  /* Add specific styling for the view container if needed */
+  /* Example: margin-right: 5px; */
+}
+
+.item-view-select {
+  padding: 2px 4px;
+  font-size: 0.9em;
+  border: 1px solid #555;
+  background-color: #444;
+  color: #eee;
+  border-radius: 3px;
+}
+
+.item-view-select:focus {
+  outline: 1px solid var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Adjust abbr and strategy flex properties if needed to fit */
+.item-abbr {
+   /* flex-grow: 0; */ /* Example: prevent abbr from growing too much */
+   /* min-width: 50px; */ /* Example: ensure minimum width */
+}
+
+.item-strategy {
+  flex-grow: 1; /* Allow strategy to take remaining space */
+}
+
+
+/* === Tumbler View Display === */
+.tumbler-view {
+  color: #575757; /* Dim text color */
+  font-size: 18px; /* Adjust base size as needed, scales with updateFontSizes */
+  font-weight: normal;
+  margin-bottom: 5px; /* Space below the view text */
+  margin-left: 10px;
+  text-align: left;
+  /* Add other styles like padding if necessary */
+  width: 100%; /* Ensure it takes full width for centering */
+}
+
+/* Adjust tumbler abbreviation margin if view is present */
+.tumbler-abbr {
+    margin-top: 0; /* Remove top margin if view is above */
+    margin-bottom: 5px;
+}
+
+/* Ensure chunk items don't show view text (handled by JS display:none, but good fallback) */
+.chunk-item .tumbler-view {
+    display: none;
 }
