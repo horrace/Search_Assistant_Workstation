@@ -237,7 +237,7 @@ footer {
 .editor-container {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 50px);
+  height: calc(100vh - 60px);
   padding-bottom: 20px;
   padding-left: 20px;
   padding-right: 20px;
@@ -269,7 +269,7 @@ footer {
 .pattern-editor {
   flex: 2;
   padding: 10px;
-  min-width: 550px;
+  min-width: 600px;
   margin-bottom: 10px;
   border-right: 1px solid #444;
 }
@@ -498,7 +498,7 @@ footer {
   color: #888;
   display: flex;
   justify-content: center;
-  margin-right: 11px;
+  margin-right: 2px;
   position: relative;
   flex-shrink: 0; /* Prevent the handle from shrinking */
   height: 100%; /* Take full height of parent */
@@ -527,33 +527,57 @@ footer {
   display: flex;
   flex-direction: column;
   padding-left: 24px; /* Match the padding-left of chunk-header for alignment */
+  gap: 6px; /* Add gap between chunk items */
 }
 
 .chunk-item-part {
   display: flex;
-  margin-bottom: 6px;
-  margin-left:   3px;
+  align-items: center; /* Align items vertically */
+  gap: 8px; /* Space between view, abbr, strategy */
+  margin-bottom: 0; /* Remove margin, use gap instead */
+  margin-left: 3px;
   border-bottom: 1px solid rgba(79, 195, 247, 0.3);
   padding-bottom: 8px;
+  /* Remove explicit height/width constraints if any */
 }
 
 .chunk-item-part:last-child {
-  margin-bottom: 0;
   border-bottom: none;
   padding-bottom: 0;
 }
 
+/* Adjust child elements within chunk-item-part */
+.chunk-item-part .item-view {
+  /* Optionally add styles specific to view dropdown inside chunk */
+  flex-shrink: 0; /* Prevent dropdown from shrinking */
+}
+
 .chunk-item-part .item-abbr {
-  min-width: 120px;
+  min-width: auto; /* Allow abbr to shrink if needed */
+  /* width: 100px; */ /* Consider a fixed or max-width */
+  flex-shrink: 0; /* Prevent shrinking too much */
+  margin-right: 0; /* Remove margin, use gap instead */
   font-weight: bold;
   color: #FFFFFF;
-  margin-right: 16px;
 }
 
 .chunk-item-part .item-strategy {
-  flex: 1;
+  flex-grow: 1; /* Allow strategy to take remaining space */
   color: #AAAAAA;
   font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Make sure the select dropdown inherits font/color */
+.chunk-item-part .item-view-select {
+    font-size: small; /* Or set a specific size like 0.8em */
+	font-weight: bold;
+    color: #576475;
+    background-color: transparent; /* Match non-chunk version */
+    border: 0px solid #555; /* Match non-chunk version */
+    padding: 1px 3px; /* Slightly smaller padding */
 }
 
 .item-abbr {
@@ -806,7 +830,6 @@ footer {
 .window-header {
   position: relative; /* Needed for absolute positioning of buttons */
   height: 20px; /* Adjust height as needed */
-  margin-bottom: 10px;
   margin-top: 10px;
   background-color: transparent; /* Or any desired background */
   width: 100%;
@@ -852,10 +875,11 @@ footer {
 
 .item-view-select {
   padding: 2px 4px;
-  font-size: 0.9em;
-  border: 1px solid #555;
-  background-color: #444;
-  color: #eee;
+  font-size: small;
+  font-weight: bold;
+  border: 0px solid #555;
+  background-color: transparent;
+  color: #576475;
   border-radius: 3px;
 }
 
@@ -868,6 +892,7 @@ footer {
 .item-abbr {
    /* flex-grow: 0; */ /* Example: prevent abbr from growing too much */
    /* min-width: 50px; */ /* Example: ensure minimum width */
+   margin-left: 10px;
 }
 
 .item-strategy {

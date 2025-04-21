@@ -207,8 +207,7 @@ function loadPattern(patternName) {
           seenAbbrs.add(abbr);
           return true;
         }).map(item => ({
-          ...item,
-          view: item.view || 'ax' // Add default view if missing
+          ...item
         }));
         
         renderPatternItems();
@@ -280,8 +279,17 @@ function renderPatternItems() {
       // Add each chunk item within the container
       chunkItems.forEach((chunkItem, chunkIdx) => {
         const chunkItemIndex = chunkIndices[chunkIdx];
+        // Get the view for this specific item within the chunk
+        const chunkItemView = chunkItem.view_plane || 'ax'; 
         html += `
           <div class="chunk-item-part" data-chunk-index="${chunkItemIndex}">
+            <div class="item-view">
+              <select class="item-view-select" data-index="${chunkItemIndex}">
+                <option value="ax" ${chunkItemView === 'ax' ? 'selected' : ''}>ax</option>
+                <option value="cor" ${chunkItemView === 'cor' ? 'selected' : ''}>cor</option>
+                <option value="sag" ${chunkItemView === 'sag' ? 'selected' : ''}>sag</option>
+              </select>
+            </div>
             <div class="item-abbr" contenteditable="true" data-field="abbr" data-index="${chunkItemIndex}">${chunkItem.abbr || ''}</div>
             <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${chunkItemIndex}">${chunkItem.strategy || ''}</div>
           </div>
@@ -308,9 +316,9 @@ function renderPatternItems() {
             <div class="drag-handle" data-handle="true"></div>
             <div class="item-view">
               <select class="item-view-select" data-index="${itemIndexCounter}">
-                <option value="ax" ${item.view === 'ax' ? 'selected' : ''}>ax</option>
-                <option value="cor" ${item.view === 'cor' ? 'selected' : ''}>cor</option>
-                <option value="sag" ${item.view === 'sag' ? 'selected' : ''}>sag</option>
+                <option value="ax" ${item.view_plane === 'ax' ? 'selected' : ''}>ax</option>
+                <option value="cor" ${item.view_plane === 'cor' ? 'selected' : ''}>cor</option>
+                <option value="sag" ${item.view_plane === 'sag' ? 'selected' : ''}>sag</option>
               </select>
             </div>
             <div class="item-abbr" contenteditable="true" data-field="abbr">${item.abbr || ''}</div>
@@ -487,7 +495,6 @@ function renderPatternItems() {
   // Add change listener for the new view dropdowns
   document.querySelectorAll('.item-view-select').forEach(selectElement => {
     selectElement.addEventListener('change', handleViewChange);
-    // Prevent sortable drag starting from select
     selectElement.addEventListener('mousedown', (e) => { e.stopPropagation(); });
     selectElement.addEventListener('touchstart', (e) => { e.stopPropagation(); });
   });
@@ -813,21 +820,26 @@ function createNewPattern() {
 // Handler for view dropdown change
 function handleViewChange(e) {
   const selectElement = e.target;
-  const itemIndex = parseInt(selectElement.getAttribute('data-index'));
   const newView = selectElement.value;
+  // Get the index from the 'data-index' attribute, which is set during rendering.
+  // This index directly corresponds to the position in the flat currentPatternItems array.
+  const itemIndex = parseInt(selectElement.dataset.index, 10); // Use data-index
 
+  console.log(`View changed for data index: ${itemIndex}, new view: ${newView}`);
+
+  // Check if the index is valid within the currentPatternItems array
   if (!isNaN(itemIndex) && itemIndex >= 0 && itemIndex < currentPatternItems.length) {
-    // Update the local state immediately for responsiveness
-    currentPatternItems[itemIndex].view = newView;
-    console.log(`Updated item ${itemIndex} view to ${newView}`);
+    // Update the view_plane property directly in the flat array item
+    currentPatternItems[itemIndex].view_plane = newView;
+    console.log(`Updated item at index ${itemIndex} view_plane:`, currentPatternItems[itemIndex]);
 
-    // Debounce save operation slightly
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      saveCurrentPattern();
-    }, 300); // Save after 300ms of inactivity
+    // Save the changes
+    saveCurrentPattern();
   } else {
-    console.error('Invalid index or view value from change event:', e.target);
+    console.error("Could not find valid item index for view change:", itemIndex, selectElement);
+    // Optionally, provide feedback and reload to prevent inconsistent state
+     alert("Error updating view. Reloading pattern to ensure data integrity.");
+     loadPattern(currentPattern); // Reload to reset state
   }
 }
 
@@ -835,38 +847,47 @@ function handleViewChange(e) {
 let saveTimeout; // For debouncing saves
 
 async function saveCurrentPattern() {
-  clearTimeout(saveTimeout); // Clear any pending timeout
+  console.log('Saving pattern:', currentPattern);
+  console.log('Pattern items to save:', currentPatternItems); // Log the data being sent
 
-  // Ensure view is included when saving
-  const patternDataToSave = currentPatternItems.map(item => ({
-    abbr: item.abbr || '',
-    strategy: item.strategy || '',
-    chunkID: item.chunkID || 0,
-    view: item.view || 'ax' // Ensure view is saved
-  }));
+  // Create a deep copy to avoid potential issues with reactivity or unintended modifications
+  const patternDataToSave = JSON.parse(JSON.stringify(currentPatternItems));
 
-  console.log(`Saving pattern ${currentPattern} with data:`, patternDataToSave);
-
-  // Call backend API
-  window.electronAPI.callAPI('save_pattern', {
+  // Prepare the data for saving
+  const saveData = {
     pattern_name: currentPattern,
-    items: patternDataToSave
+    // Ensure the items sent for saving have the view_plane property
+    items: patternDataToSave.map(item => ({
+        ...item,
+        view_plane: item.view_plane || 'ax' // Ensure default if somehow missing
+      }))
+  };
+
+  console.log(`Saving pattern ${currentPattern} with data:`, saveData);
+
+  // Call backend API - Changed from 'save_pattern' to 'update_pattern'
+  // And adjust payload structure to match update_pattern(pattern_name, pattern_data)
+  window.electronAPI.callAPI('update_pattern', {
+    pattern_name: saveData.pattern_name, // Pass pattern_name
+    pattern_data: saveData.items       // Pass the items array as pattern_data
   });
 
   // Listen for save response (optional, for confirmation/error handling)
    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'save_pattern') {
+    if (data && data.responseFor === 'update_pattern') { // Check for update_pattern response
       unsubscribe();
-      if (data.result && data.result.success) {
-        console.log('Pattern saved successfully.');
-        // Optionally provide user feedback
-      } else if (data.error) {
+      // Modify success check: Check if data.result is simply true
+      if (data.result === true) { 
+        console.log('Save successful (result was true)');
+        // Optionally, reload the pattern to confirm save, but might be disruptive
+        // loadPattern(currentPattern); 
+      } else if (data.error) { // Check for explicit error first
         console.error('Error saving pattern:', data.error);
         // Optionally provide user feedback (e.g., alert)
         alert(`Failed to save pattern: ${data.error}`);
-      } else {
-          console.error('Unknown error saving pattern. Response:', data);
-          alert('An unknown error occurred while saving the pattern.');
+      } else { // Catch other non-true results (like false from save_patterns failure, or unexpected data)
+          console.error('Save pattern failed or returned unexpected data. Response:', data);
+          alert('An error occurred while saving the pattern.');
       }
     }
   });
@@ -882,7 +903,7 @@ function addItemFromBank(partData) {
         abbr: partData.abbr || '',
         strategy: partData.strategy || '',
         chunkID: 0, // New items are not in chunks initially
-        view: 'ax' // Default view for new items
+        view_plane: 'ax' // Default view for new items
     };
 
     // Add to the end of the current pattern list
@@ -902,7 +923,7 @@ async function loadPartsBank() {
         if (data && data.responseFor === 'get_parts_bank') {
             unsubscribe();
             if (data.result && Array.isArray(data.result)) {
-                partsBankList = data.result.map(item => ({ ...item, view: item.view || 'ax' })); // Add default view
+                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || 'ax' })); // Add default view
                 renderPartsBank();
             } else if (data.error) {
                 console.error('Error loading parts bank:', data.error);
@@ -984,6 +1005,84 @@ function setupPatternDropZone() {
             console.log('Drop event without expected data type.');
         }
     });
+}
+
+// Handle item click for selection
+function handleItemClick(e, itemElement) {
+  const clickedItemIndex = parseInt(itemElement.getAttribute('data-item-index'));
+  const isChunk = itemElement.dataset.isChunk === 'true';
+
+  if (isNaN(clickedItemIndex)) {
+    console.error('Invalid index on clicked item:', itemElement);
+    return;
+  }
+
+  // Prevent selection changes if clicking on contenteditable or select
+  if (e.target.isContentEditable || e.target.tagName === 'SELECT' || e.target.closest('.drag-handle')) {
+    return;
+  }
+
+  console.log(`Item clicked: Index ${clickedItemIndex}, MultiSelect: ${multiSelectionMode}`);
+
+  if (multiSelectionMode) {
+    // Multi-selection mode (Shift key held)
+    const indexPosition = selectedIndices.indexOf(clickedItemIndex);
+    if (indexPosition > -1) {
+      // Already selected, deselect it
+      selectedIndices.splice(indexPosition, 1);
+      itemElement.classList.remove('selected');
+    } else {
+      // Not selected, select it
+      selectedIndices.push(clickedItemIndex);
+      itemElement.classList.add('selected');
+    }
+    // Ensure single select index is cleared in multi-mode
+    selectedIndex = -1;
+  } else {
+    // Single selection mode
+    // Clear previous multi-selection
+    selectedIndices = []; 
+    document.querySelectorAll('.draggable-item.selected').forEach(el => el.classList.remove('selected'));
+
+    if (selectedIndex === clickedItemIndex) {
+      // Clicked the same item again, deselect it
+      selectedIndex = -1;
+      itemElement.classList.remove('selected');
+    } else {
+      // Deselect previous single selection if any
+      if (selectedIndex !== -1) {
+        const previousSelectedItem = patternItems.querySelector(`.draggable-item[data-item-index="${selectedIndex}"]`);
+        if (previousSelectedItem) {
+          previousSelectedItem.classList.remove('selected');
+        }
+      }
+      // Select the new item
+      selectedIndex = clickedItemIndex;
+      itemElement.classList.add('selected');
+    }
+  }
+
+  // Update visual state (might be redundant if classList handles it, but good practice)
+  // renderPatternItems(); // Avoid full re-render on selection change if possible
+}
+
+// Handle keydown events on contenteditable fields
+function handleFieldKeydown(e) {
+  const fieldElement = e.target;
+
+  // Enter key: Treat as blur (save)
+  if (e.key === 'Enter') {
+    e.preventDefault(); // Prevent adding newline
+    fieldElement.blur(); // Trigger the blur event which handles saving
+  }
+  // Escape key: Revert changes and blur
+  else if (e.key === 'Escape') {
+    // Find original value (assuming it's stored somewhere or reload)
+    // For simplicity, we just blur, losing current edits.
+    // A more robust solution would store the original value on focus.
+    console.log('Escape pressed, reverting changes (by blurring)');
+    fieldElement.blur(); 
+  }
 }
 
 // Initialize
@@ -1151,6 +1250,9 @@ function init() {
    // Keyboard listeners for multi-select etc.
   document.addEventListener('keydown', handleKeyDown);
   document.addEventListener('keyup', handleKeyUp);
+
+  // Setup drop zone AFTER initializing sortable for pattern items
+  setupPatternDropZone(); 
 }
 
 // Initialize when the DOM is ready

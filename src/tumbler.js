@@ -183,7 +183,7 @@ function displayCurrentItem() {
   const chunkID = item.chunkID || 0;
   const itemAbbr = item.abbr || '';
   const itemStrategy = item.strategy || '';
-  const itemView = item.view || 'ax'; // Get the view, default to 'ax'
+  const itemView = item.view_plane || 'ax';
   
   // Get the view display element (or create if it doesn't exist)
   let tumblerView = document.getElementById('tumbler-view');
@@ -204,9 +204,11 @@ function displayCurrentItem() {
     const chunkItems = patternItems.filter(i => (i.chunkID || 0) === chunkID);
     let html = '';
     chunkItems.forEach(chunkItem => {
-      // Include view in chunk display if needed later
+      const chunkItemView = chunkItem.view_plane || 'ax'; // Get view for each chunk item
+      // Include view in chunk display
       html += `
         <div class="chunk-item">
+          <div class="chunk-item-view">${chunkItemView}</div>
           <div class="chunk-item-abbr">${chunkItem.abbr || ''}</div> 
           ${chunkItem.strategy ? `<div class="chunk-item-strategy">${chunkItem.strategy}</div>` : ''}
         </div>

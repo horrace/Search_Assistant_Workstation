@@ -7,7 +7,8 @@
       "window_level": "",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "sag"
     },
     {
       "abbr": "Quick Scroll, Chart Hx",
@@ -16,7 +17,8 @@
       "window_level": "brain",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "sag"
     },
     {
       "abbr": "LDA, surg",
@@ -25,7 +27,8 @@
       "window_level": "",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "sag"
     },
     {
       "abbr": "Scalp, Periorb.ST, Orbit",
@@ -34,7 +37,8 @@
       "window_level": "bone",
       "best_seen_on": "ax, cor, sag",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "Exclude Hemorrhage",
@@ -43,7 +47,8 @@
       "window_level": "brain",
       "best_seen_on": "ax, sag",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "dSAH",
@@ -52,7 +57,8 @@
       "window_level": "brain",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "Falx/Tent",
@@ -61,16 +67,18 @@
       "window_level": "brain",
       "best_seen_on": "cor",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
-      "abbr": "IRIC + BG",
+      "abbr": "Insular Ribbons, Internal Capsule / Basal Ganglia",
       "full_name": "Insular Ribbons, Internal Capsule, Basal Ganglia",
       "strategy": "",
       "window_level": "infarct",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 2
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "GWdiff",
@@ -79,7 +87,8 @@
       "window_level": "infarct",
       "best_seen_on": "ax, cor",
       "groupID": 0,
-      "chunkID": 2
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "MCA/ACA HD, sup Cisterns",
@@ -88,7 +97,8 @@
       "window_level": "brain",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 1
+      "chunkID": 1,
+      "view_plane": "ax"
     },
     {
       "abbr": "Bas/PCA HD, inf Cisterns",
@@ -97,16 +107,8 @@
       "window_level": "brain",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 1
-    },
-    {
-      "abbr": "BS/CS/CC",
-      "full_name": "BasiSphenoid, Cavernous Sinuses + Carotid Canals",
-      "strategy": "looking for fx",
-      "window_level": "bone",
-      "best_seen_on": "",
-      "groupID": 0,
-      "chunkID": 0
+      "chunkID": 1,
+      "view_plane": "ax"
     },
     {
       "abbr": "CbHmsphr/CPA/FM",
@@ -115,7 +117,18 @@
       "window_level": "brain",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
+    },
+    {
+      "abbr": "BS/CS/CC",
+      "full_name": "BasiSphenoid, Cavernous Sinuses + Carotid Canals",
+      "strategy": "looking for fx",
+      "window_level": "bone",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "OccCond, Dens, C1arch",
@@ -124,7 +137,8 @@
       "window_level": "bone",
       "best_seen_on": "ax, sag",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "IAC,VCF,Oss",
@@ -133,7 +147,8 @@
       "window_level": "bone",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "MsH, L+3v",
@@ -142,7 +157,8 @@
       "window_level": "brain",
       "best_seen_on": "ax,cor",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "pCCp 3A4",
@@ -151,7 +167,8 @@
       "window_level": "brain",
       "best_seen_on": "sag",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "PetrApex-Mast",
@@ -160,7 +177,8 @@
       "window_level": "bone",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     },
     {
       "abbr": "NOP,F.Rmuller, WR, RP/PPnodes",
@@ -169,7 +187,8 @@
       "window_level": "ST",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "view_plane": "ax"
     }
   ],
   "MR Brain": [
