@@ -613,21 +613,23 @@ function hideContextMenu() {
 // Handle context menu action
 function handleContextMenuAction(e) {
   const action = e.currentTarget.getAttribute('data-action');
+
+  switch (action) {
+    case 'create_chunk_first':
+      setChunkFirstItem();
+      break;
+    case 'create_chunk_last':
+      createChunkWithRange();
+      break;
+    case 'remove_from_chunk':
+      removeFromChunk();
+      break;
+    case 'disband_chunk':
+      disbandChunk();
+      break;
+  }
   
   hideContextMenu();
-
-  if (action === 'create_chunk_first') {
-    setChunkFirstItem();
-  } else if (action === 'create_chunk_last') {
-    createChunkWithRange(); // Will call save internally
-  } else if (action === 'remove_from_chunk') {
-    removeFromChunk(); // Will call save internally
-  } else if (action === 'disband_chunk') {
-    disbandChunk(); // Will call save internally
-  } else if (action === 'delete_item') { // Assuming you might add delete later
-      // deleteItem(contextMenuTargetIndex); // Would need save call
-  }
-  // No explicit save call needed here IF the action functions call saveCurrentPattern
 }
 
 // Set the first item for chunk creation
@@ -662,38 +664,41 @@ function setChunkFirstItem() {
 
 // Create a chunk with a range of items
 function createChunkWithRange() {
-  if (chunkFirstItemIndex >= 0 && contextMenuTargetIndex >= 0 && chunkFirstItemIndex !== contextMenuTargetIndex) {
-    const startIndex = Math.min(chunkFirstItemIndex, contextMenuTargetIndex);
-    const endIndex = Math.max(chunkFirstItemIndex, contextMenuTargetIndex);
-
-    // Check for existing chunks in range before calling API
-    let hasChunksInRange = false;
-    for (let i = startIndex; i <= endIndex; i++) {
-        if (currentPatternItems[i].chunkID > 0) {
-            hasChunksInRange = true;
-            break;
-        }
-    }
-    if (hasChunksInRange) {
-         alert("Cannot create a chunk that overlaps with an existing chunk.");
-         resetChunkSelection();
-         renderPatternItems(); // Re-render to remove highlights etc.
-         return;
-    }
-
-    // Generate a simple unique chunk ID (e.g., based on timestamp or a counter)
-    const newChunkID = Date.now(); // Simple example
-
-    // Update local state first
-    for (let i = startIndex; i <= endIndex; i++) {
-      currentPatternItems[i].chunkID = newChunkID;
-    }
-
-    console.log(`Creating chunk ${newChunkID} from index ${startIndex} to ${endIndex}`);
-    resetChunkSelection(); // Clear selection state
-    saveCurrentPattern(); // Save the updated pattern data
-    renderPatternItems(); // Re-render to show the new chunk visually
-  }
+	if (chunkFirstItemIndex < 0) return;
+  
+	const startIndex = Math.min(chunkFirstItemIndex, contextMenuTargetIndex);
+	const endIndex = Math.max(chunkFirstItemIndex, contextMenuTargetIndex);
+	
+	// Check that no items in the range are already in chunks
+	for (let i = startIndex; i <= endIndex; i++) {
+	  if (currentPatternItems[i].chunkID > 0) {
+		alert('Cannot create chunk because some items in the range are already in chunks.');
+		chunkFirstItemIndex = -1; // Reset first item
+		return;
+	  }
+	}
+	
+	// Send chunk creation request to backend
+	window.electronAPI.callAPI('create_chunk', {
+	  pattern_name: currentPattern,
+	  start_index: startIndex,
+	  end_index: endIndex
+	});
+	
+	// Listen for response and reload the pattern if successful
+	const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+	  if (data && data.responseFor === 'create_chunk') {
+		unsubscribe();
+		if (data.result && data.result.success) {
+		  // Reset first item selection
+		  chunkFirstItemIndex = -1;
+		  loadPattern(currentPattern);
+		} else if (data.error) {
+		  console.error('Error creating chunk:', data.error);
+		  // Add error handling here if needed
+		}
+	  }
+	});
 }
 
 // Remove an item from its chunk

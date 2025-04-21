@@ -67,7 +67,7 @@
       "window_level": "brain",
       "best_seen_on": "cor",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 2,
       "view_plane": "ax"
     },
     {
@@ -77,7 +77,7 @@
       "window_level": "infarct",
       "best_seen_on": "ax",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 2,
       "view_plane": "ax"
     },
     {
