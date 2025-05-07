@@ -474,6 +474,50 @@ class SearchPatternAPI {
   }
 
   /**
+   * Get the current main window position settings
+   */
+  get_main_window_position() {
+    return this.settings.mainWindowPosition || null;
+  }
+
+  /**
+   * Save main window position settings
+   */
+  save_main_window_position(position_data) {
+    try {
+      if (!this.settings) this.settings = {};
+      this.settings.mainWindowPosition = position_data;
+      this.save_settings();
+      return { success: true, position: position_data };
+    } catch (error) {
+      console.error(`Error saving main window position: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get the current editor window position settings
+   */
+  get_editor_window_position() {
+    return this.settings.editorWindowPosition || null;
+  }
+
+  /**
+   * Save editor window position settings
+   */
+  save_editor_window_position(position_data) {
+    try {
+      if (!this.settings) this.settings = {};
+      this.settings.editorWindowPosition = position_data;
+      this.save_settings();
+      return { success: true, position: position_data };
+    } catch (error) {
+      console.error(`Error saving editor window position: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Add a new item to a pattern at a specific index.
    */
   add_item(pattern_name, item_data, index) {

@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { api } = require('./api'); // Import the JavaScript API
@@ -28,7 +28,19 @@ let editorWindow;
 let tumblerWindow;
 
 function createMainWindow() {
+  const savedPosition = api.get_main_window_position();
+  let initialX, initialY;
+  if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
+    initialX = savedPosition.x;
+    initialY = savedPosition.y;
+    console.log(`Found saved Main window position: x=${initialX}, y=${initialY}`);
+  } else {
+    console.log("No saved Main window position found, using default.");
+  }
+
   mainWindow = new BrowserWindow({
+    x: initialX,
+    y: initialY,
     width: 500,
     height: 400,
     frame: false,
@@ -48,6 +60,29 @@ function createMainWindow() {
   const transparency = store.get('transparency', 1.0);
   mainWindow.setOpacity(transparency);
   
+  // Save position on move (debounced)
+  let moveTimeout;
+  mainWindow.on('move', () => {
+    clearTimeout(moveTimeout);
+    moveTimeout = setTimeout(() => {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        const [x, y] = mainWindow.getPosition();
+        console.log(`Main window moved to: x=${x}, y=${y}. Saving position.`);
+        api.save_main_window_position({ x, y });
+      }
+    }, 500);
+  });
+
+  // Save position before close
+  mainWindow.on('close', () => {
+    clearTimeout(moveTimeout); // Clear any pending save on move
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      const [x, y] = mainWindow.getPosition();
+      console.log(`Main window about to close at: x=${x}, y=${y}. Saving final position.`);
+      api.save_main_window_position({ x, y });
+    }
+  });
+  
   mainWindow.on('closed', () => {
     mainWindow = null;
     app.quit();
@@ -55,11 +90,29 @@ function createMainWindow() {
   
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
+    // Save initial position once shown
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        const [x, y] = mainWindow.getPosition();
+        console.log(`Main window shown at: x=${x}, y=${y}. Saving initial position.`);
+        api.save_main_window_position({ x, y });
+    }
   });
 }
 
 function createEditorWindow() {
+  const savedPosition = api.get_editor_window_position();
+  let initialX, initialY;
+  if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
+    initialX = savedPosition.x;
+    initialY = savedPosition.y;
+    console.log(`Found saved Editor window position: x=${initialX}, y=${initialY}`);
+  } else {
+    console.log("No saved Editor window position found, using default.");
+  }
+
   editorWindow = new BrowserWindow({
+    x: initialX,
+    y: initialY,
     width: 800,
     height: 700,
     parent: mainWindow,
@@ -80,6 +133,29 @@ function createEditorWindow() {
   // Editor window should always be fully opaque
   editorWindow.setOpacity(1.0);
   
+  // Save position on move (debounced)
+  let editorMoveTimeout;
+  editorWindow.on('move', () => {
+    clearTimeout(editorMoveTimeout);
+    editorMoveTimeout = setTimeout(() => {
+      if (editorWindow && !editorWindow.isDestroyed()) {
+        const [x, y] = editorWindow.getPosition();
+        console.log(`Editor window moved to: x=${x}, y=${y}. Saving position.`);
+        api.save_editor_window_position({ x, y });
+      }
+    }, 500);
+  });
+
+  // Save position before close
+  editorWindow.on('close', () => {
+    clearTimeout(editorMoveTimeout); // Clear any pending save on move
+    if (editorWindow && !editorWindow.isDestroyed()) {
+      const [x, y] = editorWindow.getPosition();
+      console.log(`Editor window about to close at: x=${x}, y=${y}. Saving final position.`);
+      api.save_editor_window_position({ x, y });
+    }
+  });
+
   editorWindow.on('closed', () => {
     editorWindow = null;
     mainWindow.show();
@@ -88,6 +164,12 @@ function createEditorWindow() {
   editorWindow.once('ready-to-show', () => {
     mainWindow.hide();
     editorWindow.show();
+    // Save initial position once shown
+    if (editorWindow && !editorWindow.isDestroyed()) {
+        const [x, y] = editorWindow.getPosition();
+        console.log(`Editor window shown at: x=${x}, y=${y}. Saving initial position.`);
+        api.save_editor_window_position({ x, y });
+    }
   });
 }
 
