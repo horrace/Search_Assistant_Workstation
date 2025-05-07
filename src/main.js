@@ -425,12 +425,24 @@ ipcMain.on('api-request', (event, data) => {
                 result = api[method](params.pattern_name, params.item_index, params.new_chunk_id);
                 break;
             
+          case 'rename_chunk_id':
+                result = api[method](params.pattern_name, params.old_chunk_id, params.new_chunk_id);
+                break;
+            
+          case 'delete_chunk':
+                result = api[method](params.pattern_name, params.chunk_id);
+                break;
+            
           case 'set_transparency':
             result = api[method](params.value);
             break;
             
           case 'save_tumbler_settings':
             result = api[method](params);
+            break;
+            
+          case 'get_parts_bank':
+            result = api[method]();
             break;
             
           default:

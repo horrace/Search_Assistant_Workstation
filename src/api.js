@@ -648,44 +648,101 @@ class SearchPatternAPI {
    */
   update_item_chapter(pattern_name, item_index, new_chapter, is_chunk = false, chunk_id = 0) {
     try {
-       const pattern = this.patterns[pattern_name] || [];
-       if (!pattern.length) {
-         return { success: false, error: "Pattern not found" };
+       let pattern = this.patterns[pattern_name] || [];
+       if (!pattern.length && pattern_name !== '-') { // Allow '-' for initial load maybe? Check usage.
+         // If pattern_name is not '-', it should exist. If it's empty, that's fine.
+         if (pattern_name !== '-' && !this.patterns[pattern_name]) {
+            console.error(`update_item_chapter: Pattern not found - ${pattern_name}`);
+            return { success: false, error: "Pattern not found" };
+         }
        }
-        console.log(`API: update_item_chapter received: pattern='${pattern_name}', index=${item_index}, new_chapter='${new_chapter}', is_chunk=${is_chunk}, chunk_id=${chunk_id}`);
+       console.log(`API: update_item_chapter received: pattern='${pattern_name}', index=${item_index}, new_chapter='${new_chapter}', is_chunk=${is_chunk}, chunk_id=${chunk_id}`);
 
-       let changed = false;
+       const items_to_update_indices = [];
        if (is_chunk && chunk_id > 0) {
-           // Update chapter for all items in the specified chunk
-            console.log(` -> Updating chapter for chunk ${chunk_id}`);
-            for (const item of pattern) {
-                if (item.chunkID === chunk_id) {
-                     if (item.chapter !== new_chapter) {
-                        item.chapter = new_chapter;
-                        changed = true;
-                    }
-                }
-            }
-       } else {
-           // Update chapter for a single item
-           if (item_index >= 0 && item_index < pattern.length) {
-               if (pattern[item_index].chapter !== new_chapter) {
-                    pattern[item_index].chapter = new_chapter;
-                    changed = true;
-                     console.log(` -> Updating chapter for single item at index ${item_index}`);
+           console.log(` -> Identifying items for chunk ${chunk_id}`);
+           pattern.forEach((item, idx) => {
+               if (item.chunkID === chunk_id) {
+                   items_to_update_indices.push(idx);
                }
+           });
+       } else {
+           if (item_index >= 0 && item_index < pattern.length) {
+               items_to_update_indices.push(item_index);
+               console.log(` -> Identifying single item at index ${item_index}`);
            } else {
-                console.error(`update_item_chapter: Invalid index ${item_index} for single item update.`);
-                return { success: false, error: "Invalid item index" };
+               console.error(`update_item_chapter: Invalid index ${item_index} for single item update.`);
+               return { success: false, error: "Invalid item index" };
            }
        }
 
-        if (!changed) {
-             console.warn("update_item_chapter: No chapter change needed.");
-             return { success: true }; // No actual change, but operation is valid.
-         }
+       if (items_to_update_indices.length === 0) {
+           console.warn("update_item_chapter: No items identified for update.");
+           return { success: true }; // No items to update, operation is vacuously successful.
+       }
 
-       this.patterns[pattern_name] = pattern;
+       // Check if a change is actually needed before doing complex operations
+       let needs_change = false;
+       for (const idx of items_to_update_indices) {
+           if (pattern[idx].chapter !== new_chapter) {
+               needs_change = true;
+               break;
+           }
+       }
+
+       if (!needs_change) {
+           console.warn("update_item_chapter: All identified items already have the target chapter. No change needed.");
+           return { success: true };
+       }
+
+       // Store items to move and their original first index
+       const original_first_index = Math.min(...items_to_update_indices);
+       const items_to_move = items_to_update_indices
+           .sort((a, b) => a - b) // Process in original order
+           .map(idx => pattern[idx]);
+
+       // Create a new pattern array without the items to move
+       const remaining_items = pattern.filter((_, idx) => !items_to_update_indices.includes(idx));
+
+       // Update chapter for the items to move
+       items_to_move.forEach(item => {
+           item.chapter = new_chapter;
+       });
+       console.log(` -> Updated chapter to '${new_chapter}' for ${items_to_move.length} item(s)`);
+
+       // Determine insertion point
+       let insertion_point = -1;
+       if (new_chapter !== '') { // Only try to append to existing if new_chapter is not root
+            for (let i = remaining_items.length - 1; i >= 0; i--) {
+                if (remaining_items[i].chapter === new_chapter) {
+                    insertion_point = i + 1;
+                    break;
+                }
+            }
+       }
+
+       if (insertion_point === -1) {
+           // No existing block for this chapter found, or assigning to root.
+           // Insert at the original position of the first moved item, adjusted for removals before it.
+           let adjusted_original_first_index = original_first_index;
+           let removed_before_original = 0;
+            items_to_update_indices.forEach(idx => {
+                if (idx < original_first_index) {
+                    removed_before_original++;
+                }
+            });
+           adjusted_original_first_index -= removed_before_original;
+
+           insertion_point = Math.max(0, Math.min(remaining_items.length, adjusted_original_first_index));
+           console.log(` -> No existing chapter block for '${new_chapter}' found or assigning to root. Inserting at original adjusted index: ${insertion_point}`);
+       } else {
+           console.log(` -> Existing chapter block for '${new_chapter}' found. Inserting at index: ${insertion_point}`);
+       }
+       
+       // Insert items_to_move into remaining_items at insertion_point
+       remaining_items.splice(insertion_point, 0, ...items_to_move);
+
+       this.patterns[pattern_name] = remaining_items;
        const saved = this.save_patterns();
        return { success: saved, error: saved ? null : "Failed to save pattern" };
 
@@ -712,40 +769,135 @@ class SearchPatternAPI {
             return { success: false, error: "Invalid item index" };
         }
 
-       // Currently only supports removing item from chunk
-       if (new_chunk_id === 0) {
-           const originalChunkId = pattern[item_index].chunkID;
+       const item = pattern[item_index];
+       const originalChunkId = item.chunkID || 0;
+
+       if (new_chunk_id === originalChunkId) {
+           console.warn(`update_chunk: Item at index ${item_index} is already in chunk state ${new_chunk_id}.`);
+           return { success: true }; // No change needed, operation successful conceptually.
+       }
+
+       // --- Handle Assigning TO a Chunk (new_chunk_id > 0) --- 
+       if (new_chunk_id > 0) {
+           console.log(` -> Assigning item at index ${item_index} to chunk ${new_chunk_id}`);
+           item.chunkID = new_chunk_id;
+           // Optional: If removing from a chunk with only one item left, disband that old chunk.
+           if (originalChunkId > 0) {
+               const remainingInOldChunk = pattern.filter(i => i.chunkID === originalChunkId).length;
+               if (remainingInOldChunk === 1) {
+                   console.log(` -> Auto-disbanding old chunk ${originalChunkId} as only one item remains after moving item ${item_index}.`);
+                   pattern.forEach(i => {
+                       if (i.chunkID === originalChunkId) {
+                           i.chunkID = 0;
+                       }
+                   });
+               }
+           }
+       } 
+       // --- Handle Removing FROM a Chunk (new_chunk_id === 0) ---
+       else { // new_chunk_id is 0
            if (originalChunkId === 0) {
                 console.warn(`update_chunk: Item at index ${item_index} is not in a chunk.`);
                 return { success: true }; // Nothing to do
            }
-            pattern[item_index].chunkID = 0;
+            item.chunkID = 0;
             console.log(` -> Removed item at index ${item_index} from chunk ${originalChunkId}`);
 
             // Optional: Auto-disband if only one item left in the original chunk
-            const remainingInChunk = pattern.filter(item => item.chunkID === originalChunkId).length;
+            const remainingInChunk = pattern.filter(i => i.chunkID === originalChunkId).length;
             if (remainingInChunk === 1) {
                  console.log(` -> Auto-disbanding chunk ${originalChunkId} as only one item remains.`);
-                 pattern.forEach(item => {
-                     if (item.chunkID === originalChunkId) {
-                         item.chunkID = 0;
+                 pattern.forEach(i => {
+                     if (i.chunkID === originalChunkId) {
+                         i.chunkID = 0;
                      }
                  });
             }
-
-           this.patterns[pattern_name] = pattern;
-           const saved = this.save_patterns();
-           return { success: saved, error: saved ? null : "Failed to save pattern" };
-       } else {
-            console.error("update_chunk: Currently only supports removing items (new_chunk_id=0).");
-            return { success: false, error: "Operation not supported" };
        }
+
+       // --- Save and Return --- 
+       this.patterns[pattern_name] = pattern;
+       const saved = this.save_patterns();
+       return { success: saved, error: saved ? null : "Failed to save pattern" };
 
      } catch (error) {
         console.error(`Error in update_chunk: ${error.message}\n${error.stack}`);
         return { success: false, error: error.message };
      }
    }
+
+  // --- New API methods for chunk management ---
+
+  /**
+   * Rename a chunk ID for all items in a pattern.
+   */
+  rename_chunk_id(pattern_name, old_chunk_id, new_chunk_id) {
+    try {
+      const pattern = this.patterns[pattern_name] || [];
+      if (!pattern.length) {
+        return { success: false, error: "Pattern not found" };
+      }
+      if (old_chunk_id <= 0 || new_chunk_id <= 0) {
+        return { success: false, error: "Invalid chunk IDs" };
+      }
+      if (this.patterns[pattern_name].some(item => item.chunkID === new_chunk_id)) {
+        return { success: false, error: `New chunk ID ${new_chunk_id} already exists` };
+      }
+
+      console.log(`API: rename_chunk_id received: pattern='${pattern_name}', old_id=${old_chunk_id}, new_id=${new_chunk_id}`);
+      let changed = false;
+      for (const item of pattern) {
+        if (item.chunkID === old_chunk_id) {
+          item.chunkID = new_chunk_id;
+          changed = true;
+        }
+      }
+
+      if (!changed) {
+        console.warn(`rename_chunk_id: No items found with chunk ID ${old_chunk_id}.`);
+        return { success: true }; // No change needed, success.
+      }
+
+      this.patterns[pattern_name] = pattern;
+      const saved = this.save_patterns();
+      return { success: saved, error: saved ? null : "Failed to save pattern" };
+
+    } catch (error) {
+      console.error(`Error in rename_chunk_id: ${error.message}\n${error.stack}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Delete all items belonging to a specific chunk ID from a pattern.
+   */
+  delete_chunk(pattern_name, chunk_id) {
+    try {
+      const original_pattern = this.patterns[pattern_name] || [];
+      if (!original_pattern.length) {
+        return { success: false, error: "Pattern not found" };
+      }
+      if (chunk_id <= 0) {
+        return { success: false, error: "Invalid chunk ID" };
+      }
+
+      console.log(`API: delete_chunk received: pattern='${pattern_name}', chunk_id=${chunk_id}`);
+      const new_pattern = original_pattern.filter(item => item.chunkID !== chunk_id);
+
+      if (new_pattern.length === original_pattern.length) {
+        console.warn(`delete_chunk: No items found with chunk ID ${chunk_id}.`);
+        return { success: true }; // No change needed, success.
+      }
+
+      this.patterns[pattern_name] = new_pattern;
+      const saved = this.save_patterns();
+      return { success: saved, error: saved ? null : "Failed to save pattern" };
+
+    } catch (error) {
+      console.error(`Error in delete_chunk: ${error.message}\n${error.stack}`);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // Create and export the API instance

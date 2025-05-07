@@ -11,9 +11,19 @@ const dialogOkBtn = document.getElementById('dialog-ok-btn');
 const dialogCancelBtn = document.getElementById('dialog-cancel-btn');
 const chapterInputDialog = document.getElementById('chapter-input-dialog');
 const chapterDialogTitle = document.getElementById('chapter-dialog-title');
-const chapterInputName = document.getElementById('chapter-input-name');
+let chapterInputName = document.getElementById('chapter-input-name'); // Changed to let for reassignment
 const chapterDialogOkBtn = document.getElementById('chapter-dialog-ok-btn');
 const chapterDialogCancelBtn = document.getElementById('chapter-dialog-cancel-btn');
+
+// New Dialog: Chunk Assignment
+const chunkAssignmentDialog = document.getElementById('chunk-assignment-dialog');
+const chunkAssignmentDialogTitle = document.getElementById('chunk-assignment-dialog-title');
+const chunkAssignItemName = document.getElementById('chunk-assign-item-name');
+const chunkAssignCurrentId = document.getElementById('chunk-assign-current-id');
+const chunkAssignSelect = document.getElementById('chunk-assign-select');
+const chunkAssignNewIdInput = document.getElementById('chunk-assign-new-id');
+const chunkAssignDialogOkBtn = document.getElementById('chunk-assign-dialog-ok-btn');
+const chunkAssignDialogCancelBtn = document.getElementById('chunk-assign-dialog-cancel-btn');
 
 // State
 let patterns = [];
@@ -30,6 +40,10 @@ let contextMenuTargetIsChapter = false;
 let contextMenuTargetChapterName = '';
 let contextMenuTargetSpecificIndex = -1;
 let chapterDialogContext = null;
+let contextMenuTargetIsChunkContainer = false; 
+let contextMenuTargetChunkId = null; 
+let chunkAssignmentContext = null; // For storing context for the chunk assignment dialog
+let isDragging = false; // Declare isDragging
 
 // Load available patterns
 async function loadPatterns() {
@@ -468,100 +482,135 @@ function renderPatternItems() {
 // Handle context menu
 function handleContextMenu(e) {
   e.preventDefault();
-  const targetElement = e.currentTarget; // The .draggable-item element
-  const isChapter = targetElement.dataset.isChapter === 'true';
-  const isChunk = targetElement.dataset.isChunk === 'true';
+  const exactTarget = e.target; // The most specific element clicked
+  const currentTargetElement = e.currentTarget; // The .draggable-item element the listener is on
 
-  // Determine the primary data index and chapter name associated with the right-clicked element
-  let targetDataIndex = -1;
-  let targetChapterName = '';
-  let targetRenderedIndex = parseInt(targetElement.dataset.renderedIndex); // Get visual index
+  let itemIndexForMenu = -1;
+  let chunkIdForMenu = null;
+  let chapterNameForMenu = '';
+  let isChapterContext = false;
+  let isChunkContainerContext = false;
+  let isRegularItemContext = false; // This will be true for standalone items OR items within a chunk
 
-  if (isChapter) {
-      targetChapterName = targetElement.dataset.chapterName;
-      // Find the index of the first item *in the data* that belongs to this chapter
-      targetDataIndex = currentPatternItems.findIndex(item => (item.chapter || '') === targetChapterName);
-       // If chapter is empty, targetDataIndex will be -1, but targetChapterName is valid.
-      console.log(`Context menu on CHAPTER: Name='${targetChapterName}', FirstItemIndex=${targetDataIndex}, RenderedIndex=${targetRenderedIndex}`);
+  // Reset global context vars at the beginning
+  contextMenuTargetIndex = -1;
+  contextMenuTargetRenderedIndex = parseInt(currentTargetElement.dataset.renderedIndex); // Visual index of the listened-to element
+  contextMenuTargetIsChapter = false;
+  contextMenuTargetChapterName = '';
+  contextMenuTargetSpecificIndex = -1; // Crucial for specific item actions
+  contextMenuTargetIsChunkContainer = false;
+  contextMenuTargetChunkId = null;
 
+  // 1. Check if the click was on a specific item part inside a chunk
+  const clickedChunkItemPart = exactTarget.closest('.chunk-item-part');
+  if (clickedChunkItemPart) {
+    isRegularItemContext = true;
+    contextMenuTargetSpecificIndex = parseInt(clickedChunkItemPart.dataset.chunkIndex);
+    const parentChunkContainer = clickedChunkItemPart.closest('.chunk-container');
+    if (parentChunkContainer) {
+        contextMenuTargetChunkId = parseInt(parentChunkContainer.dataset.chunkId);
+        contextMenuTargetChapterName = parentChunkContainer.dataset.parentChapter || '';
+        // targetDataIndex for a regular item within a chunk is its own index
+        contextMenuTargetIndex = contextMenuTargetSpecificIndex;
+    }
+    console.log(`Context menu on ITEM WITHIN CHUNK: SpecificIndex=${contextMenuTargetSpecificIndex}, ChunkID=${contextMenuTargetChunkId}, Chapter='${contextMenuTargetChapterName}'`);
   } else {
-      // For chunks or single items, use the data-item-index
-      targetDataIndex = parseInt(targetElement.getAttribute('data-item-index'));
-      targetChapterName = targetElement.dataset.parentChapter || ''; // Get chapter from the item itself
-       console.log(`Context menu on ITEM/CHUNK: DataIndex=${targetDataIndex}, Chapter='${targetChapterName}', RenderedIndex=${targetRenderedIndex}`);
+    // 2. If not an item within a chunk, evaluate currentTargetElement (the .draggable-item)
+    if (currentTargetElement.dataset.isChapter === 'true') {
+        isChapterContext = true;
+        contextMenuTargetIsChapter = true;
+        contextMenuTargetChapterName = currentTargetElement.dataset.chapterName;
+        contextMenuTargetIndex = currentPatternItems.findIndex(item => (item.chapter || '') === contextMenuTargetChapterName);
+        console.log(`Context menu on CHAPTER: Name='${contextMenuTargetChapterName}', FirstItemIndex=${contextMenuTargetIndex}`);
+    } else if (currentTargetElement.classList.contains('chunk-container')) {
+        isChunkContainerContext = true;
+        contextMenuTargetIsChunkContainer = true;
+        contextMenuTargetIndex = parseInt(currentTargetElement.getAttribute('data-item-index')); // Index of first item in chunk
+        contextMenuTargetChunkId = parseInt(currentTargetElement.dataset.chunkId);
+        contextMenuTargetChapterName = currentTargetElement.dataset.parentChapter || '';
+        console.log(`Context menu on CHUNK CONTAINER: ChunkID=${contextMenuTargetChunkId}, DataIndex=${contextMenuTargetIndex}, Chapter='${contextMenuTargetChapterName}'`);
+    } else { // Standalone regular item (not a chapter, not a chunk container)
+        isRegularItemContext = true;
+        contextMenuTargetIndex = parseInt(currentTargetElement.getAttribute('data-item-index'));
+        contextMenuTargetSpecificIndex = contextMenuTargetIndex; // For standalone item, specific is same as target
+        contextMenuTargetChapterName = currentTargetElement.dataset.parentChapter || '';
+        // Check if this standalone item happens to be part of a chunk (data inconsistency or different rendering path)
+        const item = currentPatternItems[contextMenuTargetSpecificIndex];
+        if (item && item.chunkID > 0) {
+            contextMenuTargetChunkId = item.chunkID;
+        }
+        console.log(`Context menu on STANDALONE ITEM: SpecificIndex=${contextMenuTargetSpecificIndex}, Chapter='${contextMenuTargetChapterName}', ChunkID=${contextMenuTargetChunkId}`);
+    }
   }
-
-  // Store context for actions
-  contextMenuTargetIndex = targetDataIndex; // Store the data index (or -1 for empty chapter)
-  contextMenuTargetRenderedIndex = targetRenderedIndex; // Store visual index
-  contextMenuTargetIsChapter = isChapter;
-  contextMenuTargetChapterName = targetChapterName; // Store the relevant chapter name
 
   // --- Build Context Menu Items ---
   let menuItems = [];
-  const targetItem = (targetDataIndex !== -1 && targetDataIndex < currentPatternItems.length) ? currentPatternItems[targetDataIndex] : null;
-  const targetInChunk = !isChapter && targetItem?.chunkID > 0;
+  const itemForActions = (contextMenuTargetSpecificIndex !== -1 && contextMenuTargetSpecificIndex < currentPatternItems.length)
+                         ? currentPatternItems[contextMenuTargetSpecificIndex]
+                         : ((contextMenuTargetIndex !== -1 && contextMenuTargetIndex < currentPatternItems.length && !isChapterContext) ? currentPatternItems[contextMenuTargetIndex] : null);
 
-  // --- Chapter Actions (if right-clicked on a chapter container) ---
-  if (isChapter) {
-      menuItems.push({ text: `Rename Chapter \"${targetChapterName}\"`, action: 'rename_chapter', enabled: true });
-      menuItems.push({ text: `Delete Chapter \"${targetChapterName}\" (and contents)`, action: 'delete_chapter', enabled: true });
+
+  if (isChapterContext) {
+      menuItems.push({ text: `Rename Chapter \"${contextMenuTargetChapterName}\"`, action: 'rename_chapter', enabled: true });
+      menuItems.push({ text: `Delete Chapter \"${contextMenuTargetChapterName}\" (and contents)`, action: 'delete_chapter', enabled: true });
       menuItems.push({ text: '---', action: 'separator', enabled: false });
       menuItems.push({ text: 'Add New Item to Chapter', action: 'add_item_to_chapter', enabled: true });
+  } else if (isChunkContainerContext) {
+      // Menu for the chunk container itself
+      // "Rename Chunk" is removed as per request. Will be handled by direct edit later.
+      menuItems.push({ text: 'New Chunk Item', action: 'new_chunk_item', enabled: true, chunkId: contextMenuTargetChunkId });
+      menuItems.push({ text: 'Assign/Change Chapter', action: 'assign_chapter_for_chunk', enabled: true, chunkId: contextMenuTargetChunkId });
+      menuItems.push({ text: 'Create New Chapter Here', action: 'create_chapter_here', enabled: true });
+      menuItems.push({ text: 'Disband Chunk', action: 'disband_chunk', enabled: true, chunkId: contextMenuTargetChunkId });
+      menuItems.push({ text: 'Delete Chunk + Items', action: 'delete_chunk_and_items', enabled: true, chunkId: contextMenuTargetChunkId });
+  } else if (isRegularItemContext && itemForActions) {
+      // Menu for a regular item (either standalone or an item clicked within a chunk)
+      const specificItem = itemForActions; // itemForActions should point to the correct specific item
+      const specificItemInChunk = specificItem?.chunkID > 0;
+
+      menuItems.push({ text: 'Add New Item Here', action: 'add_item_here', enabled: true }); // 'here' means after this specific item
+      menuItems.push({ text: 'Delete Item', action: 'delete_item', enabled: true }); // Targets specificIndex
+
+      // Assign/Change Chunk for this specific item
+      menuItems.push({ text: 'Assign/Change Chunk', action: 'assign_change_chunk', enabled: true, itemIndex: contextMenuTargetSpecificIndex });
+
+      if (specificItemInChunk) {
+          menuItems.push({ text: 'Remove Item from Chunk', action: 'remove_from_chunk', enabled: true }); // Targets specificIndex
+      } else { // Only allow chunk creation for non-chunked items
+          if (chunkFirstItemIndex >= 0 && chunkFirstItemIndex !== contextMenuTargetSpecificIndex) {
+              const firstItem = currentPatternItems[chunkFirstItemIndex];
+              const firstItemChapter = firstItem?.chapter || '';
+              const canBeLastItem = !specificItemInChunk && (specificItem?.chapter || '') === firstItemChapter;
+              let itemsBetweenAreValid = true;
+              const start = Math.min(chunkFirstItemIndex, contextMenuTargetSpecificIndex);
+              const end = Math.max(chunkFirstItemIndex, contextMenuTargetSpecificIndex);
+              for (let i = start; i <= end; i++) {
+                  if (!currentPatternItems[i] || currentPatternItems[i].chunkID > 0 || (currentPatternItems[i].chapter || '') !== firstItemChapter) {
+                      itemsBetweenAreValid = false;
+                      break;
+                  }
+              }
+              menuItems.push({ text: 'Create Chunk: Last Item', action: 'create_chunk_last', enabled: canBeLastItem && itemsBetweenAreValid });
+          } else {
+              const canBeFirstItem = !specificItemInChunk;
+              menuItems.push({ text: 'Create Chunk: First Item', action: 'create_chunk_first', enabled: canBeFirstItem });
+          }
+      }
+      menuItems.push({ text: 'Assign/Change Chapter', action: 'assign_chapter_for_item', enabled: true, itemIndex: contextMenuTargetSpecificIndex });
   }
 
-   // --- Item/Chunk Actions (if right-clicked on an item/chunk) ---
-   if (!isChapter) {
-       // Get the specific item clicked, even inside a chunk
-        const specificItemIndex = targetElement.dataset.isChunk === 'true'
-            ? parseInt(e.target.closest('.chunk-item-part')?.dataset.chunkIndex ?? targetDataIndex) // Get specific index if clicked inside chunk part
-            : targetDataIndex;
-         const specificItem = currentPatternItems[specificItemIndex];
-         const specificItemInChunk = specificItem?.chunkID > 0;
-         contextMenuTargetSpecificIndex = specificItemIndex; // Store specific index if needed
-
-
-       menuItems.push({ text: 'Add New Item Here', action: 'add_item_here', enabled: true });
-       menuItems.push({ text: 'Delete Item/Chunk', action: 'delete_item', enabled: targetItem != null }); // Enable if item exists
-
-       if (specificItemInChunk) {
-           menuItems.push({ text: 'Remove Item from Chunk', action: 'remove_from_chunk', enabled: true }); // Action targets specificItemIndex
-           menuItems.push({ text: 'Disband Chunk', action: 'disband_chunk', enabled: true }); // Action targets chunkID of specificItem
-       } else if (targetItem) { // Only allow chunk creation for non-chunk items
-            // Chunk Creation Logic
-            if (chunkFirstItemIndex >= 0 && chunkFirstItemIndex !== targetDataIndex) { // Ensure not same item
-                const firstItem = currentPatternItems[chunkFirstItemIndex];
-                const firstItemChapter = firstItem?.chapter || '';
-                 // Check if target is valid last item (not in chunk, same chapter as first)
-                const canBeLastItem = !specificItemInChunk && (specificItem?.chapter || '') === firstItemChapter;
-                // Check for chunks/chapters between (more complex - simplify for now)
-                let itemsBetweenAreValid = true;
-                 const start = Math.min(chunkFirstItemIndex, targetDataIndex);
-                 const end = Math.max(chunkFirstItemIndex, targetDataIndex);
-                 for(let i = start; i <= end; i++) {
-                     if (!currentPatternItems[i] || currentPatternItems[i].chunkID > 0 || (currentPatternItems[i].chapter || '') !== firstItemChapter) {
-                         itemsBetweenAreValid = false;
-                         break;
-                     }
-                 }
-                menuItems.push({ text: 'Create Chunk: Last Item', action: 'create_chunk_last', enabled: canBeLastItem && itemsBetweenAreValid });
-            } else {
-                // Check if target is valid first item
-                const canBeFirstItem = !specificItemInChunk;
-                menuItems.push({ text: 'Create Chunk: First Item', action: 'create_chunk_first', enabled: canBeFirstItem });
-            }
-       }
-
-        // --- Assign Chapter ---
-        if (targetItem) { // Only if clicked on an existing item/chunk
-             menuItems.push({ text: 'Assign/Change Chapter...', action: 'assign_chapter', enabled: true });
-        }
-   }
-
-
-  // --- General Actions ---
-  menuItems.push({ text: '---', action: 'separator', enabled: false });
-  menuItems.push({ text: 'Create New Chapter Here', action: 'create_chapter_here', enabled: true });
+  // General "Create New Chapter Here" if no specific context menu dominated, or if appropriate for the context
+  if (menuItems.length === 0 || isChunkContainerContext || (isRegularItemContext && !itemForActions)) {
+    // Add separator if some items were already added (e.g. for chunk container)
+    if (menuItems.length > 0 && (isChunkContainerContext || isRegularItemContext)) {
+        menuItems.push({ text: '---', action: 'separator', enabled: false });
+    }
+    menuItems.push({ text: 'Create New Chapter Here', action: 'create_chapter_here', enabled: true });
+  } else if (isRegularItemContext && itemForActions && !menuItems.find(mi => mi.action === 'create_chapter_here')) {
+    // Add for regular items if not already present from another block
+    menuItems.push({ text: '---', action: 'separator', enabled: false });
+    menuItems.push({ text: 'Create New Chapter Here', action: 'create_chapter_here', enabled: true });
+  }
 
 
   // Position and show the context menu
@@ -573,10 +622,19 @@ function showContextMenu(x, y, items) {
   // Generate menu HTML
   let html = '';
   items.forEach(item => {
+    let dataAttributes = '';
+    if (item.itemIndex !== undefined) {
+      dataAttributes += ` data-item-index="${item.itemIndex}"`;
+    }
+    if (item.chunkId !== undefined) {
+      dataAttributes += ` data-chunk-id="${item.chunkId}"`;
+    }
+
     html += `
       <div 
         class="context-menu-item ${item.enabled ? '' : 'disabled'}" 
         data-action="${item.action}" 
+        ${dataAttributes}
         ${item.enabled ? '' : 'disabled'}
       >
         ${item.text}
@@ -611,81 +669,140 @@ function hideContextMenu() {
 // Handle context menu action
 function handleContextMenuAction(e) {
   const action = e.currentTarget.getAttribute('data-action');
-  // Use context variables set in handleContextMenu
-  const targetIndex = contextMenuTargetIndex;
-  const specificIndex = contextMenuTargetSpecificIndex; // Index of the exact item clicked (even within chunk)
-  const isChapterTarget = contextMenuTargetIsChapter;
-  const chapterName = contextMenuTargetChapterName;
+  // These are now correctly populated by showContextMenu if the menu item object had them
+  const itemIndexFromMenu = e.currentTarget.dataset.itemIndex ? parseInt(e.currentTarget.dataset.itemIndex) : undefined;
+  const chunkIdFromMenu = e.currentTarget.dataset.chunkId ? parseInt(e.currentTarget.dataset.chunkId) : undefined;
 
-  console.log(`Context Action: ${action}, Target Index: ${targetIndex}, Specific Index: ${specificIndex}, IsChapter: ${isChapterTarget}, ChapterName: ${chapterName}`);
+  // Use globally set context variables from handleContextMenu
+  const targetDataIdx = contextMenuTargetIndex; // Index of the draggable-item (chapter start, chunk start, or standalone item)
+  const specificItemIdx = contextMenuTargetSpecificIndex; // THE specific item affected, esp. if inside a chunk. This is key.
+  const isChapTarget = contextMenuTargetIsChapter;
+  const chapName = contextMenuTargetChapterName;
+  const isChunkContTarget = contextMenuTargetIsChunkContainer;
+  const currentCtxChunkId = contextMenuTargetChunkId; // Chunk ID of the context element (chunk container or item within chunk)
+
+  console.log(`Context Action: ${action}, TargetDataIdx: ${targetDataIdx}, SpecificItemIdx: ${specificItemIdx}, IsChapter: ${isChapTarget}, ChapterName: ${chapName}, IsChunkContainer: ${isChunkContTarget}, CtxChunkId: ${currentCtxChunkId}`);
+  console.log(`Menu item data: itemIndexFromMenu=${itemIndexFromMenu}, chunkIdFromMenu=${chunkIdFromMenu}`);
+
 
   switch (action) {
     // --- Chunk Actions ---
     case 'create_chunk_first':
-      // Use specificIndex if available and valid, otherwise targetIndex
-       const firstIndex = (specificIndex !== -1 && !isChapterTarget) ? specificIndex : targetIndex;
-       if (firstIndex !== -1) setChunkFirstItem(firstIndex);
+       // This action originates from right-clicking an item to be the first. specificItemIdx is that item.
+       if (specificItemIdx !== -1) setChunkFirstItem(specificItemIdx);
+       else console.warn("Create chunk first: specificItemIdx was -1");
       break;
     case 'create_chunk_last':
-       // Use specificIndex if available and valid, otherwise targetIndex
-       const lastIndex = (specificIndex !== -1 && !isChapterTarget) ? specificIndex : targetIndex;
-      if (lastIndex !== -1) createChunkWithRange(lastIndex);
+      // This action originates from right-clicking an item to be the last. specificItemIdx is that item.
+      if (specificItemIdx !== -1) createChunkWithRange(specificItemIdx);
+      else console.warn("Create chunk last: specificItemIdx was -1");
       break;
     case 'remove_from_chunk':
-      // Needs the specific item's index within the pattern array
-      if (specificIndex !== -1) removeFromChunk(specificIndex);
+      // itemIndexFromMenu should be set correctly by showContextMenu for this item
+      if (itemIndexFromMenu !== undefined) removeFromChunk(itemIndexFromMenu);
+      else if (specificItemIdx !== -1) removeFromChunk(specificItemIdx); // Fallback to context if menu didn't pass
+      else console.warn("Remove from chunk: No valid item index.");
       break;
     case 'disband_chunk':
-      // Needs the chunk ID from the specific item
-       const itemToDisband = currentPatternItems[specificIndex];
-       if (itemToDisband && itemToDisband.chunkID > 0) {
-           disbandChunkByChunkId(itemToDisband.chunkID); // Use new helper
+      const anId = chunkIdFromMenu !== undefined ? chunkIdFromMenu : currentCtxChunkId;
+      if (anId > 0) {
+           disbandChunkByChunkId(anId);
        } else {
-           console.warn("Cannot disband chunk: Target item not found or not in a chunk.");
+           console.warn("Cannot disband chunk: Invalid chunk ID from menu/context.");
        }
       break;
+    // 'rename_chunk' case removed
+    case 'new_chunk_item':
+        if (chunkIdFromMenu !== undefined) {
+            addNewItemToChunk(chunkIdFromMenu);
+        } else {
+            console.warn("New chunk item action called without chunkId from menu.");
+        }
+        break;
+    case 'delete_chunk_and_items':
+        if (chunkIdFromMenu !== undefined) {
+            deleteChunkAndItsItems(chunkIdFromMenu);
+        } else {
+            console.warn("Delete chunk + items action called without chunkId from menu.");
+        }
+        break;
+    case 'assign_change_chunk': // For individual items
+        // itemIndexFromMenu should be the specific item's index
+        if (itemIndexFromMenu !== undefined) {
+            assignItemToChunk(itemIndexFromMenu);
+        } else if (specificItemIdx !== -1) { // Fallback, though menu should provide it
+            assignItemToChunk(specificItemIdx);
+        } else {
+            console.warn("Assign/Change Chunk action called without a valid itemIndex.");
+        }
+        break;
+
 
      // --- Item Actions ---
-     case 'add_item_here': // Add item relative to the clicked item/chunk/chapter
-       // Calculate insertion index based on where the user clicked
-        const insertAtIndexItem = calculateInsertionIndex(targetIndex, isChapterTarget, false);
-       addNewItem(insertAtIndexItem, chapterName); // Pass chapter context
+     case 'add_item_here':
+        // Add item relative to specificItemIdx if available, otherwise targetDataIdx.
+        // calculateInsertionIndex should handle if it's after a chunk container, etc.
+        const insertAfterIndex = specificItemIdx !== -1 ? specificItemIdx : targetDataIdx;
+        const insertAtIndexItem = calculateInsertionIndex(insertAfterIndex, isChapTarget, false, isChunkContTarget, currentCtxChunkId);
+       addNewItem(insertAtIndexItem, chapName); // chapName might need to be derived more carefully for items in chunks
        break;
      case 'delete_item':
-       // Deletes single item or entire chunk based on targetIndex
-       if (targetIndex !== -1) deleteItemOrChunk(targetIndex);
+       // This deletes the specific item right-clicked, identified by specificItemIdx
+       if (specificItemIdx !== -1) {
+           deleteSingleItem(specificItemIdx);
+       } else {
+           console.warn("Delete item action called but specificItemIdx is -1.");
+       }
        break;
 
       // --- Chapter Actions ---
       case 'rename_chapter':
-          if (isChapterTarget && chapterName) {
-              renameChapter(chapterName);
+          if (isChapTarget && chapName) {
+              renameChapter(chapName);
           } else {
-              console.error("Rename action called but target was not a chapter or chapter name is missing.");
+              console.error("Rename chapter: Target was not a chapter or chapter name is missing.");
           }
           break;
       case 'delete_chapter':
-           if (isChapterTarget && chapterName) {
-               deleteChapter(chapterName);
+           if (isChapTarget && chapName) {
+               deleteChapter(chapName);
            } else {
-                console.error("Delete action called but target was not a chapter or chapter name is missing.");
+                console.error("Delete chapter: Target was not a chapter or chapter name is missing.");
            }
           break;
-       case 'assign_chapter':
-           // Assign chapter for the item/chunk represented by targetIndex
-           if (targetIndex !== -1) assignChapter(targetIndex);
+       case 'assign_chapter_for_item':
+           // itemIndexFromMenu should be the specific item's index
+           if (itemIndexFromMenu !== undefined) {
+                assignChapterForItem(itemIndexFromMenu);
+           } else if (specificItemIdx !== -1) { // Fallback
+                assignChapterForItem(specificItemIdx);
+           } else {
+                console.warn("Assign chapter for item: No valid itemIndex.");
+           }
+           break;
+       case 'assign_chapter_for_chunk':
+            if (chunkIdFromMenu !== undefined) {
+                assignChapterForChunk(chunkIdFromMenu);
+            } else {
+                console.warn("Assign chapter for chunk: No chunkId from menu.");
+            }
            break;
        case 'create_chapter_here':
-            // Calculate insertion index for the new item that defines the chapter
-            const insertAtIndexChapter = calculateInsertionIndex(targetIndex, isChapterTarget, true);
-           createNewChapterHere(insertAtIndexChapter); // Will prompt for name
+            // If context is a chunk container, insert after it. If an item, insert after it.
+            const baseIndexForNewChapter = specificItemIdx !== -1 ? specificItemIdx : (isChunkContTarget ? targetDataIdx : currentPatternItems.length);
+            const insertAtIndexChapter = calculateInsertionIndex(baseIndexForNewChapter, isChapTarget, true, isChunkContTarget, currentCtxChunkId);
+           createNewChapterHere(insertAtIndexChapter);
            break;
        case 'add_item_to_chapter':
-            // Add item at the end of the specified chapter
-             if (isChapterTarget && chapterName) {
-                  const lastItemIndex = findLastIndexOfChapter(chapterName);
-                  const insertIndex = lastItemIndex !== -1 ? lastItemIndex + 1 : targetIndex; // Insert after last item or at start if empty
-                 addNewItem(insertIndex, chapterName); // Add with chapter context
+             if (isChapTarget && chapName) {
+                  const lastItemIdx = findLastIndexOfChapter(chapName);
+                  // If chapter is empty (targetDataIdx is -1), this needs careful handling.
+                  // contextMenuTargetIndex (targetDataIdx) is the first item of chapter or -1 if empty.
+                  // Add after last item, or if chapter empty, effectively at start of where chapter would be.
+                  const insertIdx = lastItemIdx !== -1 ? lastItemIdx + 1 : (targetDataIdx !== -1 ? targetDataIdx : currentPatternItems.length);
+                 addNewItem(insertIdx, chapName);
+             } else {
+                console.warn("Add item to chapter: Context was not a chapter or chapter name missing.");
              }
              break;
 
@@ -704,6 +821,8 @@ function handleContextMenuAction(e) {
     contextMenuTargetIsChapter = false;
     contextMenuTargetChapterName = '';
     contextMenuTargetSpecificIndex = -1;
+    contextMenuTargetIsChunkContainer = false;
+    contextMenuTargetChunkId = null;
 
 
   hideContextMenu();
@@ -712,36 +831,40 @@ function handleContextMenuAction(e) {
 // --- Helper Functions for Context Menu Actions ---
 
 // Calculate insertion index based on context menu target
-function calculateInsertionIndex(targetDataIdx, isChapter, isCreatingChapter) {
+function calculateInsertionIndex(targetDataIdx, isChapter, isCreatingChapter, isChunkContainer = false, chunkId = null) {
     if (isChapter) {
         // Clicked on a chapter header
         if (targetDataIdx !== -1) {
-            // If chapter has items, insert *before* the first item of this chapter
-            return targetDataIdx;
+            return targetDataIdx; // Before first item of this chapter
         } else {
-            // Chapter is empty or doesn't exist in data yet.
-            // Find the visual position based on rendered index and insert there.
-             // This requires mapping rendered index back to data index, which is complex.
-             // Simple approach: Find previous element's last data index + 1.
-             console.warn("Insertion index for empty/new chapter needs better calculation. Defaulting to end.");
-             return currentPatternItems.length; // Fallback: add to end
+            console.warn("Insertion index for empty/new chapter. Defaulting to end.");
+            return currentPatternItems.length;
+        }
+    } else if (isChunkContainer) {
+        // Clicked on a chunk container, insert *after* the entire chunk
+        if (chunkId !== null) {
+            let lastIndexOfChunk = -1;
+            for (let i = currentPatternItems.length - 1; i >= 0; i--) {
+                if (currentPatternItems[i].chunkID === chunkId) {
+                    lastIndexOfChunk = i;
+                    break;
+                }
+            }
+            return lastIndexOfChunk !== -1 ? lastIndexOfChunk + 1 : currentPatternItems.length;
+        } else {
+             console.warn("Cannot calculate insertion index: Invalid chunkId for chunk container.");
+             return currentPatternItems.length;
         }
     } else {
-         // Clicked on an item or chunk
+         // Clicked on an item (single or part of chunk)
          if (targetDataIdx !== -1) {
-              // Insert *after* the clicked item or chunk
               const item = currentPatternItems[targetDataIdx];
-              const isChunk = item?.chunkID > 0;
-              let size = 1;
-                if (isChunk) {
-                    // Make sure to get the size based on the *current* data state
-                    size = currentPatternItems.filter(i => i.chunkID === item.chunkID).length;
-                    size = size > 0 ? size : 1; // Fallback size
-                }
-              return targetDataIdx + size;
+              // If it's an item within a chunk (but not the container itself), insert after it.
+              // If it's a standalone item, insert after it.
+              return targetDataIdx + 1;
          } else {
-             console.warn("Cannot calculate insertion index: Invalid targetDataIdx for item/chunk.");
-              return currentPatternItems.length; // Fallback: add to end
+             console.warn("Cannot calculate insertion index: Invalid targetDataIdx for item.");
+              return currentPatternItems.length;
          }
     }
 }
@@ -763,12 +886,14 @@ function disbandChunkByChunkId(chunkId) {
          console.warn("Cannot disband chunk: Invalid chunkId", chunkId);
          return;
      }
-     console.log(`Requesting disbanding of chunk ${chunkId}`);
-     window.electronAPI.callAPI('disband_chunk', {
-         pattern_name: currentPattern,
-         chunk_id: chunkId // Use chunk_id here
-     });
-     handleApiResponse('disband_chunk', `disbanding chunk ${chunkId}`);
+     if (confirm(`Are you sure you want to disband chunk ${chunkId}? Items will become individual.`)) {
+        console.log(`Requesting disbanding of chunk ${chunkId}`);
+        window.electronAPI.callAPI('disband_chunk', {
+            pattern_name: currentPattern,
+            chunk_id: chunkId
+        });
+        handleApiResponse('disband_chunk', `disbanding chunk ${chunkId}`);
+    }
 }
 
 
@@ -780,71 +905,156 @@ function showChapterInputDialog(context) {
 
     // Customize dialog based on action
     switch (context.action) {
-        case 'rename':
-            chapterDialogTitle.textContent = `Rename Chapter "${context.oldName}"`;
+        case 'rename_chapter': // Renamed from 'rename' to be more specific
+            chapterDialogTitle.textContent = `Rename Chapter \"${context.oldName}\"`;
             chapterInputName.value = context.oldName;
             chapterInputName.placeholder = "Enter new chapter name";
+            // Populate select with existing chapters
+            populateChapterSelect(chapterInputName, context.oldName, true); // true for allow 'none'
             break;
-        case 'assign':
-             // Ensure itemIndex is valid before accessing
+        case 'assign_chapter_item': // Renamed for clarity
              if (context.itemIndex === undefined || context.itemIndex < 0 || context.itemIndex >= currentPatternItems.length) {
                   console.error("Invalid itemIndex in context for assign chapter:", context);
                   alert("Error: Cannot determine item for chapter assignment.");
-                  return; // Don't show dialog if context is bad
+                  return;
              }
              const item = currentPatternItems[context.itemIndex];
-             const currentChapter = item?.chapter || '';
-             const itemType = item?.chunkID > 0 ? 'chunk' : 'item';
-             chapterDialogTitle.textContent = `Set Chapter for ${itemType}`;
-             chapterInputName.value = currentChapter;
-             chapterInputName.placeholder = "Chapter Name (leave blank for none)";
+             const currentItemChapter = item?.chapter || '';
+             chapterDialogTitle.textContent = `Set Chapter for Item \"${item.abbr}\"`;
+             chapterInputName.value = currentItemChapter; // This will become a select
+             chapterInputName.placeholder = "Select Chapter (or type new, or blank for none)";
+             populateChapterSelect(chapterInputName, currentItemChapter, true); // true for allow 'none'
              break;
-         case 'create':
+        case 'assign_chapter_chunk':
+            if (context.chunkId === undefined) {
+                console.error("Invalid chunkId in context for assign chapter to chunk:", context);
+                alert("Error: Cannot determine chunk for chapter assignment.");
+                return;
+            }
+            const firstChunkItem = currentPatternItems.find(it => it.chunkID === context.chunkId);
+            const currentChunkChapter = firstChunkItem?.chapter || '';
+            chapterDialogTitle.textContent = `Set Chapter for Chunk ${context.chunkId}`;
+            chapterInputName.value = currentChunkChapter; // This will become a select
+            chapterInputName.placeholder = "Select Chapter (or type new, or blank for none)";
+            populateChapterSelect(chapterInputName, currentChunkChapter, true); // true for allow 'none'
+            break;
+         case 'create_chapter': // Renamed from 'create'
               chapterDialogTitle.textContent = 'Enter Name for New Chapter';
               chapterInputName.value = '';
               chapterInputName.placeholder = "New Chapter Name (cannot be blank)";
+              clearSelectAndMakeInput(chapterInputName); // Ensure it's an input field
              break;
+        case 'rename_chunk':
+            chapterDialogTitle.textContent = `Rename Chunk ${context.chunkId}`;
+            // For renaming a chunk, we might want to allow changing its ID if that's how chunks are named.
+            // Or, if chunks have separate names, this would be `chunk.name`.
+            // Assuming chunk "name" is its ID for now. This usually means changing all chunkIDs.
+            // This is a complex operation if "renaming" means changing the chunkID.
+            // For now, let's assume chunks don't have separate names other than their ID.
+            // So, this action might be more about "Re-number chunk" or similar.
+            // Or, if a chunk could have a display name property, we'd edit that.
+            // Let's assume for now "Rename Chunk" isn't about changing ID, but a conceptual name if it existed.
+            // Since it doesn't, this might be a NO-OP or prompt for a new ID (more complex).
+            // Placeholder for now:
+            alert("Renaming chunk (conceptual name) is not yet fully implemented if different from ID.");
+            hideChapterInputDialog(); // Hide as it's not ready
+            return;
+            // chapterInputName.value = context.chunkId; // Or current name if chunks had names
+            // chapterInputName.placeholder = "Enter new chunk name/ID";
+            // clearSelectAndMakeInput(chapterInputName);
+            break;
          default:
-              chapterDialogTitle.textContent = 'Enter Chapter Name';
+              chapterDialogTitle.textContent = 'Enter Value';
               chapterInputName.value = '';
-              chapterInputName.placeholder = "Chapter Name";
+              chapterInputName.placeholder = "Value";
+              clearSelectAndMakeInput(chapterInputName);
     }
 
-    chapterInputDialog.style.display = 'flex'; // Use flex to center
-    chapterInputName.focus();
-    chapterInputName.select();
+    chapterInputDialog.style.display = 'flex';
+    if (chapterInputName.tagName.toLowerCase() === 'input') {
+        chapterInputName.focus();
+        chapterInputName.select();
+    } else if (chapterInputName.tagName.toLowerCase() === 'select') {
+        chapterInputName.focus();
+    }
 
-    // *** Debugging: Attach listeners when dialog is shown ***
     console.log('Attaching listeners in showChapterInputDialog');
     if (chapterDialogOkBtn) {
-        chapterDialogOkBtn.removeEventListener('click', handleChapterDialogOk); // Remove old first
+        chapterDialogOkBtn.removeEventListener('click', handleChapterDialogOk);
         chapterDialogOkBtn.addEventListener('click', handleChapterDialogOk);
-        console.log(' - OK button listener attached');
-    } else {
-        console.error(' - chapterDialogOkBtn not found in showChapterInputDialog');
     }
     if (chapterDialogCancelBtn) {
         chapterDialogCancelBtn.removeEventListener('click', hideChapterInputDialog);
         chapterDialogCancelBtn.addEventListener('click', hideChapterInputDialog);
-        console.log(' - Cancel button listener attached');
-    } else {
-        console.error(' - chapterDialogCancelBtn not found in showChapterInputDialog');
     }
-    // *** End Debugging ***
 }
 
-function hideChapterInputDialog() {
-    console.log('hideChapterInputDialog called'); // Added for debugging
-    chapterInputDialog.style.display = 'none';
-    chapterDialogContext = null; // Clear context
-    chapterInputName.value = ''; // Clear input
+function populateChapterSelect(selectElementOrId, currentValue, allowNone = false) {
+    let select = (typeof selectElementOrId === 'string') ? document.getElementById(selectElementOrId) : selectElementOrId;
+    if (!select) return;
+
+    // Convert to select if it's an input
+    if (select.tagName.toLowerCase() === 'input') {
+        const newSelect = document.createElement('select');
+        newSelect.id = select.id;
+        newSelect.className = select.className; // Copy classes
+        select.parentNode.replaceChild(newSelect, select);
+        // Update chapterInputName to new select element for future references in this scope
+        if (window.chapterInputName && window.chapterInputName.id === newSelect.id) { // Assuming chapterInputName is global or accessible
+            window.chapterInputName = newSelect;
+        }
+         // Update the module-scoped chapterInputName to refer to the newSelect element directly
+        if (select.id === 'chapter-input-name') { // select.id here is the id of the original input
+            chapterInputName = newSelect;
+        }
+
+        select = newSelect; // Now this assignment is valid
+    }
+
+    const existingChapters = ['', ...new Set(currentPatternItems.map(item => item.chapter || '').filter(ch => ch))]; // Include "None" (empty string) and unique chapter names
+    select.innerHTML = ''; // Clear existing options
+
+    if (allowNone) {
+        const noneOption = document.createElement('option');
+        noneOption.value = '';
+        noneOption.textContent = '(None)';
+        select.appendChild(noneOption);
+    }
+
+    existingChapters.filter(ch => ch).forEach(chapter => { // Filter out the initial empty string if not allowing "None" explicitly via other means
+        if (chapter) { // Only add non-empty chapters
+            const option = document.createElement('option');
+            option.value = chapter;
+            option.textContent = chapter;
+            select.appendChild(option);
+        }
+    });
+    select.value = currentValue;
 }
 
-// --- OK Button Handler ---
+function clearSelectAndMakeInput(element) {
+    if (element.tagName.toLowerCase() === 'select') {
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.id = element.id;
+        input.className = element.className;
+        input.placeholder = element.placeholder || "Enter value";
+        element.parentNode.replaceChild(input, element);
+        // Update chapterInputName to new input element if it was the global one
+        if (window.chapterInputName && window.chapterInputName.id === input.id) {
+             window.chapterInputName = input;
+        }
+         // Re-query if it was the global one
+        if (element.id === 'chapter-input-name') chapterInputName = document.getElementById('chapter-input-name');
+    }
+}
+
+
 function handleChapterDialogOk() {
-    console.log('handleChapterDialogOk called'); // Added for debugging
-    const newNameRaw = chapterInputName.value;
-    const newName = newNameRaw.trim(); // Trim whitespace for validation and API call
+    console.log('handleChapterDialogOk called');
+    const inputElement = chapterInputName; // chapterInputName can now be <input> or <select>
+    const newNameRaw = inputElement.value;
+    const newName = newNameRaw.trim();
 
     if (!chapterDialogContext) {
         console.error("Chapter dialog OK clicked but no context found.");
@@ -857,13 +1067,10 @@ function handleChapterDialogOk() {
 
     try {
         switch (context.action) {
-            case 'rename':
-                 // Allow renaming to blank (moves items to root)
-                 if (newName !== context.oldName) { // Check against original name
-                     // Optional confirmation if renaming to blank
+            case 'rename_chapter':
+                 if (newName !== context.oldName) {
                       if (newName === "" && context.oldName !== "") {
                            if (!confirm(`Setting an empty chapter name will move items from "${context.oldName}" to the root level. Continue?`)) {
-                                // Don't hide dialog, let user correct
                                 return;
                             }
                        }
@@ -871,63 +1078,98 @@ function handleChapterDialogOk() {
                      window.electronAPI.callAPI('rename_chapter', {
                          pattern_name: currentPattern,
                          old_name: context.oldName,
-                         new_name: newName // Send trimmed name
+                         new_name: newName
                      });
                      handleApiResponse('rename_chapter', `renaming chapter`);
                  } else {
                       console.log("No change in chapter name.");
                  }
-                break; // Added missing break
+                break;
 
-            case 'assign':
-                 // Ensure itemIndex is valid
+            case 'assign_chapter_item':
                  if (context.itemIndex === undefined || context.itemIndex < 0 || context.itemIndex >= currentPatternItems.length) {
                       console.error("Invalid itemIndex in context during OK handling:", context);
                       alert("Error: Cannot determine item for chapter assignment.");
-                      break; // Exit case
+                      break;
                  }
-                const item = currentPatternItems[context.itemIndex];
-                const isChunk = item?.chunkID > 0;
-                const currentChapter = item?.chapter || '';
-                const chunkId = item?.chunkID;
+                const itemToAssign = currentPatternItems[context.itemIndex];
+                const currentItemChapter = itemToAssign?.chapter || '';
+                const itemIsChunk = itemToAssign?.chunkID > 0; // Check if the item itself is part of a chunk
+                const itemIdToUpdate = itemToAssign?.id; // Assuming items have a unique 'id' if needed for more precise update
 
-                if (newName !== currentChapter) {
-                     const actualStartIndex = isChunk ? currentPatternItems.findIndex(i => i.chunkID === chunkId) : context.itemIndex;
-                      if (actualStartIndex === -1 && isChunk) {
-                           console.error("Could not find start index for chunk to assign chapter.");
-                           alert("Error: Could not find chunk to assign chapter.");
-                           break; // Exit case
-                       }
-                     console.log(`Calling API: update_item_chapter pattern='${currentPattern}', item_index=${actualStartIndex}, new_chapter='${newName}', is_chunk=${isChunk}, chunk_id=${chunkId}`);
+                if (newName !== currentItemChapter) {
+                     console.log(`Calling API: update_item_chapter pattern='${currentPattern}', item_index=${context.itemIndex}, new_chapter='${newName}', is_chunk=${itemIsChunk}, chunk_id=${itemToAssign?.chunkID || 0}`);
                      window.electronAPI.callAPI('update_item_chapter', {
                          pattern_name: currentPattern,
-                         item_index: actualStartIndex,
-                         new_chapter: newName, // Send trimmed name
-                         is_chunk: isChunk,
-                         chunk_id: chunkId
+                         item_index: context.itemIndex, // API needs the actual index in the array
+                         new_chapter: newName,
+                         is_chunk: itemIsChunk, // If the item is part of a chunk, the API needs to know to update all items in that chunk
+                         chunk_id: itemToAssign?.chunkID || 0 // Pass the chunk_id if the item is part of a chunk
                      });
-                     handleApiResponse('update_item_chapter', `assigning chapter`);
+                     handleApiResponse('update_item_chapter', `assigning chapter to item`);
                 } else {
-                     console.log("No change in chapter assignment.");
+                     console.log("No change in chapter assignment for item.");
                  }
-                break; // Added missing break
+                break;
+            case 'assign_chapter_chunk':
+                if (context.chunkId === undefined) {
+                    console.error("Invalid chunkId in context during OK handling for assign_chapter_chunk:", context);
+                    alert("Error: Cannot determine chunk for chapter assignment.");
+                    break;
+                }
+                // Find the first item of the chunk to get its current chapter
+                const firstChunkItem = currentPatternItems.find(it => it.chunkID === context.chunkId);
+                const currentChunkChapter = firstChunkItem?.chapter || '';
 
-            case 'create':
-                 if (newName) { // Require a non-empty name for new chapters
-                     // Use context.insertAtIndex passed during 'create_chapter_here' action
+                if (newName !== currentChunkChapter) {
+                    console.log(`Calling API: update_item_chapter (for whole chunk) pattern='${currentPattern}', chunk_id=${context.chunkId}, new_chapter='${newName}'`);
+                    // The API 'update_item_chapter' needs an item_index, so we give the index of the first item of the chunk.
+                    // The API backend should then iterate through all items of that chunk.
+                    const firstItemIndexOfChunk = currentPatternItems.findIndex(it => it.chunkID === context.chunkId);
+                    if (firstItemIndexOfChunk === -1) {
+                        console.error(`Could not find first item for chunk ID ${context.chunkId} to assign chapter.`);
+                        alert(`Error: Could not find chunk ${context.chunkId}.`);
+                        break;
+                    }
+                    window.electronAPI.callAPI('update_item_chapter', {
+                        pattern_name: currentPattern,
+                        item_index: firstItemIndexOfChunk, // API will use this to identify the chunk via chunk_id
+                        new_chapter: newName,
+                        is_chunk: true, // Crucial: tells the API this is for a whole chunk
+                        chunk_id: context.chunkId
+                    });
+                    handleApiResponse('update_item_chapter', `assigning chapter to chunk ${context.chunkId}`);
+                } else {
+                    console.log(`No change in chapter assignment for chunk ${context.chunkId}.`);
+                }
+                break;
+
+            case 'create_chapter':
+                 if (newName) {
                       if (context.insertAtIndex === undefined) {
                           console.error("Missing insertAtIndex in context for create chapter action.");
                            alert("Error: Cannot determine where to create chapter.");
-                           break; // Exit case
+                           break;
                       }
                       console.log(`Creating chapter '${newName}' by adding new item at index ${context.insertAtIndex}`);
-                      addNewItem(context.insertAtIndex, newName); // Calls add_item API
+                      addNewItem(context.insertAtIndex, newName);
                  } else {
                       alert("Chapter name cannot be empty.");
-                      // Don't hide dialog, let user correct
-                      return; // Stop processing, keep dialog open
+                      return;
                  }
-                break; // Added missing break
+                break;
+            // case 'rename_chunk': // Placeholder logic
+            //     if (newName) {
+            //         console.log(`Request to rename chunk ${context.chunkId} to ${newName}`);
+            //         // API call for renaming chunk ID or name would go here
+            //         // window.electronAPI.callAPI('rename_chunk_id', { pattern_name: currentPattern, old_chunk_id: context.chunkId, new_chunk_id: newName });
+            //         // handleApiResponse('rename_chunk_id', `renaming chunk ${context.chunkId}`);
+            //         alert("Chunk renaming API call not yet implemented.");
+            //     } else {
+            //         alert("New chunk name/ID cannot be empty.");
+            //         return;
+            //     }
+            //     break;
 
              default:
                  console.error("Unknown chapter dialog action:", context.action);
@@ -943,7 +1185,13 @@ function handleChapterDialogOk() {
     // Hide dialog only if processing reached here without returning early
     hideChapterInputDialog();
 }
-// === END: Dialog Functions ===
+
+function hideChapterInputDialog() {
+    console.log('hideChapterInputDialog called'); // Added for debugging
+    chapterInputDialog.style.display = 'none';
+    chapterDialogContext = null; // Clear context
+    chapterInputName.value = ''; // Clear input
+}
 
 // --- Implement Chapter Management Functions ---
 
@@ -952,7 +1200,9 @@ function addNewItem(insertAtIndex, chapter = '') {
     const newItem = {
         abbr: `New Item ${Date.now() % 1000}`,
         full_name: "", strategy: "", window_level: "", best_seen_on: "",
-        groupID: 0, chunkID: 0, view_plane: "ax",
+        groupID: 0, // groupID might need logic if you group new items
+        chunkID: 0, // New items are not in chunks initially
+        view_plane: "ax",
         chapter: chapter // Assign chapter context
     };
 
@@ -967,43 +1217,57 @@ function addNewItem(insertAtIndex, chapter = '') {
     handleApiResponse('add_item', `adding new item to chapter '${chapter}'`);
 }
 
+// Delete a single item. Chunks have their own delete mechanism.
+function deleteSingleItem(itemIndex) {
+    console.log("Action: Delete Single Item at index", itemIndex);
+    if (itemIndex < 0 || itemIndex >= currentPatternItems.length) return;
+
+    const itemToDelete = currentPatternItems[itemIndex];
+    if (itemToDelete.chunkID > 0) {
+        if (!confirm(`This item is part of chunk ${itemToDelete.chunkID}. Are you sure you want to delete only this item from the chunk? The chunk itself will remain.`)){
+            return;
+        }
+    } else {
+        if (!confirm(`Are you sure you want to delete this item: "${itemToDelete.abbr}"?`)) {
+            return;
+        }
+    }
+
+    console.log(`Calling API: delete_item pattern='${currentPattern}', index=${itemIndex}, count=1`);
+    window.electronAPI.callAPI('delete_item', {
+        pattern_name: currentPattern,
+        index: itemIndex,
+        count: 1 // Always 1 for single item deletion
+    });
+    handleApiResponse('delete_item', `deleting single item`);
+}
+
+
 // (deleteItemOrChunk function already exists and should work, might need slight adjustment if API changes)
+// This function is now primarily for deleting chunks via context menu on chunk container.
+// Single item deletion is handled by deleteSingleItem.
 function deleteItemOrChunk(itemIndex) {
+    // This function is now less used directly by context menu for "delete item"
+    // It's kept for potential other uses or if a chunk context implies deleting the whole chunk.
+    // The new 'delete_chunk_and_items' handles chunk deletion more explicitly.
     console.log("Action: Delete Item/Chunk starting at index", itemIndex);
     if (itemIndex < 0 || itemIndex >= currentPatternItems.length) return;
 
     const itemToDelete = currentPatternItems[itemIndex];
     const isChunk = itemToDelete.chunkID > 0;
-    // If it's a chunk, find its *actual* start index and size
-    let startIndex = itemIndex;
-    let count = 1;
-    if (isChunk) {
-         const chunkId = itemToDelete.chunkID;
-         const chunkItems = currentPatternItems.filter(item => item.chunkID === chunkId);
-         startIndex = currentPatternItems.findIndex(item => item.chunkID === chunkId); // Find first item
-         count = chunkItems.length;
-         startIndex = startIndex === -1 ? itemIndex : startIndex; // Fallback if index is weird
-         count = count === 0 ? 1 : count; // Fallback count
-    }
 
-
-    if (confirm(`Are you sure you want to delete this ${isChunk ? 'chunk' : 'item'}?`)) {
-        console.log(`Calling API: delete_item pattern='${currentPattern}', index=${startIndex}, count=${count}`);
-        window.electronAPI.callAPI('delete_item', {
-            pattern_name: currentPattern,
-            index: startIndex, // Use the calculated start index
-            count: count       // Use the calculated count
-        });
-        handleApiResponse('delete_item', `deleting item/chunk`);
+    if (isChunk) { // This path should ideally be taken by delete_chunk_and_items
+        const chunkId = itemToDelete.chunkID;
+        deleteChunkAndItsItems(chunkId); // Delegate to specific chunk deletion
+    } else { // Single item
+        deleteSingleItem(itemIndex); // Delegate to specific single item deletion
     }
 }
 
 
 function renameChapter(oldChapterName) {
     console.log("Action: Rename Chapter", oldChapterName);
-    // Use dialog instead of prompt
-    showChapterInputDialog({ action: 'rename', oldName: oldChapterName });
-    // API call moved to handleChapterDialogOk
+    showChapterInputDialog({ action: 'rename_chapter', oldName: oldChapterName });
 }
 
 function deleteChapter(chapterName) {
@@ -1018,19 +1282,201 @@ function deleteChapter(chapterName) {
      }
 }
 
-function assignChapter(itemIndex) {
-    console.log("Action: Assign Chapter for item/chunk starting at index", itemIndex);
+function assignChapterForItem(itemIndex) {
+    console.log("Action: Assign Chapter for item at index", itemIndex);
     if (itemIndex < 0 || itemIndex >= currentPatternItems.length) return;
-    // Use dialog instead of prompt
-     showChapterInputDialog({ action: 'assign', itemIndex: itemIndex });
-     // API call moved to handleChapterDialogOk
+    showChapterInputDialog({ action: 'assign_chapter_item', itemIndex: itemIndex });
 }
+
+function assignChapterForChunk(chunkId) {
+    console.log("Action: Assign Chapter for chunk ID", chunkId);
+    if (!chunkId || chunkId <=0) return;
+    const firstItemOfChunk = currentPatternItems.find(item => item.chunkID === chunkId);
+    if (!firstItemOfChunk) {
+        alert(`Chunk ${chunkId} not found.`);
+        return;
+    }
+    showChapterInputDialog({ action: 'assign_chapter_chunk', chunkId: chunkId });
+}
+
 
 function createNewChapterHere(insertAtIndex) {
     console.log("Action: Create New Chapter near index", insertAtIndex);
-    // Use dialog instead of prompt
-     showChapterInputDialog({ action: 'create', insertAtIndex: insertAtIndex });
-      // API call moved to handleChapterDialogOk (via addNewItem)
+    showChapterInputDialog({ action: 'create_chapter', insertAtIndex: insertAtIndex });
+}
+
+// --- New/Modified Chunk Specific Functions ---
+function addNewItemToChunk(chunkId) {
+    console.log(`Action: Add New Item to Chunk ID ${chunkId}`);
+    if (!chunkId || chunkId <= 0) {
+        console.warn("Cannot add item to chunk: Invalid chunkId");
+        return;
+    }
+
+    // Find the last item of the chunk to insert after it
+    let lastItemIndexOfChunk = -1;
+    for (let i = currentPatternItems.length - 1; i >= 0; i--) {
+        if (currentPatternItems[i].chunkID === chunkId) {
+            lastItemIndexOfChunk = i;
+            break;
+        }
+    }
+
+    if (lastItemIndexOfChunk === -1) {
+        alert(`Chunk ${chunkId} not found. Cannot add item.`);
+        return;
+    }
+
+    const firstItemOfChunk = currentPatternItems.find(item => item.chunkID === chunkId);
+    const chapterOfChunk = firstItemOfChunk ? (firstItemOfChunk.chapter || '') : '';
+
+
+    const newItem = {
+        abbr: `New Item in Chunk ${Date.now() % 1000}`,
+        full_name: "", strategy: "", window_level: "", best_seen_on: "",
+        groupID: firstItemOfChunk ? firstItemOfChunk.groupID : 0, // Inherit groupID from chunk
+        chunkID: chunkId, // Assign to the target chunk
+        view_plane: "ax",
+        chapter: chapterOfChunk // Inherit chapter from chunk
+    };
+
+    const insertAtIndex = lastItemIndexOfChunk + 1;
+
+    console.log(`Calling API: add_item (to chunk) pattern='${currentPattern}', item_data (for chunk ${chunkId}), index=${insertAtIndex}`);
+    window.electronAPI.callAPI('add_item', {
+        pattern_name: currentPattern,
+        item_data: newItem, // API needs to handle assigning this to the chunk
+        index: insertAtIndex
+    });
+    handleApiResponse('add_item', `adding new item to chunk ${chunkId}`);
+}
+
+function deleteChunkAndItsItems(chunkId) {
+    console.log(`Action: Delete Chunk ID ${chunkId} and all its items`);
+    if (!chunkId || chunkId <= 0) {
+        console.warn("Cannot delete chunk: Invalid chunkId");
+        return;
+    }
+
+    if (confirm(`Are you sure you want to delete chunk ${chunkId} and all items within it?`)) {
+        console.log(`Calling API: delete_chunk pattern='${currentPattern}', chunk_id=${chunkId}`);
+        window.electronAPI.callAPI('delete_chunk', { // Assuming an API endpoint like this
+            pattern_name: currentPattern,
+            chunk_id: chunkId
+        });
+        handleApiResponse('delete_chunk', `deleting chunk ${chunkId} and its items`);
+    }
+}
+
+function assignItemToChunk(itemIndex) {
+    console.log(`Action: Assign/Change Chunk for item at index ${itemIndex}`);
+    if (itemIndex < 0 || itemIndex >= currentPatternItems.length) {
+        alert("Error: Invalid item index for chunk assignment.");
+        return;
+    }
+
+    const item = currentPatternItems[itemIndex];
+    const currentChunkId = item.chunkID || 0;
+    const existingChunkIds = [...new Set(currentPatternItems.map(i => i.chunkID).filter(id => id && id > 0))];
+    
+    chunkAssignmentContext = { itemIndex, itemName: item.abbr, currentChunkId }; // Store context
+
+    showChunkAssignmentDialog(item.abbr, currentChunkId, existingChunkIds);
+}
+
+
+// --- Chunk Assignment Dialog Functions ---
+function showChunkAssignmentDialog(itemName, currentChunkId, existingChunkIds) {
+    if (!chunkAssignmentDialog) {
+        console.error("Chunk assignment dialog element not found!");
+        return;
+    }
+
+    chunkAssignItemName.textContent = itemName;
+    chunkAssignCurrentId.textContent = currentChunkId === 0 ? 'None' : currentChunkId;
+
+    chunkAssignSelect.innerHTML = ''; // Clear previous options
+    const noneOption = document.createElement('option');
+    noneOption.value = '0'; // Value for "None"
+    noneOption.textContent = '(None) - Remove from chunk';
+    chunkAssignSelect.appendChild(noneOption);
+
+    existingChunkIds.sort((a, b) => a - b).forEach(id => {
+        const option = document.createElement('option');
+        option.value = id;
+        option.textContent = `Chunk ${id}`;
+        chunkAssignSelect.appendChild(option);
+    });
+
+    // Set select to current chunk or '0' if not in a chunk
+    chunkAssignSelect.value = currentChunkId === 0 ? '0' : currentChunkId.toString();
+    chunkAssignNewIdInput.value = ''; // Clear new ID input
+
+    chunkAssignmentDialog.style.display = 'flex';
+    chunkAssignSelect.focus();
+
+    // Ensure event listeners are attached (and not duplicated)
+    chunkAssignDialogOkBtn.removeEventListener('click', handleChunkAssignmentDialogOk);
+    chunkAssignDialogOkBtn.addEventListener('click', handleChunkAssignmentDialogOk);
+    chunkAssignDialogCancelBtn.removeEventListener('click', hideChunkAssignmentDialog);
+    chunkAssignDialogCancelBtn.addEventListener('click', hideChunkAssignmentDialog);
+}
+
+function hideChunkAssignmentDialog() {
+    if (chunkAssignmentDialog) {
+        chunkAssignmentDialog.style.display = 'none';
+    }
+    chunkAssignmentContext = null; // Clear context
+}
+
+function handleChunkAssignmentDialogOk() {
+    if (!chunkAssignmentContext) {
+        console.error("Chunk assignment OK clicked but no context found.");
+        hideChunkAssignmentDialog();
+        return;
+    }
+
+    const { itemIndex, currentChunkId } = chunkAssignmentContext;
+    let chosenChunkId = parseInt(chunkAssignSelect.value);
+    const newChunkIdRaw = chunkAssignNewIdInput.value.trim();
+
+    if (newChunkIdRaw !== '') {
+        const newId = parseInt(newChunkIdRaw);
+        if (isNaN(newId) || newId <= 0) {
+            alert("New Chunk ID must be a positive number if specified.");
+            chunkAssignNewIdInput.focus();
+            return;
+        }
+        // User entered a new ID, this takes precedence
+        chosenChunkId = newId;
+        console.log(`User specified new chunk ID: ${chosenChunkId}`);
+    } else {
+        console.log(`User selected from existing/none: ${chosenChunkId}`);
+    }
+
+    if (isNaN(chosenChunkId) || chosenChunkId < 0) {
+        alert("Invalid Chunk ID selected or entered. Must be a non-negative number (0 for None).");
+        return;
+    }
+
+    if (chosenChunkId === currentChunkId) {
+        alert("Item is already in this chunk state. No changes made.");
+        hideChunkAssignmentDialog();
+        return;
+    }
+    
+    // If chosenChunkId > 0 and it's a *new* ID not in existing list (excluding 0 for 'None'),
+    // it implies creating a new chunk with just this item.
+    // The backend API 'update_chunk' should handle this logic of assigning to new or existing.
+
+    console.log(`Calling API: update_chunk pattern='${currentPattern}', item_index=${itemIndex}, new_chunk_id=${chosenChunkId}`);
+    window.electronAPI.callAPI('update_chunk', {
+        pattern_name: currentPattern,
+        item_index: itemIndex,
+        new_chunk_id: chosenChunkId
+    });
+    handleApiResponse('update_chunk', `assigning item to chunk ${chosenChunkId}`);
+    hideChunkAssignmentDialog();
 }
 
 // Modify the existing remove_from_chunk to call the API
@@ -1058,27 +1504,39 @@ function removeFromChunk(itemIndex) {
 // Helper for handling API responses and reloading (if not already present and correct)
 function handleApiResponse(apiMethod, actionDescription) {
     // Ensure only one listener is active per action
-    const listenerId = `${apiMethod}_${Date.now()}`; // Unique ID for listener
+    // REMOVED: const listenerId = `${apiMethod}_${Date.now()}`; // Unique ID for listener - Not needed with returned unsubscribe function
+
+    let unsubscribe = null; // Variable to hold the unsubscribe function
 
     const handleResponse = (data) => {
         if (data && data.responseFor === apiMethod) {
-            window.electronAPI.removeAPIResponseListener(listenerId); // Remove listener
+            if (unsubscribe) { // Check if unsubscribe function exists
+                 console.log(`[EDITOR] Unsubscribing listener for ${apiMethod}`); // Use console.log
+                 unsubscribe(); // Call the returned unsubscribe function
+                 unsubscribe = null; // Clear it after use
+            } else {
+                 console.warn(`[EDITOR] No unsubscribe function found for ${apiMethod} listener.`); // Use console.warn
+            }
+            // window.electronAPI.removeAPIResponseListener(listenerId); // REMOVED: Incorrect usage
             if (data.result && data.result.success) {
-                console.log(`Success ${actionDescription}. Reloading pattern.`);
+                console.log(`[EDITOR] Success ${actionDescription}. Reloading pattern.`); // Use console.log
                 loadPattern(currentPattern);
             } else if (data.error) {
-                console.error(`Error ${actionDescription}:`, data.error);
+                console.error(`[EDITOR] Error ${actionDescription}:`, data.error); // Use console.error
                 alert(`Error ${actionDescription}: ${data.error}`);
                 loadPattern(currentPattern); // Reload even on error to ensure consistency
             } else {
-                 console.error(`Unknown error/response ${actionDescription}:`, data);
+                 console.error(`[EDITOR] Unknown error/response ${actionDescription}:`, data); // Use console.error
                  alert(`An unknown error occurred while ${actionDescription}.`);
                  loadPattern(currentPattern);
             }
         }
     };
 
-    window.electronAPI.onAPIResponse(handleResponse, listenerId); // Pass listener ID
+    // Call onAPIResponse and store the returned unsubscribe function
+    unsubscribe = window.electronAPI.onAPIResponse(handleResponse);
+    // Pass listener ID
+    // REMOVED: window.electronAPI.onAPIResponse(handleResponse, listenerId);
 }
 
 // Ensure add_item handles chapter correctly (already modified above)
@@ -1612,13 +2070,31 @@ function handleSortEnd(evt) {
 
     console.log(` -> Calculated final Target API Index (before adjustment): ${targetApiIndex}`);
 
-    // Adjust targetApiIndex for downward moves to counteract API's subtraction
-    // If originalDataStartIndex < targetApiIndex, it's a downward move relative to data indices.
-    if (originalDataStartIndex < targetApiIndex && movedItemSize > 0) {
-        console.log(` -> Adjusting for downward move: ${targetApiIndex} + ${movedItemSize}`);
-        targetApiIndex += movedItemSize;
-        console.log(` -> Adjusted final Target API Index for call: ${targetApiIndex}`);
+    // --- Modified block for downward move adjustment ---
+    let finalApiTargetIndex = targetApiIndex; // Start with the visually calculated target index
+
+    if (originalDataStartIndex < targetApiIndex && movedItemSize > 0) { // It's a downward move relative to data indices.
+        const isMovingOutOfChapterToRoot = (movedItemOriginalChapter !== '' && targetChapterName === '');
+
+        if (isMovingOutOfChapterToRoot) {
+            // When moving out of a chapter downwards to the root,
+            // the user reports the pre-adjusted targetApiIndex is correct,
+            // and the standard +movedItemSize adjustment makes it land too low.
+            console.log(` -> Downward move: ITEM OUT OF CHAPTER ('${movedItemOriginalChapter}') TO ROOT. Original Target API Index: ${targetApiIndex}. No +size adjustment for API call.`);
+            // finalApiTargetIndex remains targetApiIndex (the pre-adjustment value for this specific case)
+        } else {
+            // Standard downward move (e.g., within root, within chapter, root to chapter, chapter to chapter).
+            // Apply adjustment to counteract API's potential subtraction.
+            console.log(` -> Downward move: Standard. Adjusting: ${targetApiIndex} + ${movedItemSize}`);
+            finalApiTargetIndex = targetApiIndex + movedItemSize;
+        }
+    } else {
+        // For upward moves or no change in visual order, targetApiIndex is usually correct as is.
+        // finalApiTargetIndex is already targetApiIndex by initialization.
+        console.log(` -> Upward move or no significant visual reordering affecting API index calculation. Using Target API Index: ${targetApiIndex}`);
     }
+    console.log(` -> Final Target API Index for call: ${finalApiTargetIndex}`);
+    // --- End of modified block ---
 
     // --- Handle Chapter Change --- Determine if the effective chapter changed
     const needsChapterUpdate = !isChapterContainer && targetChapterName !== movedItemOriginalChapter;
@@ -1631,7 +2107,7 @@ function handleSortEnd(evt) {
     const apiParams = {
         pattern_name: currentPattern,
         from_index: originalDataStartIndex,
-        to_index: targetApiIndex,
+        to_index: finalApiTargetIndex, // Use the conditionally adjusted target index
         count: movedItemSize
     };
 

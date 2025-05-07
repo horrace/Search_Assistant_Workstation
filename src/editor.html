@@ -76,6 +76,29 @@
     </div>
   </div>
   
+  <!-- === ADDED: Chunk Assignment Dialog === -->
+  <div id="chunk-assignment-dialog" class="dialog-overlay" style="display: none;">
+    <div class="dialog-content">
+      <h3 id="chunk-assignment-dialog-title">Assign/Change Chunk</h3>
+      <p>Item: <span id="chunk-assign-item-name"></span></p>
+      <p>Current Chunk ID: <span id="chunk-assign-current-id"></span></p>
+      <div>
+        <label for="chunk-assign-select">Assign to Existing Chunk:</label>
+        <select id="chunk-assign-select">
+          <!-- Options will be populated here -->
+        </select>
+      </div>
+      <div>
+        <label for="chunk-assign-new-id">Or, New Chunk ID (number > 0):</label>
+        <input type="number" id="chunk-assign-new-id" placeholder="e.g., 10, 25">
+      </div>
+      <div class="dialog-buttons">
+        <button id="chunk-assign-dialog-cancel-btn" class="btn">Cancel</button>
+        <button id="chunk-assign-dialog-ok-btn" class="btn">OK</button>
+      </div>
+    </div>
+  </div>
+  
   <script src="vendor/Sortable.min.js"></script>
   <script src="editor.js"></script>
 </body>
