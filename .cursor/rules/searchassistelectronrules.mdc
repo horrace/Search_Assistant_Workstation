@@ -1,0 +1,9 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+This project no longer uses a python backend.
+
+
+Please avoid changing the look, feel, and functionality of the app outside of the request outside the scope of the requested changes (for example, changing font styles or altering button actions in ways that do not relate directly to the request task).

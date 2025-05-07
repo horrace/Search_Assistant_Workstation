@@ -254,7 +254,7 @@ function renderPatternItems() {
   }
 
   let html = '';
-  let currentChapter = null; // Use null to indicate no chapter started yet
+  let currentChapter = ''; // Initialize to empty string instead of null
   let itemIndexCounter = 0; // Index in the currentPatternItems array
   let renderedItemIndex = 0; // Visual index counter for rendered elements
 

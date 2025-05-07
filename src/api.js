@@ -449,6 +449,31 @@ class SearchPatternAPI {
   }
 
   /**
+   * Get the current tumbler window position settings
+   */
+  get_tumbler_window_position() {
+    return this.settings.tumblerWindowPosition || null; // Return null if not set
+  }
+
+  /**
+   * Save tumbler window position settings
+   */
+  save_tumbler_window_position(position_data) {
+    try {
+      // Ensure this.settings is initialized
+      if (!this.settings) {
+        this.settings = {};
+      }
+      this.settings.tumblerWindowPosition = position_data;
+      this.save_settings();
+      return { success: true, position: position_data };
+    } catch (error) {
+      console.error(`Error saving tumbler window position: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Add a new item to a pattern at a specific index.
    */
   add_item(pattern_name, item_data, index) {

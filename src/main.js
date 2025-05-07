@@ -92,7 +92,22 @@ function createEditorWindow() {
 }
 
 function createTumblerWindow(patternName) {
+  const savedPosition = api.get_tumbler_window_position();
+  let initialX, initialY;
+
+  if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
+    initialX = savedPosition.x;
+    initialY = savedPosition.y;
+    console.log(`Found saved Tumbler position: x=${initialX}, y=${initialY}`);
+  } else {
+    // Default position if none saved (e.g., centered on parent or primary display)
+    // For now, let Electron handle default positioning if nothing is saved.
+    console.log("No saved Tumbler position found, using default.");
+  }
+
   tumblerWindow = new BrowserWindow({
+    x: initialX, // Apply saved X or undefined
+    y: initialY, // Apply saved Y or undefined
     width: 400,
     height: 300,
     parent: mainWindow,
@@ -120,14 +135,53 @@ function createTumblerWindow(patternName) {
     tumblerWindow.webContents.send('pattern-selected', patternName);
   });
   
+  // Save position on move (debounced)
+  let moveTimeout;
+  tumblerWindow.on('move', () => {
+    clearTimeout(moveTimeout);
+    moveTimeout = setTimeout(() => {
+      if (tumblerWindow) { // Check if window still exists
+        const [x, y] = tumblerWindow.getPosition();
+        console.log(`Tumbler moved to: x=${x}, y=${y}. Saving position.`);
+        api.save_tumbler_window_position({ x, y });
+      }
+    }, 500); // Debounce for 500ms
+  });
+  
+  // Use 'close' event to save position *before* the window is destroyed
+  tumblerWindow.on('close', () => {
+    clearTimeout(moveTimeout); // Clear any pending save on move
+    
+    // Check if tumblerWindow still exists and is not yet destroyed
+    // This check is more of a safeguard; 'close' should fire before destruction.
+    if (tumblerWindow && !tumblerWindow.isDestroyed()) {
+      const [x, y] = tumblerWindow.getPosition();
+      console.log(`Tumbler about to close at: x=${x}, y=${y}. Saving final position.`);
+      api.save_tumbler_window_position({ x, y });
+    } else {
+      console.log("Tumbler window was already destroyed or null before 'close' event finished processing for saving position.");
+    }
+    // It's important that tumblerWindow is nulled *after* any operations on it.
+    // And mainWindow.show() should be called after we're done with tumblerWindow.
+  });
+  
+  // Original 'closed' event logic for nullifying and showing main window
   tumblerWindow.on('closed', () => {
-    tumblerWindow = null;
-    mainWindow.show();
+    tumblerWindow = null; // Nullify the global reference
+    if (mainWindow && !mainWindow.isDestroyed()) { // Ensure mainWindow still exists
+        mainWindow.show();
+    }
   });
   
   tumblerWindow.once('ready-to-show', () => {
     mainWindow.hide();
     tumblerWindow.show();
+    // Save initial position once shown, in case it's a new window or position was defaulted
+    if (tumblerWindow) {
+        const [x, y] = tumblerWindow.getPosition();
+        console.log(`Tumbler shown at: x=${x}, y=${y}. Saving initial position.`);
+        api.save_tumbler_window_position({ x, y });
+    }
   });
 
   // Workaround for Electron issue #39959 (frameless transparent window artifact on blur/focus)

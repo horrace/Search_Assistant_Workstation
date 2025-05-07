@@ -390,6 +390,17 @@ footer {
   z-index: 1001; /* Ensure content is above other elements */
 }
 
+.tumbler-chapter-label {
+  color: #A9A9A9; /* Dark Gray */
+  font-size: 16px; /* Adjust as needed, can also be controlled by font scaling */
+  font-weight: normal;
+  text-align: left;
+  margin-bottom: 5px; /* Space below the chapter label */
+  margin-left: 10px; /* Align with tumbler-view if present, or general content */
+  width: 100%; /* Ensure it takes full width for left alignment */
+  display: none; /* Initially hidden, shown by JS when chapter exists */
+}
+
 .tumbler-abbr {
   color: #FFFFFF;
   font-size: 24px;

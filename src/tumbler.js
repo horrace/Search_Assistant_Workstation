@@ -4,6 +4,7 @@ const closeButton = document.getElementById('close-button');
 const tumblerAbbr = document.getElementById('tumbler-abbr');
 const tumblerStrategy = document.getElementById('tumbler-strategy');
 const tumblerChunk = document.getElementById('tumbler-chunk');
+const tumblerChapterLabel = document.getElementById('tumbler-chapter-label');
 const decreaseFontBtn = document.getElementById('decrease-font');
 const increaseFontBtn = document.getElementById('increase-font');
 const tumblerTimer = document.getElementById('tumbler-timer');
@@ -161,10 +162,9 @@ function updateFontSizes() {
       tumblerView.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`; // Adjust base size as needed
   }
   
-  // Added: Update chapter font size
-  const tumblerChapter = document.getElementById('tumbler-chapter');
-  if (tumblerChapter) {
-      tumblerChapter.style.fontSize = `${chapterBaseFontSize * fontScaleFactor}px`;
+  // Update chapter label font size
+  if (tumblerChapterLabel) {
+      tumblerChapterLabel.style.fontSize = `${chapterBaseFontSize * fontScaleFactor}px`;
   }
   
   // Update chunk item font sizes if visible
@@ -197,17 +197,15 @@ function displayCurrentItem() {
   
   // Get the view display element
   let tumblerView = document.getElementById('tumbler-view');
-  // Get the chapter display element
-  let tumblerChapterElem = document.getElementById('tumbler-chapter');
   
-  // --- Update Chapter Display --- (Added)
-  if (tumblerChapterElem) {
+  // --- Update Chapter Display ---
+  if (tumblerChapterLabel) {
       if (itemChapter && chunkID === 0) { // Only show chapter for non-chunk items
-         tumblerChapterElem.textContent = itemChapter;
-         tumblerChapterElem.style.display = 'block';
+         tumblerChapterLabel.textContent = itemChapter;
+         tumblerChapterLabel.style.display = 'block';
       } else {
-          tumblerChapterElem.textContent = '';
-          tumblerChapterElem.style.display = 'none';
+          tumblerChapterLabel.textContent = '';
+          tumblerChapterLabel.style.display = 'none';
       }
   }
   
