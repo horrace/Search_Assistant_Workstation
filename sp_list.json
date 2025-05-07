@@ -8,17 +8,8 @@
       "best_seen_on": "",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "sag"
-    },
-    {
-      "abbr": "Quick Scroll, Chart Hx",
-      "full_name": "",
-      "strategy": "",
-      "window_level": "brain",
-      "best_seen_on": "",
-      "groupID": 0,
-      "chunkID": 0,
-      "view_plane": "sag"
+      "view_plane": "sag",
+      "chapter": "chptr1"
     },
     {
       "abbr": "LDA, surg",
@@ -28,7 +19,30 @@
       "best_seen_on": "",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "sag"
+      "view_plane": "sag",
+      "chapter": "chptr1"
+    },
+    {
+      "abbr": "New Item 720",
+      "full_name": "",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "ax",
+      "chapter": "chptr1"
+    },
+    {
+      "abbr": "Quick Scroll, Chart Hx",
+      "full_name": "",
+      "strategy": "",
+      "window_level": "brain",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "sag",
+      "chapter": ""
     },
     {
       "abbr": "Scalp, Periorb.ST, Orbit",
@@ -38,7 +52,8 @@
       "best_seen_on": "ax, cor, sag",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "Exclude Hemorrhage",
@@ -48,17 +63,8 @@
       "best_seen_on": "ax, sag",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
-    },
-    {
-      "abbr": "dSAH",
-      "full_name": "Dependent Subarachnoid Hemorrhage",
-      "strategy": "OccHorns,SylvF,IPfoss, lat QdCist",
-      "window_level": "brain",
-      "best_seen_on": "ax",
-      "groupID": 0,
-      "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "Falx/Tent",
@@ -68,7 +74,8 @@
       "best_seen_on": "cor",
       "groupID": 0,
       "chunkID": 2,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "Insular Ribbons, Internal Capsule / Basal Ganglia",
@@ -78,7 +85,19 @@
       "best_seen_on": "ax",
       "groupID": 0,
       "chunkID": 2,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
+    },
+    {
+      "abbr": "dSAH",
+      "full_name": "Dependent Subarachnoid Hemorrhage",
+      "strategy": "OccHorns,SylvF,IPfoss, lat QdCist",
+      "window_level": "brain",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "GWdiff",
@@ -88,7 +107,8 @@
       "best_seen_on": "ax, cor",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "MCA/ACA HD, sup Cisterns",
@@ -98,7 +118,8 @@
       "best_seen_on": "ax",
       "groupID": 0,
       "chunkID": 1,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "Bas/PCA HD, inf Cisterns",
@@ -108,7 +129,8 @@
       "best_seen_on": "ax",
       "groupID": 0,
       "chunkID": 1,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "CbHmsphr/CPA/FM",
@@ -118,7 +140,8 @@
       "best_seen_on": "",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "BS/CS/CC",
@@ -128,37 +151,8 @@
       "best_seen_on": "",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
-    },
-    {
-      "abbr": "OccCond, Dens, C1arch",
-      "full_name": "OccCond, Dens, C1 arch",
-      "strategy": "",
-      "window_level": "bone",
-      "best_seen_on": "ax, sag",
-      "groupID": 0,
-      "chunkID": 0,
-      "view_plane": "ax"
-    },
-    {
-      "abbr": "IAC,VCF,Oss",
-      "full_name": "Internal Auditory Canal, VestibuloCochlearFacialnerve, Ossicles",
-      "strategy": "",
-      "window_level": "bone",
-      "best_seen_on": "ax",
-      "groupID": 0,
-      "chunkID": 0,
-      "view_plane": "ax"
-    },
-    {
-      "abbr": "MsH, L+3v",
-      "full_name": "Midline Shift / herniation, Lateral + 3rd ventricles",
-      "strategy": "",
-      "window_level": "brain",
-      "best_seen_on": "ax,cor",
-      "groupID": 0,
-      "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "pCCp 3A4",
@@ -168,7 +162,41 @@
       "best_seen_on": "sag",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
+    },
+    {
+      "abbr": "OccCond, Dens, C1arch",
+      "full_name": "OccCond, Dens, C1 arch",
+      "strategy": "",
+      "window_level": "bone",
+      "best_seen_on": "ax, sag",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "ax",
+      "chapter": ""
+    },
+    {
+      "abbr": "IAC,VCF,Oss",
+      "full_name": "Internal Auditory Canal, VestibuloCochlearFacialnerve, Ossicles",
+      "strategy": "",
+      "window_level": "bone",
+      "best_seen_on": "ax",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "ax",
+      "chapter": ""
+    },
+    {
+      "abbr": "MsH, L+3v",
+      "full_name": "Midline Shift / herniation, Lateral + 3rd ventricles",
+      "strategy": "",
+      "window_level": "brain",
+      "best_seen_on": "ax,cor",
+      "groupID": 0,
+      "chunkID": 0,
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "PetrApex-Mast",
@@ -178,7 +206,8 @@
       "best_seen_on": "ax",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     },
     {
       "abbr": "NOP,F.Rmuller, WR, RP/PPnodes",
@@ -188,7 +217,8 @@
       "best_seen_on": "ax",
       "groupID": 0,
       "chunkID": 0,
-      "view_plane": "ax"
+      "view_plane": "ax",
+      "chapter": ""
     }
   ],
   "MR Brain": [
@@ -198,7 +228,8 @@
       "strategy": "",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "T1 sag",
@@ -206,7 +237,8 @@
       "strategy": "midline anat, tonsils, orbits, NOP, upper Cspine / cord",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "FLAIR",
@@ -214,7 +246,8 @@
       "strategy": "edema, SAH, WM lesions (by lobe), skull marrow",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "DWI",
@@ -222,7 +255,8 @@
       "strategy": "watershed, bstem, inf Pfoss",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "SWI",
@@ -230,7 +264,8 @@
       "strategy": "clot in prox vessels; Ca, hemosiderin",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "Postcon",
@@ -238,7 +273,8 @@
       "strategy": "",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "T2",
@@ -246,7 +282,8 @@
       "strategy": "orbits, opticNerves, PNS/mastoids, IAC/vestibCoch, flow voids (incl strght/trans/sigm, carotids into skull base), GWdiff",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     },
     {
       "abbr": "Chart Hx to compare finding",
@@ -255,7 +292,8 @@
       "window_level": "brain",
       "best_seen_on": "",
       "groupID": 0,
-      "chunkID": 0
+      "chunkID": 0,
+      "chapter": ""
     }
   ]
 }

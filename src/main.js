@@ -237,7 +237,14 @@ ipcMain.on('api-request', (event, data) => {
             break;
             
           case 'move_item':
-            result = api[method](params.pattern_name, params.from_index, params.to_index);
+            result = api[method](
+              params.pattern_name,
+              params.from_index,
+              params.to_index,
+              params.count,
+              params.new_chapter,
+              params.moved_chapter_name
+            );
             break;
             
           case 'update_item':
@@ -252,9 +259,35 @@ ipcMain.on('api-request', (event, data) => {
             result = api[method](params.pattern_name, params.chunk_id);
             break;
             
-          case 'remove_from_chunk':
-            result = api[method](params.pattern_name, params.index);
+          case 'add_item':
+            result = api[method](params.pattern_name, params.item_data, params.index);
             break;
+            
+          case 'delete_item':
+            result = api[method](params.pattern_name, params.index, params.count);
+            break;
+            
+          case 'rename_chapter':
+            result = api[method](params.pattern_name, params.old_name, params.new_name);
+            break;
+            
+          case 'delete_chapter':
+            result = api[method](params.pattern_name, params.chapter_name);
+            break;
+            
+          case 'update_item_chapter':
+            result = api[method](
+                params.pattern_name,
+                params.item_index,
+                params.new_chapter,
+                params.is_chunk,
+                params.chunk_id
+            );
+            break;
+            
+           case 'update_chunk':
+                result = api[method](params.pattern_name, params.item_index, params.new_chunk_id);
+                break;
             
           case 'set_transparency':
             result = api[method](params.value);

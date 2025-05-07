@@ -26,6 +26,9 @@ const strategyBaseFontSize = 14;
 const chunkItemAbbrBaseFontSize = 16;
 const chunkItemStrategyBaseFontSize = 14;
 
+// Added: Font size base for chapter
+const chapterBaseFontSize = 16; // Adjust as needed
+
 // Initialize the application
 function init() {
   // Get the pattern name from the main process
@@ -158,6 +161,12 @@ function updateFontSizes() {
       tumblerView.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`; // Adjust base size as needed
   }
   
+  // Added: Update chapter font size
+  const tumblerChapter = document.getElementById('tumbler-chapter');
+  if (tumblerChapter) {
+      tumblerChapter.style.fontSize = `${chapterBaseFontSize * fontScaleFactor}px`;
+  }
+  
   // Update chunk item font sizes if visible
   document.querySelectorAll('.chunk-item-abbr').forEach(el => {
     el.style.fontSize = `${chunkItemAbbrBaseFontSize * fontScaleFactor}px`;
@@ -184,9 +193,25 @@ function displayCurrentItem() {
   const itemAbbr = item.abbr || '';
   const itemStrategy = item.strategy || '';
   const itemView = item.view_plane || 'ax';
+  const itemChapter = item.chapter || ''; // Get chapter name
+  
+  // Get the view display element
+  let tumblerView = document.getElementById('tumbler-view');
+  // Get the chapter display element
+  let tumblerChapterElem = document.getElementById('tumbler-chapter');
+  
+  // --- Update Chapter Display --- (Added)
+  if (tumblerChapterElem) {
+      if (itemChapter && chunkID === 0) { // Only show chapter for non-chunk items
+         tumblerChapterElem.textContent = itemChapter;
+         tumblerChapterElem.style.display = 'block';
+      } else {
+          tumblerChapterElem.textContent = '';
+          tumblerChapterElem.style.display = 'none';
+      }
+  }
   
   // Get the view display element (or create if it doesn't exist)
-  let tumblerView = document.getElementById('tumbler-view');
   if (!tumblerView) {
     tumblerView = document.createElement('div');
     tumblerView.id = 'tumbler-view';

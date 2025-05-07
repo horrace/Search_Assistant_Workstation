@@ -450,7 +450,7 @@ footer {
   will-change: transform, opacity;
 }
 
-.draggable-item:not(.chunk-container) {
+.draggable-item:not(.chunk-container):not(.chapter-container) {
   height: 40px;
 }
 
@@ -895,11 +895,6 @@ footer {
    margin-left: 10px;
 }
 
-.item-strategy {
-  flex-grow: 1; /* Allow strategy to take remaining space */
-}
-
-
 /* === Tumbler View Display === */
 .tumbler-view {
   color: #575757; /* Dim text color */
@@ -921,4 +916,158 @@ footer {
 /* Ensure chunk items don't show view text (handled by JS display:none, but good fallback) */
 .chunk-item .tumbler-view {
     display: none;
+}
+
+/* === Chapter Styles === */
+.chapter-container {
+  border: 1px solid #666666; /* Gray border */
+  border-radius: 6px;
+  margin-bottom: 10px; /* Space between chapters/items */
+  background-color: transparent; /* Transparent fill */
+  position: relative; /* For absolute positioning of label/handle if needed */
+  padding: 5px; /* Add some padding around the chapter content */
+  overflow: hidden; /* ADDED: To ensure it contains its children correctly */
+}
+
+.chapter-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px; /* Space between header and items */
+  padding-left: 25px; /* Make space for the absolutely positioned label */
+  position: relative; /* For label positioning */
+  min-height: 24px; /* Ensure header has some height */
+}
+
+/* Chapter Label - Positioned to the left */
+.chapter-label {
+  position: absolute;
+  left: 25px; /* Position relative to chapter-header padding */
+  top: 50%;
+  transform: translateY(-50%);
+  font-weight: bold;
+  color: #AAAAAA; /* Dark gray */
+  font-size: 14px;
+  /* Ensure label doesn't overlap drag handle if handle is also absolute */
+  /* max-width: calc(100% - 50px); /* Adjust as needed */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Reposition drag handle within chapter header */
+.chapter-container > .chapter-header > .drag-handle {
+  position: absolute;
+  left: 5px; /* Position handle to the far left */
+  top: 50%;
+  transform: translateY(-50%);
+  height: auto;
+  z-index: 2;
+}
+
+.chapter-items {
+  /* Container for items within a chapter */
+  padding-left: 5px; /* Indent items slightly within the chapter */
+  min-height: 20px; /* Ensure drop zone is visible even when empty */
+  /* Background color for drop zone visibility */
+  /* background-color: rgba(255, 255, 255, 0.03); */
+  border-radius: 4px;
+}
+
+/* Style adjustments for items inside chapters if needed */
+.chapter-items .draggable-item {
+  /* Example: slightly different margin */
+  margin-bottom: 5px;
+}
+
+.chapter-items .chunk-container {
+   /* Example: slightly different margin */
+   margin-bottom: 5px;
+}
+
+/* Ensure drag-over state is visible on chapter items container */
+.chapter-items.drag-over {
+    background-color: rgba(79, 195, 247, 0.1); /* Highlight drop zone */
+    border: 1px dashed #4FC3F7;
+}
+
+/* Ghost class for items dragged *within* or *into* a chapter */
+.sortable-ghost-inner {
+  opacity: 0.5;
+  background-color: #5a6bac; /* Slightly different color */
+}
+
+/* === Context menu === */
+.context-menu {
+}
+
+/* === Tumbler Chapter Display === */
+.tumbler-chapter {
+  color: #888888; /* Dark gray font */
+  font-size: 16px; /* Adjust base size as needed, scales with updateFontSizes */
+  font-weight: bold;
+  margin-bottom: 5px; /* Space below the chapter text */
+  margin-left: 10px;
+  text-align: left;
+  width: 100%; /* Ensure it takes full width for alignment */
+  /* Ensure it appears above the view/abbr in no-background mode */
+  background-color: transparent; /* Make sure background is transparent by default */
+  z-index: 1003; /* Ensure it's above other content like abbr */
+}
+
+.tumbler-container.no-background .tumbler-chapter {
+    color: #AAAAAA; /* Slightly lighter gray for visibility */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7); /* Add shadow for contrast */
+}
+
+/* Dialog Styles (reuse for chapter dialog if structure is similar) */
+.dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1100; /* Ensure above context menu */
+}
+
+.dialog-content {
+  background-color: #424242;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.dialog-content h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 18px;
+  text-align: center;
+}
+
+.dialog-content input[type="text"] {
+  padding: 10px;
+  border-radius: 4px;
+  border: 1px solid #666;
+  background-color: #555;
+  color: #FFF;
+  font-size: 14px;
+}
+
+.dialog-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+/* Specific ID if needed, but class reuse is preferred */
+#chapter-input-dialog .dialog-content {
+  /* Add specific overrides if needed */
 }
