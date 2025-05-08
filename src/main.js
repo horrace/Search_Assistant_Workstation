@@ -190,7 +190,7 @@ function createTumblerWindow(patternName) {
   tumblerWindow = new BrowserWindow({
     x: initialX, // Apply saved X or undefined
     y: initialY, // Apply saved Y or undefined
-    width: 400,
+    width: 500,
     height: 300,
     parent: mainWindow,
     modal: false,

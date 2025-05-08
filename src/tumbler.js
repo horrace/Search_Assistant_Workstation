@@ -13,9 +13,10 @@ const tumblerHeader = document.querySelector('.tumbler-header');
 
 // State
 let currentPattern = '';
-let patternItems = [];
-let currentItemIndex = 0;
-let totalItems = 0;
+let patternItems = []; // Original full list of all items
+let displayableUnits = []; // New: Holds single items or one representative item per chunk
+let currentDisplayIndex = 0; // New: Index for displayableUnits
+let totalDisplayItems = 0; // New: Count of units in displayableUnits
 let elapsedSeconds = 0;
 let timerInterval = null;
 let fontScaleFactor = 1.0;
@@ -139,14 +140,33 @@ function loadSettings() {
 function loadPattern(patternName) {
   // Send request to backend
   window.electronAPI.callAPI('get_pattern', { pattern_name: patternName });
-  
+
   // Listen for response
   window.electronAPI.onAPIResponse((data) => {
-    if (data && Array.isArray(data.result)) {
+    if (data && data.responseFor === 'get_pattern' && Array.isArray(data.result)) {
       patternItems = data.result;
-      totalItems = patternItems.length;
-      currentItemIndex = 0;
+      displayableUnits = [];
+      const processedChunkIDs = new Set();
+
+      for (const item of patternItems) {
+        const chunkID = item.chunkID || 0;
+        if (chunkID > 0) {
+          if (!processedChunkIDs.has(chunkID)) {
+            displayableUnits.push(item); // Add the first item of the chunk as representative
+            processedChunkIDs.add(chunkID);
+          }
+        } else {
+          displayableUnits.push(item); // Add non-chunk item
+        }
+      }
+
+      totalDisplayItems = displayableUnits.length;
+      currentDisplayIndex = 0;
       displayCurrentItem();
+    } else if (data && data.responseFor === 'get_pattern' && data.error) {
+      console.error("Error loading pattern:", data.error);
+      // Handle error display if necessary
+      tumblerCounter.textContent = "Error";
     }
   });
 }
@@ -179,56 +199,63 @@ function updateFontSizes() {
 
 // Display the current item
 function displayCurrentItem() {
-  if (!patternItems || patternItems.length === 0) {
+  if (!displayableUnits || displayableUnits.length === 0) {
+    tumblerCounter.textContent = "0/0";
+    tumblerAbbr.textContent = '';
+    tumblerStrategy.textContent = '';
+    tumblerChunk.style.display = 'none';
+    const tumblerView = document.getElementById('tumbler-view');
+    if (tumblerView) tumblerView.style.display = 'none';
+    if (tumblerChapterLabel) tumblerChapterLabel.style.display = 'none';
     return;
   }
-  
-  const item = patternItems[currentItemIndex];
-  
-  // Update counter
-  tumblerCounter.textContent = `${currentItemIndex + 1}/${totalItems}`;
-  
-  // Check if current item is part of a chunk
-  const chunkID = item.chunkID || 0;
-  const itemAbbr = item.abbr || '';
-  const itemStrategy = item.strategy || '';
-  const itemView = item.view_plane || 'ax';
-  const itemChapter = item.chapter || ''; // Get chapter name
-  
-  // Get the view display element
+
+  // Get the representative item for the current display unit
+  const representativeItem = displayableUnits[currentDisplayIndex];
+
+  // Update counter using display indices
+  tumblerCounter.textContent = `${currentDisplayIndex + 1}/${totalDisplayItems}`;
+
+  const chunkID = representativeItem.chunkID || 0;
+  const itemAbbr = representativeItem.abbr || '';
+  const itemStrategy = representativeItem.strategy || '';
+  const itemView = representativeItem.view_plane || 'ax';
+  const itemChapter = representativeItem.chapter || '';
+
   let tumblerView = document.getElementById('tumbler-view');
-  
+
   // --- Update Chapter Display ---
   if (tumblerChapterLabel) {
-      if (itemChapter && chunkID === 0) { // Only show chapter for non-chunk items
-         tumblerChapterLabel.textContent = itemChapter;
-         tumblerChapterLabel.style.display = 'block';
-      } else {
-          tumblerChapterLabel.textContent = '';
-          tumblerChapterLabel.style.display = 'none';
-      }
+    // Show chapter label if the representative item has a chapter AND it's not a chunk
+    // or if it IS a chunk, the chapter is usually associated with the chunk itself.
+    // For simplicity, we tie chapter display to the representative item's chapter field.
+    if (itemChapter) { 
+      tumblerChapterLabel.textContent = itemChapter;
+      tumblerChapterLabel.style.display = 'block';
+    } else {
+      tumblerChapterLabel.textContent = '';
+      tumblerChapterLabel.style.display = 'none';
+    }
   }
-  
-  // Get the view display element (or create if it doesn't exist)
+
   if (!tumblerView) {
     tumblerView = document.createElement('div');
     tumblerView.id = 'tumbler-view';
     tumblerView.className = 'tumbler-view';
-    // Insert it before the abbreviation
     tumblerAbbr.parentNode.insertBefore(tumblerView, tumblerAbbr);
   }
-  
+
   if (chunkID > 0) {
     // --- Chunk Item Display ---
+    // This representativeItem is part of a chunk, display all items in that chunk.
     tumblerAbbr.style.display = 'none';
     tumblerStrategy.style.display = 'none';
-    tumblerView.style.display = 'none'; // Hide view for chunks
-    
+    tumblerView.style.display = 'none';
+
     const chunkItems = patternItems.filter(i => (i.chunkID || 0) === chunkID);
     let html = '';
     chunkItems.forEach(chunkItem => {
-      const chunkItemView = chunkItem.view_plane || 'ax'; // Get view for each chunk item
-      // Include view in chunk display
+      const chunkItemView = chunkItem.view_plane || 'ax';
       html += `
         <div class="chunk-item">
           <div class="chunk-item-view">${chunkItemView}</div>
@@ -237,59 +264,39 @@ function displayCurrentItem() {
         </div>
       `;
     });
-    
+
     tumblerChunk.innerHTML = html;
     tumblerChunk.style.display = 'block';
   } else {
     // --- Single Item Display ---
-    tumblerChunk.style.display = 'none'; // Hide chunk container
-    
+    // This representativeItem is a single, non-chunk item.
+    tumblerChunk.style.display = 'none';
+
     tumblerAbbr.textContent = itemAbbr;
     tumblerStrategy.textContent = itemStrategy;
-    tumblerView.textContent = itemView; // Display the view text
-    
+    tumblerView.textContent = itemView;
+
     tumblerAbbr.style.display = 'block';
     tumblerStrategy.style.display = itemStrategy ? 'block' : 'none';
-    tumblerView.style.display = 'block'; // Show the view element
+    tumblerView.style.display = 'block';
   }
-  
-  // Ensure font sizes are updated after content change
+
   updateFontSizes();
 }
 
 // Go to the next item
 function nextItem() {
-  if (!patternItems || patternItems.length === 0) {
+  if (!displayableUnits || displayableUnits.length === 0) {
     return;
   }
-  
-  const currentItem = patternItems[currentItemIndex];
-  const currentChunkID = currentItem.chunkID || 0;
-  
-  if (currentItemIndex >= patternItems.length - 1) {
-    // Reached the end, return to the main page instead of wrapping
+
+  if (currentDisplayIndex >= totalDisplayItems - 1) {
+    // Reached the end of displayable units, close tumbler
     window.electronAPI.closeTumbler();
     return;
   } else {
-    // Check if we're in a chunk and need to skip to the next chunk
-    if (currentChunkID > 0) {
-      // Find the first item after this chunk
-      let i = currentItemIndex + 1;
-      while (i < patternItems.length) {
-        if ((patternItems[i].chunkID || 0) !== currentChunkID) {
-          currentItemIndex = i;
-          displayCurrentItem();
-          return;
-        }
-        i++;
-      }
-      // If no item found after this chunk, also return to main page
-      window.electronAPI.closeTumbler();
-      return;
-    } else {
-      // Move to the next item
-      currentItemIndex++;
-    }
+    // Move to the next displayable unit
+    currentDisplayIndex++;
   }
   
   displayCurrentItem();

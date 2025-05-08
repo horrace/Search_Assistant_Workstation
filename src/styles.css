@@ -391,7 +391,7 @@ footer {
 }
 
 .tumbler-chapter-label {
-  color: #A9A9A9; /* Dark Gray */
+  color: #575757; /* Dark Gray */
   font-size: 16px; /* Adjust as needed, can also be controlled by font scaling */
   font-weight: normal;
   text-align: left;
@@ -432,6 +432,9 @@ footer {
 
 .chunk-item {
   margin-bottom: 8px;
+  display: flex; /* Arrange children (view, abbr, strategy) in a row */
+  align-items: baseline; /* Align text nicely if font sizes/paddings differ */
+  gap: 8px; /* Space between view, abbr, and strategy */
 }
 
 .chunk-item-abbr {
@@ -650,7 +653,7 @@ footer {
 
 /* Make text content visible in no-background mode */
 .tumbler-container.no-background .tumbler-abbr {
-  color: #DDDDDD;
+  color: #cacaca;
   background-color: transparent;
   box-shadow: none;
   margin-left: 2px;
@@ -685,7 +688,7 @@ footer {
 .tumbler-container.no-background .tumbler-help,
 .tumbler-container.no-background .tumbler-close,
 .tumbler-container.no-background .settings-button {
-  color: #AAAAAA;
+  color: #696969;
 }
 
 /* Make sure all UI elements remain visible */
