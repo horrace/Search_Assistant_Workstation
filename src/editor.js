@@ -333,7 +333,7 @@ function renderPatternItems() {
               >
               <div class="chunk-header">
                  <div class="drag-handle" data-handle="true"></div>
-                 <span>Chunk </span><div class="chunk-id-label" contenteditable="true" data-field="chunk-id" data-current-chunk-id="${chunkID}">${chunkID}</div>
+                 <div class="chunk-id-label" contenteditable="true" data-field="chunk-id" data-current-chunk-id="${chunkID}">${chunkID}</div>
               </div>
               <div class="chunk-items">
           `;
@@ -425,6 +425,7 @@ function renderPatternItems() {
     ghostClass: 'sortable-ghost',
     chosenClass: 'sortable-chosen',
     dragClass: 'sortable-drag',
+    preventOnFilter: false, // <--- ADD THIS LINE
     onEnd: handleSortEnd // Use the shared handler (will be implemented next)
   };
 
@@ -432,14 +433,16 @@ function renderPatternItems() {
   window.mainSortableInstance = new Sortable(patternItems, {
     ...sortableOptions,
     draggable: '.draggable-item', // Can drag chapters, chunks, and single items at top level
-    filter: '.chapter-items, .chunk-items', // Prevent dragging *from* inner containers at top level
+    filter: '.chapter-items, .chunk-items, select', // Prevent dragging *from* inner containers at top level AND from select elements
+    // preventOnFilter is inherited from sortableOptions
   });
 
   // Initialize sortable for each chapter's item container
   document.querySelectorAll('.chapter-items.sortable-group').forEach(group => {
     group.sortableInstance = new Sortable(group, {
-      ...sortableOptions,
+      ...sortableOptions, // This will also inherit preventOnFilter: false
       draggable: '.draggable-item:not(.chapter-container)', // Items within the chapter
+      filter: 'select', // Add filter for select elements within chapters
       ghostClass: 'sortable-ghost-inner', // Different ghost class
     });
   });
@@ -1807,9 +1810,10 @@ function setupPatternDropZone() {
 
 // Handle item click for selection
 function handleItemClick(e, itemElement) { // itemElement is e.currentTarget (the .draggable-item)
+  console.log('[handleItemClick ENTRY]', 'Event Target:', e.target, 'Item Element:', itemElement);
   // If the direct click target is an interactive element that should consume the click, return early.
   if (e.target.isContentEditable || e.target.tagName === 'SELECT' || e.target.closest('.drag-handle')) {
-    // console.log('handleItemClick: Click on interactive element (e.g., contenteditable, select, drag-handle), ignoring selection.');
+    console.log('[handleItemClick IGNORE]', 'Click on interactive element. Target tagName:', e.target.tagName);
     return;
   }
 
