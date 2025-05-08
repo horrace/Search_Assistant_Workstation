@@ -289,7 +289,7 @@ function renderPatternItems() {
           <div class="chapter-container draggable-item" data-chapter-name="${currentChapter}" data-rendered-index="${renderedItemIndex}" data-is-chapter="true">
             <div class="chapter-header">
               <div class="drag-handle" data-handle="true"></div>
-              <span class="chapter-label">${currentChapter}</span>
+              <div class="chapter-label" contenteditable="true" data-field="chapter-name" data-original-chapter-name="${currentChapter}">${currentChapter}</div>
             </div>
             <div class="chapter-items sortable-group"> <!-- Added class for Sortable target -->
         `;
@@ -327,13 +327,13 @@ function renderPatternItems() {
               data-item-index="${firstChunkItemIndex}"
               data-rendered-index="${renderedItemIndex}"
               data-is-chunk="true"
-              data-chunk-id="${chunkID}"
+              data-chunk-id="${chunkID}" 
               data-chunk-size="${chunkItemsInOrder.length}"
               data-parent-chapter="${currentChapter || ''}"
               >
               <div class="chunk-header">
                  <div class="drag-handle" data-handle="true"></div>
-                 <span>Chunk ${chunkID}</span>
+                 <span>Chunk </span><div class="chunk-id-label" contenteditable="true" data-field="chunk-id" data-current-chunk-id="${chunkID}">${chunkID}</div>
               </div>
               <div class="chunk-items">
           `;
@@ -464,8 +464,33 @@ function renderPatternItems() {
   document.querySelectorAll('[contenteditable]').forEach(editableField => {
     editableField.addEventListener('blur', handleFieldEdit);
     editableField.addEventListener('keydown', handleFieldKeydown); // Added for Enter/Escape
-    editableField.addEventListener('mousedown', (e) => { e.stopPropagation(); });
-    editableField.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+    // Removed mousedown/touchstart from generic contenteditable, will add specifically
+  });
+
+  // Add listeners for editable chapter names
+  document.querySelectorAll('.chapter-label[contenteditable="true"]').forEach(label => {
+    console.log('[renderPatternItems] Attaching listeners to chapter-label:', label);
+    label.removeEventListener('blur', handleFieldEdit); // Remove generic field edit
+    label.addEventListener('blur', handleHeaderEdit); // Add specific header edit
+    if (!label.hasAttribute('listener-keydown-set')) {
+        label.addEventListener('keydown', handleFieldKeydown);
+        label.setAttribute('listener-keydown-set', 'true');
+    }
+    label.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    label.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+  });
+
+  // Add listeners for editable chunk IDs
+  document.querySelectorAll('.chunk-id-label[contenteditable="true"]').forEach(label => {
+    console.log('[renderPatternItems] Attaching listeners to chunk-id-label:', label);
+    label.removeEventListener('blur', handleFieldEdit); // Remove generic field edit
+    label.addEventListener('blur', handleHeaderEdit);   // Add specific header edit
+    if (!label.hasAttribute('listener-keydown-set')) {
+        label.addEventListener('keydown', handleFieldKeydown);
+        label.setAttribute('listener-keydown-set', 'true');
+    }
+    label.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    label.addEventListener('touchstart', (e) => { e.stopPropagation(); });
   });
 
   // Add change listener for the view dropdowns
@@ -551,13 +576,11 @@ function handleContextMenu(e) {
 
 
   if (isChapterContext) {
-      menuItems.push({ text: `Rename Chapter \"${contextMenuTargetChapterName}\"`, action: 'rename_chapter', enabled: true });
       menuItems.push({ text: `Delete Chapter \"${contextMenuTargetChapterName}\" (and contents)`, action: 'delete_chapter', enabled: true });
       menuItems.push({ text: '---', action: 'separator', enabled: false });
       menuItems.push({ text: 'Add New Item to Chapter', action: 'add_item_to_chapter', enabled: true });
   } else if (isChunkContainerContext) {
       // Menu for the chunk container itself
-      // "Rename Chunk" is removed as per request. Will be handled by direct edit later.
       menuItems.push({ text: 'New Chunk Item', action: 'new_chunk_item', enabled: true, chunkId: contextMenuTargetChunkId });
       menuItems.push({ text: 'Assign/Change Chapter', action: 'assign_chapter_for_chunk', enabled: true, chunkId: contextMenuTargetChunkId });
       menuItems.push({ text: 'Create New Chapter Here', action: 'create_chapter_here', enabled: true });
@@ -711,7 +734,6 @@ function handleContextMenuAction(e) {
            console.warn("Cannot disband chunk: Invalid chunk ID from menu/context.");
        }
       break;
-    // 'rename_chunk' case removed
     case 'new_chunk_item':
         if (chunkIdFromMenu !== undefined) {
             addNewItemToChunk(chunkIdFromMenu);
@@ -756,13 +778,6 @@ function handleContextMenuAction(e) {
        break;
 
       // --- Chapter Actions ---
-      case 'rename_chapter':
-          if (isChapTarget && chapName) {
-              renameChapter(chapName);
-          } else {
-              console.error("Rename chapter: Target was not a chapter or chapter name is missing.");
-          }
-          break;
       case 'delete_chapter':
            if (isChapTarget && chapName) {
                deleteChapter(chapName);
@@ -905,13 +920,6 @@ function showChapterInputDialog(context) {
 
     // Customize dialog based on action
     switch (context.action) {
-        case 'rename_chapter': // Renamed from 'rename' to be more specific
-            chapterDialogTitle.textContent = `Rename Chapter \"${context.oldName}\"`;
-            chapterInputName.value = context.oldName;
-            chapterInputName.placeholder = "Enter new chapter name";
-            // Populate select with existing chapters
-            populateChapterSelect(chapterInputName, context.oldName, true); // true for allow 'none'
-            break;
         case 'assign_chapter_item': // Renamed for clarity
              if (context.itemIndex === undefined || context.itemIndex < 0 || context.itemIndex >= currentPatternItems.length) {
                   console.error("Invalid itemIndex in context for assign chapter:", context);
@@ -1067,24 +1075,6 @@ function handleChapterDialogOk() {
 
     try {
         switch (context.action) {
-            case 'rename_chapter':
-                 if (newName !== context.oldName) {
-                      if (newName === "" && context.oldName !== "") {
-                           if (!confirm(`Setting an empty chapter name will move items from "${context.oldName}" to the root level. Continue?`)) {
-                                return;
-                            }
-                       }
-                     console.log(`Calling API: rename_chapter pattern='${currentPattern}', old_name='${context.oldName}', new_name='${newName}'`);
-                     window.electronAPI.callAPI('rename_chapter', {
-                         pattern_name: currentPattern,
-                         old_name: context.oldName,
-                         new_name: newName
-                     });
-                     handleApiResponse('rename_chapter', `renaming chapter`);
-                 } else {
-                      console.log("No change in chapter name.");
-                 }
-                break;
 
             case 'assign_chapter_item':
                  if (context.itemIndex === undefined || context.itemIndex < 0 || context.itemIndex >= currentPatternItems.length) {
@@ -1158,18 +1148,6 @@ function handleChapterDialogOk() {
                       return;
                  }
                 break;
-            // case 'rename_chunk': // Placeholder logic
-            //     if (newName) {
-            //         console.log(`Request to rename chunk ${context.chunkId} to ${newName}`);
-            //         // API call for renaming chunk ID or name would go here
-            //         // window.electronAPI.callAPI('rename_chunk_id', { pattern_name: currentPattern, old_chunk_id: context.chunkId, new_chunk_id: newName });
-            //         // handleApiResponse('rename_chunk_id', `renaming chunk ${context.chunkId}`);
-            //         alert("Chunk renaming API call not yet implemented.");
-            //     } else {
-            //         alert("New chunk name/ID cannot be empty.");
-            //         return;
-            //     }
-            //     break;
 
              default:
                  console.error("Unknown chapter dialog action:", context.action);
@@ -1265,10 +1243,6 @@ function deleteItemOrChunk(itemIndex) {
 }
 
 
-function renameChapter(oldChapterName) {
-    console.log("Action: Rename Chapter", oldChapterName);
-    showChapterInputDialog({ action: 'rename_chapter', oldName: oldChapterName });
-}
 
 function deleteChapter(chapterName) {
     console.log("Action: Delete Chapter", chapterName);
@@ -1555,24 +1529,28 @@ function handleApiResponse(apiMethod, actionDescription) {
 function handleFieldEdit(e) {
   const fieldElement = e.target;
   const fieldName = fieldElement.getAttribute('data-field');
+
+  // If this is a chapter name or chunk ID field, let handleHeaderEdit deal with it.
+  if (fieldName === 'chapter-name' || fieldName === 'chunk-id') {
+    // console.log('handleFieldEdit: Ignoring chapter/chunk header edit, handled by handleHeaderEdit.');
+    return;
+  }
+
   const itemIndex = parseInt(fieldElement.getAttribute('data-index'));
   const newValue = fieldElement.textContent.trim(); // Trim whitespace
 
   // Find the correct item (handle items within chunks)
   let actualItemIndex = -1;
   if (!isNaN(itemIndex)) {
-     // Check if the element is part of a chunk or a single item
     const parentDraggable = fieldElement.closest('.draggable-item');
     if (parentDraggable && parentDraggable.dataset.isChunk === 'true') {
-        // It's inside a chunk, use the chunk-index
-         actualItemIndex = parseInt(fieldElement.closest('.chunk-item-part')?.dataset.chunkIndex);
+      actualItemIndex = parseInt(fieldElement.closest('.chunk-item-part')?.dataset.chunkIndex);
     } else if (parentDraggable && parentDraggable.dataset.isChunk === 'false') {
-        // It's a single item, use the item-index directly
-         actualItemIndex = itemIndex; // This should match parentDraggable.dataset.itemIndex
+      actualItemIndex = itemIndex;
     }
   }
 
-  if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && fieldName && currentPatternItems[actualItemIndex][fieldName] !== newValue) {
+  if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && currentPatternItems[actualItemIndex] && fieldName && currentPatternItems[actualItemIndex][fieldName] !== newValue) {
     console.log(`Field Edit: Index=${actualItemIndex}, Field=${fieldName}, NewValue='${newValue}'`);
     currentPatternItems[actualItemIndex][fieldName] = newValue;
 
@@ -1582,7 +1560,10 @@ function handleFieldEdit(e) {
       saveCurrentPattern();
     }, 300); // Save after 300ms of inactivity
   } else if (isNaN(actualItemIndex) || actualItemIndex === -1) {
-     console.error("Could not determine valid index for field edit from:", fieldElement);
+    // Only log error if it wasn't an ignored header field and fieldName is present
+    if (fieldName && fieldName !== 'chapter-name' && fieldName !== 'chunk-id') {
+         console.error("Could not determine valid index for field edit from:", fieldElement);
+    }
   }
 }
 
@@ -1655,8 +1636,8 @@ function handleViewChange(e) {
 let saveTimeout; // For debouncing saves
 
 async function saveCurrentPattern() {
-  console.log('Saving pattern:', currentPattern);
-  console.log('Pattern items to save:', currentPatternItems); // Log the data being sent
+  console.log('[saveCurrentPattern] Attempting to save pattern:', currentPattern);
+  console.log('[saveCurrentPattern] Pattern items to save:', JSON.parse(JSON.stringify(currentPatternItems))); // Log a clean copy
 
   // Create a deep copy to avoid potential issues with reactivity or unintended modifications
   const patternDataToSave = JSON.parse(JSON.stringify(currentPatternItems));
@@ -1684,19 +1665,28 @@ async function saveCurrentPattern() {
    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
     if (data && data.responseFor === 'update_pattern') { // Check for update_pattern response
       unsubscribe();
+      let anErrorOccurred = false;
+      let errorMessage = 'An error occurred while saving the pattern.';
+
       // Modify success check: Check if data.result is simply true
       if (data.result === true) { 
         console.log('Save successful (result was true)');
-        // Optionally, reload the pattern to confirm save, but might be disruptive
-        // loadPattern(currentPattern); 
       } else if (data.error) { // Check for explicit error first
         console.error('Error saving pattern:', data.error);
-        // Optionally provide user feedback (e.g., alert)
-        alert(`Failed to save pattern: ${data.error}`);
+        errorMessage = `Failed to save pattern: ${data.error}`;
+        alert(errorMessage);
+        anErrorOccurred = true;
       } else { // Catch other non-true results (like false from save_patterns failure, or unexpected data)
           console.error('Save pattern failed or returned unexpected data. Response:', data);
-          alert('An error occurred while saving the pattern.');
+          // alert('An error occurred while saving the pattern.'); // Avoid double alert if anErrorOccurred is also true
+          anErrorOccurred = true; // Keep generic error message unless overridden by data.error
+          if (!data.error) alert(errorMessage); // Show generic if no specific error was already alerted
       }
+      
+      // ALWAYS reload the pattern from the source after a save attempt for consistency.
+      // This will ensure the UI reflects what is actually in the file.
+      console.log('Reloading pattern after save attempt to ensure UI consistency.');
+      loadPattern(currentPattern);
     }
   });
 }
@@ -1816,21 +1806,27 @@ function setupPatternDropZone() {
 }
 
 // Handle item click for selection
-function handleItemClick(e, itemElement) {
-  const clickedItemIndex = parseInt(itemElement.getAttribute('data-item-index'));
-  const isChunk = itemElement.dataset.isChunk === 'true';
-
-  if (isNaN(clickedItemIndex)) {
-    console.error('Invalid index on clicked item:', itemElement);
-    return;
-  }
-
-  // Prevent selection changes if clicking on contenteditable or select
+function handleItemClick(e, itemElement) { // itemElement is e.currentTarget (the .draggable-item)
+  // If the direct click target is an interactive element that should consume the click, return early.
   if (e.target.isContentEditable || e.target.tagName === 'SELECT' || e.target.closest('.drag-handle')) {
+    // console.log('handleItemClick: Click on interactive element (e.g., contenteditable, select, drag-handle), ignoring selection.');
     return;
   }
 
-  console.log(`Item clicked: Index ${clickedItemIndex}, MultiSelect: ${multiSelectionMode}`);
+  // If the click wasn't on an interactive element, try to get the data-item-index for selection from the .draggable-item.
+  const clickedItemIndex = parseInt(itemElement.getAttribute('data-item-index'));
+
+  // If the .draggable-item doesn't have a valid data-item-index (e.g., it's a chapter container),
+  // then it's not selectable in this way.
+  if (isNaN(clickedItemIndex)) {
+    // console.warn('handleItemClick: Clicked on a draggable element without a valid data-item-index for selection (e.g., chapter header area).', itemElement);
+    return;
+  }
+
+  // If we have a valid index, proceed with selection logic.
+  const isChunk = itemElement.dataset.isChunk === 'true'; // Check if the draggable item is a chunk container
+
+  console.log(`Item clicked: Index=${clickedItemIndex}, MultiSelect: ${multiSelectionMode}`);
 
   if (multiSelectionMode) {
     // Multi-selection mode (Shift key held)
@@ -2307,8 +2303,8 @@ function init() {
   });
 
    // Keyboard listeners for multi-select etc.
-  document.addEventListener('keydown', handleKeyDown);
-  document.addEventListener('keyup', handleKeyUp);
+  // document.addEventListener('keydown', handleKeyDown); // REMOVED
+  // document.addEventListener('keyup', handleKeyUp);   // REMOVED
 
   // Setup drop zone AFTER initializing sortable for pattern items
   setupPatternDropZone(); 
@@ -2328,3 +2324,105 @@ function init() {
 
 // Initialize when the DOM is ready
 document.addEventListener('DOMContentLoaded', init); 
+
+// --- Function to handle editing of chapter names and chunk IDs directly ---
+function handleHeaderEdit(e) {
+  console.log('[handleHeaderEdit] Triggered by event:', e.type, 'on element:', e.target);
+  const fieldElement = e.target;
+  const fieldName = fieldElement.getAttribute('data-field');
+  let newValue = fieldElement.textContent.trim();
+
+  if (fieldName === 'chapter-name') {
+    const originalChapterName = fieldElement.getAttribute('data-original-chapter-name');
+    
+    if (newValue !== originalChapterName) {
+      if (newValue !== "") { // Check if new name is not empty
+          const otherChapterNames = [...new Set(currentPatternItems.map(item => item.chapter || '').filter(ch => ch && ch !== originalChapterName))];
+          if (otherChapterNames.includes(newValue)) {
+              alert(`Error: Chapter name "${newValue}" already exists. Please choose a unique name.`);
+              fieldElement.textContent = originalChapterName; // Revert
+              return; 
+          }
+      } // No alert for empty string, it implies moving to root
+
+      console.log(`Updating client data: Renaming chapter from "${originalChapterName}" to "${newValue}"`);
+      currentPatternItems = currentPatternItems.map(item => {
+        if ((item.chapter || '') === originalChapterName) {
+          return { ...item, chapter: newValue };
+        }
+        return item;
+      });
+      saveCurrentPattern(); // Save the entire modified pattern
+      renderPatternItems(); // Re-render from updated client data
+    } else {
+      // If no actual change, but the field was blurred, ensure original value is displayed
+      // This can happen if user clicks in, makes no change, and clicks out.
+      fieldElement.textContent = originalChapterName; 
+    }
+  } else if (fieldName === 'chunk-id') {
+    const currentChunkIdStr = fieldElement.getAttribute('data-current-chunk-id');
+    const currentChunkIdInt = parseInt(currentChunkIdStr, 10);
+    const newChunkIdParsed = parseInt(newValue, 10);
+
+    if (isNaN(newChunkIdParsed) || newChunkIdParsed <= 0) {
+      alert("Chunk ID must be a positive number.");
+      fieldElement.textContent = currentChunkIdStr; // Revert
+      return;
+    }
+
+    const newChunkIdStr = newChunkIdParsed.toString();
+
+    if (newChunkIdStr !== currentChunkIdStr) {
+      const otherChunkIDs = [...new Set(currentPatternItems.map(item => item.chunkID).filter(id => id && id !== currentChunkIdInt).map(id => id.toString()))];
+      if (otherChunkIDs.includes(newChunkIdStr)) {
+          alert(`Error: Chunk ID "${newChunkIdStr}" already exists. Please choose a unique ID.`);
+          fieldElement.textContent = currentChunkIdStr; // Revert
+          return;
+      }
+
+      console.log(`Updating client data: Changing Chunk ID from ${currentChunkIdInt} to ${newChunkIdParsed}`);
+      currentPatternItems = currentPatternItems.map(item => {
+        if (item.chunkID === currentChunkIdInt) {
+          return { ...item, chunkID: newChunkIdParsed };
+        }
+        return item;
+      });
+      saveCurrentPattern(); // Save the entire modified pattern
+      renderPatternItems(); // Re-render from updated client data
+    } else {
+      // If no actual change, ensure original value is displayed.
+      fieldElement.textContent = currentChunkIdStr; 
+    }
+  }
+}
+
+// Function to deselect all currently selected items
+function deselectAllItems() {
+  // Clear single selection state
+  if (selectedIndex !== -1) {
+    const previousSelectedItem = patternItems.querySelector(`.draggable-item[data-item-index="${selectedIndex}"]`);
+    if (previousSelectedItem) {
+      previousSelectedItem.classList.remove('selected');
+    }
+    selectedIndex = -1;
+  }
+
+  // Clear multi-selection state
+  if (selectedIndices.length > 0) {
+    selectedIndices.forEach(index => {
+      const itemElement = patternItems.querySelector(`.draggable-item[data-item-index="${index}"]`);
+      if (itemElement) {
+        itemElement.classList.remove('selected');
+      }
+    });
+    selectedIndices = [];
+  }
+  
+  // As a catch-all, ensure no items have .selected class if state somehow diverged
+  document.querySelectorAll('#pattern-items .draggable-item.selected').forEach(el => {
+    el.classList.remove('selected');
+  });
+
+  console.log('All items deselected.');
+  // No re-render needed usually, class removal should suffice for visuals.
+}

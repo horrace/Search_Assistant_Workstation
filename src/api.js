@@ -114,8 +114,19 @@ class SearchPatternAPI {
       }
       
       const sp_list_path = path.join(this.dataDir, 'sp_list.json');
-      fs.writeFileSync(sp_list_path, JSON.stringify(this.patterns, null, 2));
-      console.log("Patterns saved successfully to:", sp_list_path);
+      
+      // Log a snippet of the data about to be saved for the first pattern found
+      if (this.patterns && Object.keys(this.patterns).length > 0) {
+        const firstPatternName = Object.keys(this.patterns)[0];
+        const firstPatternSample = this.patterns[firstPatternName];
+        if (firstPatternSample && firstPatternSample.length > 0) {
+          console.log(`[API save_patterns] Data for pattern '${firstPatternName}' before stringify - First item chapter: ${firstPatternSample[0]?.chapter}, chunkID: ${firstPatternSample[0]?.chunkID}`);
+        }
+      }
+
+      const data_to_save = JSON.stringify(this.patterns, null, 2);
+      fs.writeFileSync(sp_list_path, data_to_save);
+      console.log("[API save_patterns] Patterns saved successfully to:", sp_list_path);
       return true;
     } catch (error) {
       console.error(`Error saving patterns: ${error.message}`);
@@ -193,8 +204,26 @@ class SearchPatternAPI {
    * Update a specific pattern
    */
   update_pattern(pattern_name, pattern_data) {
-    this.patterns[pattern_name] = pattern_data;
-    return this.save_patterns();
+    console.log(`[API update_pattern] Received request for ${pattern_name}. Incoming pattern_data has ${pattern_data?.length} items.`);
+    if (pattern_data && pattern_data.length > 0) {
+      console.log(`[API update_pattern] Incoming first item chapter: ${pattern_data[0]?.chapter}, chunkID: ${pattern_data[0]?.chunkID}`);
+    }
+
+    try {
+      // Deep clone to ensure we have plain objects and to avoid potential IPC proxy issues.
+      const plain_pattern_data = JSON.parse(JSON.stringify(pattern_data));
+      this.patterns[pattern_name] = plain_pattern_data;
+
+      console.log(`[API update_pattern] Assigned new data for ${pattern_name}. In-memory this.patterns[${pattern_name}] now has ${this.patterns[pattern_name]?.length} items.`);
+      if (this.patterns[pattern_name] && this.patterns[pattern_name].length > 0) {
+        console.log(`[API update_pattern] In-memory first item chapter: ${this.patterns[pattern_name][0]?.chapter}, chunkID: ${this.patterns[pattern_name][0]?.chunkID}`);
+      }
+      return this.save_patterns();
+    } catch (e) {
+      console.error(`[API update_pattern] Error processing/assigning pattern_data for ${pattern_name}: ${e.message}`);
+      console.error(e.stack);
+      return false; // Indicate failure
+    }
   }
   
   /**
@@ -578,42 +607,6 @@ class SearchPatternAPI {
     }
   }
 
-
-  /**
-   * Rename a chapter within a pattern.
-   */
-  rename_chapter(pattern_name, old_name, new_name) {
-    try {
-        const pattern = this.patterns[pattern_name] || [];
-        if (!pattern.length) {
-            return { success: false, error: "Pattern not found" };
-        }
-         console.log(`API: rename_chapter received: pattern='${pattern_name}', old='${old_name}', new='${new_name}'`);
-
-        let changed = false;
-        for (const item of pattern) {
-            if ((item.chapter || '') === old_name) {
-                item.chapter = new_name; // Assign new name (can be '')
-                changed = true;
-            }
-        }
-
-        if (!changed) {
-            console.warn(`rename_chapter: No items found with chapter '${old_name}'.`);
-            // Return success even if nothing changed, as the state is technically correct.
-            return { success: true };
-        }
-
-        this.patterns[pattern_name] = pattern;
-        const saved = this.save_patterns();
-        return { success: saved, error: saved ? null : "Failed to save pattern" };
-
-    } catch (error) {
-        console.error(`Error in rename_chapter: ${error.message}\n${error.stack}`);
-        return { success: false, error: error.message };
-    }
-  }
-
   /**
    * Delete a chapter and all its items from a pattern.
    */
@@ -827,46 +820,6 @@ class SearchPatternAPI {
    }
 
   // --- New API methods for chunk management ---
-
-  /**
-   * Rename a chunk ID for all items in a pattern.
-   */
-  rename_chunk_id(pattern_name, old_chunk_id, new_chunk_id) {
-    try {
-      const pattern = this.patterns[pattern_name] || [];
-      if (!pattern.length) {
-        return { success: false, error: "Pattern not found" };
-      }
-      if (old_chunk_id <= 0 || new_chunk_id <= 0) {
-        return { success: false, error: "Invalid chunk IDs" };
-      }
-      if (this.patterns[pattern_name].some(item => item.chunkID === new_chunk_id)) {
-        return { success: false, error: `New chunk ID ${new_chunk_id} already exists` };
-      }
-
-      console.log(`API: rename_chunk_id received: pattern='${pattern_name}', old_id=${old_chunk_id}, new_id=${new_chunk_id}`);
-      let changed = false;
-      for (const item of pattern) {
-        if (item.chunkID === old_chunk_id) {
-          item.chunkID = new_chunk_id;
-          changed = true;
-        }
-      }
-
-      if (!changed) {
-        console.warn(`rename_chunk_id: No items found with chunk ID ${old_chunk_id}.`);
-        return { success: true }; // No change needed, success.
-      }
-
-      this.patterns[pattern_name] = pattern;
-      const saved = this.save_patterns();
-      return { success: saved, error: saved ? null : "Failed to save pattern" };
-
-    } catch (error) {
-      console.error(`Error in rename_chunk_id: ${error.message}\n${error.stack}`);
-      return { success: false, error: error.message };
-    }
-  }
 
   /**
    * Delete all items belonging to a specific chunk ID from a pattern.
