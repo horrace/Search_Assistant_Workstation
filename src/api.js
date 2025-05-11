@@ -182,7 +182,7 @@ class SearchPatternAPI {
     // Check if pattern_name is a string
     if (typeof pattern_name !== 'string') {
       console.error('Invalid pattern_name type, expected string');
-      return [];
+      return []; // Return empty array or an error object: { success: false, error: "Invalid pattern_name" }
     }
     
     try {
@@ -191,12 +191,14 @@ class SearchPatternAPI {
         return this.patterns[pattern_name];
       } else {
         console.log(`Pattern not found: ${pattern_name}`);
-        return [];
+        // For consistency with get_available_patterns, return empty array if not found.
+        // Or, return an error object if preferred: return { success: false, error: "Pattern not found" };
+        return []; 
       }
     } catch (error) {
       console.error(`Error in get_pattern: ${error.message}`);
       console.error(error.stack);
-      return [];
+      return []; // Or an error object
     }
   }
   
@@ -218,11 +220,48 @@ class SearchPatternAPI {
       if (this.patterns[pattern_name] && this.patterns[pattern_name].length > 0) {
         console.log(`[API update_pattern] In-memory first item chapter: ${this.patterns[pattern_name][0]?.chapter}, chunkID: ${this.patterns[pattern_name][0]?.chunkID}`);
       }
-      return this.save_patterns();
+      return this.save_patterns(); // save_patterns returns true/false
     } catch (e) {
       console.error(`[API update_pattern] Error processing/assigning pattern_data for ${pattern_name}: ${e.message}`);
       console.error(e.stack);
       return false; // Indicate failure
+    }
+  }
+
+  create_pattern({ pattern_name }) {
+    console.log(`[API create_pattern] Attempting to create pattern: ${pattern_name}`);
+    if (!pattern_name || pattern_name.trim() === "") {
+        console.warn("[API create_pattern] Pattern name cannot be empty.");
+        return { success: false, error: "Pattern name cannot be empty." };
+    }
+    if (!this.patterns) { // Should be initialized by constructor
+        console.error("[API create_pattern] this.patterns is not initialized!");
+        // Attempt to recover, though this indicates an earlier issue, possibly in constructor or load_patterns
+        this.load_patterns(); 
+        if (!this.patterns) {
+             console.error("[API create_pattern] CRITICAL: this.patterns still not initialized after reload attempt.");
+             return { success: false, error: "Internal server error: Patterns data structure not available."};
+        }
+    }
+    if (this.patterns.hasOwnProperty(pattern_name)) {
+        console.warn(`[API create_pattern] Pattern "${pattern_name}" already exists.`);
+        return { success: false, error: `Pattern "${pattern_name}" already exists.` };
+    }
+    try {
+        this.patterns[pattern_name] = []; // Create new pattern with an empty list of items
+        const saved = this.save_patterns(); // Save the changes
+        if (saved) {
+            console.log(`[API create_pattern] Successfully created pattern: ${pattern_name}`);
+            return { success: true, new_pattern_name: pattern_name };
+        } else {
+            console.error(`[API create_pattern] Failed to save after creating pattern: ${pattern_name}`);
+            // Attempt to remove the partially created pattern to maintain consistency if save fails
+            delete this.patterns[pattern_name]; 
+            return { success: false, error: `Failed to save new pattern: ${pattern_name}` };
+        }
+    } catch (e) {
+        console.error(`[API create_pattern] Error creating pattern ${pattern_name}:`, e);
+        return { success: false, error: `Failed to save new pattern: ${e.message}` };
     }
   }
   
@@ -553,7 +592,7 @@ class SearchPatternAPI {
     try {
       const pattern = this.patterns[pattern_name] || [];
       // Validate index (allow insertion at the end)
-      if (index < 0 || index > pattern.length) {
+      if (index < 0 || index > pattern.length) { // Also allow index === pattern.length for appending
          console.error(`add_item: Invalid index ${index}, pattern length is ${pattern.length}`);
         return { success: false, error: "Invalid insertion index" };
       }
@@ -565,8 +604,12 @@ class SearchPatternAPI {
 
       console.log(`API: add_item received: pattern='${pattern_name}', index=${index}, item=`, item_data);
 
-      // Insert item at the specified index
-      pattern.splice(index, 0, item_data);
+      // Insert item at the specified index or append if index is -1 (though frontend sends specific index or relies on last)
+      if (index === -1 || index === pattern.length) {
+          pattern.push(item_data);
+      } else {
+          pattern.splice(index, 0, item_data);
+      }
 
       this.patterns[pattern_name] = pattern;
       const saved = this.save_patterns();
@@ -613,7 +656,10 @@ class SearchPatternAPI {
   delete_chapter(pattern_name, chapter_name) {
     try {
       const original_pattern = this.patterns[pattern_name] || [];
-      if (!original_pattern.length) {
+      if (!original_pattern.length && Object.keys(this.patterns).includes(pattern_name)) { 
+        // Pattern exists but is empty, so deleting a chapter from it is fine (no-op)
+      } else if (!Object.keys(this.patterns).includes(pattern_name)) {
+        console.error(`delete_chapter: Pattern not found - ${pattern_name}`);
         return { success: false, error: "Pattern not found" };
       }
        console.log(`API: delete_chapter received: pattern='${pattern_name}', chapter='${chapter_name}'`);
@@ -621,9 +667,10 @@ class SearchPatternAPI {
       // Filter out items belonging to the specified chapter
       const new_pattern = original_pattern.filter(item => (item.chapter || '') !== chapter_name);
 
-      if (new_pattern.length === original_pattern.length) {
-          console.warn(`delete_chapter: No items found with chapter '${chapter_name}'.`);
-          return { success: true }; // No change needed, success.
+      if (new_pattern.length === original_pattern.length && original_pattern.length > 0) { // Check if pattern had items
+          console.warn(`delete_chapter: No items found with chapter '${chapter_name}' in pattern '${pattern_name}'.`);
+          // If the chapter didn't exist in a non-empty pattern, still consider it a success (idempotent)
+          // If pattern was empty, it's also a success.
       }
 
       this.patterns[pattern_name] = new_pattern;
@@ -659,12 +706,12 @@ class SearchPatternAPI {
                    items_to_update_indices.push(idx);
                }
            });
-       } else {
+       } else { // Single item update
            if (item_index >= 0 && item_index < pattern.length) {
                items_to_update_indices.push(item_index);
                console.log(` -> Identifying single item at index ${item_index}`);
            } else {
-               console.error(`update_item_chapter: Invalid index ${item_index} for single item update.`);
+               console.error(`update_item_chapter: Invalid index ${item_index} for single item update. Pattern length: ${pattern.length}`);
                return { success: false, error: "Invalid item index" };
            }
        }
@@ -747,18 +794,18 @@ class SearchPatternAPI {
 
    /**
    * Update properties of items within a chunk, or remove an item from a chunk.
-   * Currently used by frontend only for removing an item (setting new_chunk_id = 0).
    */
   update_chunk(pattern_name, item_index, new_chunk_id) {
      try {
        const pattern = this.patterns[pattern_name] || [];
-       if (!pattern.length) {
-         return { success: false, error: "Pattern not found" };
+       if (!this.patterns.hasOwnProperty(pattern_name)) {
+            console.error(`update_chunk: Pattern not found - ${pattern_name}`);
+            return { success: false, error: "Pattern not found" };
        }
         console.log(`API: update_chunk received: pattern='${pattern_name}', item_index=${item_index}, new_chunk_id=${new_chunk_id}`);
 
        if (item_index < 0 || item_index >= pattern.length) {
-            console.error(`update_chunk: Invalid item_index ${item_index}`);
+            console.error(`update_chunk: Invalid item_index ${item_index}. Pattern length: ${pattern.length}`);
             return { success: false, error: "Invalid item index" };
         }
 
@@ -767,7 +814,7 @@ class SearchPatternAPI {
 
        if (new_chunk_id === originalChunkId) {
            console.warn(`update_chunk: Item at index ${item_index} is already in chunk state ${new_chunk_id}.`);
-           return { success: true }; // No change needed, operation successful conceptually.
+           return { success: true }; 
        }
 
        // --- Handle Assigning TO a Chunk (new_chunk_id > 0) --- 
@@ -826,11 +873,14 @@ class SearchPatternAPI {
    */
   delete_chunk(pattern_name, chunk_id) {
     try {
-      const original_pattern = this.patterns[pattern_name] || [];
-      if (!original_pattern.length) {
+      if (!this.patterns.hasOwnProperty(pattern_name)) {
+        console.error(`delete_chunk: Pattern not found - ${pattern_name}`);
         return { success: false, error: "Pattern not found" };
       }
+      const original_pattern = this.patterns[pattern_name] || []; // Get pattern, even if empty
+
       if (chunk_id <= 0) {
+        console.error(`delete_chunk: Invalid chunk_id ${chunk_id}`);
         return { success: false, error: "Invalid chunk ID" };
       }
 
@@ -838,8 +888,10 @@ class SearchPatternAPI {
       const new_pattern = original_pattern.filter(item => item.chunkID !== chunk_id);
 
       if (new_pattern.length === original_pattern.length) {
-        console.warn(`delete_chunk: No items found with chunk ID ${chunk_id}.`);
-        return { success: true }; // No change needed, success.
+        // This means no items were found with that chunk_id.
+        // This could be an error if the chunk was expected to exist, or success if it's an idempotent operation.
+        console.warn(`delete_chunk: No items found with chunk ID ${chunk_id} in pattern '${pattern_name}'.`);
+        return { success: true }; // No change needed, operation considered successful.
       }
 
       this.patterns[pattern_name] = new_pattern;
@@ -857,10 +909,15 @@ class SearchPatternAPI {
    */
   duplicate_item(pattern_name, item_index) {
     try {
+      if (!this.patterns.hasOwnProperty(pattern_name)) {
+        console.error(`duplicate_item: Pattern not found - ${pattern_name}`);
+        return { success: false, error: "Pattern not found" };
+      }
       const pattern = this.patterns[pattern_name] || [];
-      if (!pattern.length || !(0 <= item_index && item_index < pattern.length)) {
-        console.error(`duplicate_item: Invalid pattern or index. Pattern: ${pattern_name}, Index: ${item_index}`);
-        return { success: false, error: "Invalid pattern or item index" };
+
+      if (!(0 <= item_index && item_index < pattern.length)) {
+        console.error(`duplicate_item: Invalid item_index ${item_index}. Pattern length: ${pattern.length}`);
+        return { success: false, error: "Invalid item index" };
       }
 
       const item_to_duplicate = pattern[item_index];
@@ -875,10 +932,8 @@ class SearchPatternAPI {
         duplicated_item.chunkID = 0; 
       }
 
+      console.log(`API: duplicate_item received: pattern='${pattern_name}', index=${item_index}, item to duplicate=`, item_to_duplicate);
 
-      console.log(`API: duplicate_item received: pattern='${pattern_name}', index=${item_index}, item=`, item_to_duplicate);
-
-      // Insert the duplicated item right after the original
       pattern.splice(item_index + 1, 0, duplicated_item);
 
       this.patterns[pattern_name] = pattern;
@@ -901,7 +956,77 @@ class SearchPatternAPI {
       return { success: false, error: error.message };
     }
   }
-}
+
+  // --- Parts Bank Methods ---
+  get_parts_bank() {
+    console.log('[API get_parts_bank] Retrieving parts bank.');
+    if (!this.settings || !this.settings.parts_bank) {
+        console.warn('[API get_parts_bank] Parts bank not found in settings, returning empty array.');
+        return []; // Ensure it returns an array even if undefined
+    }
+    return this.settings.parts_bank;
+  }
+
+  save_parts_bank(parts_bank_data) {
+    console.log('[API save_parts_bank] Saving parts bank data.');
+    try {
+        if (!this.settings) {
+            this.settings = {}; // Initialize settings if it doesn't exist
+        }
+        this.settings.parts_bank = JSON.parse(JSON.stringify(parts_bank_data)); // Deep clone
+        const saved = this.save_settings();
+        return { success: saved, error: saved ? null : "Failed to save settings with parts bank." };
+    } catch (error) {
+        console.error(`[API save_parts_bank] Error saving parts bank: ${error.message}`);
+        return { success: false, error: error.message };
+    }
+  }
+
+  add_to_parts_bank(item_data) {
+    console.log('[API add_to_parts_bank] Adding item to parts bank:', item_data);
+    try {
+        if (!this.settings) {
+            this.settings = {};
+        }
+        if (!this.settings.parts_bank || !Array.isArray(this.settings.parts_bank)) {
+            this.settings.parts_bank = [];
+        }
+        // Ensure item_data is a plain object
+        const plain_item_data = JSON.parse(JSON.stringify(item_data));
+        this.settings.parts_bank.push(plain_item_data);
+        const saved = this.save_settings();
+        return { success: saved, error: saved ? null : "Failed to save settings after adding to parts bank." };
+    } catch (error) {
+        console.error(`[API add_to_parts_bank] Error adding to parts bank: ${error.message}`);
+        return { success: false, error: error.message };
+    }
+  }
+
+  delete_from_parts_bank(item_abbr) {
+    console.log('[API delete_from_parts_bank] Deleting item from parts bank by abbr:', item_abbr);
+    try {
+        if (!this.settings || !this.settings.parts_bank || !Array.isArray(this.settings.parts_bank)) {
+            console.warn('[API delete_from_parts_bank] Parts bank is empty or not found.');
+            return { success: false, error: "Parts bank is empty or not found." };
+        }
+        const initial_length = this.settings.parts_bank.length;
+        this.settings.parts_bank = this.settings.parts_bank.filter(item => item.abbr !== item_abbr);
+        
+        if (this.settings.parts_bank.length === initial_length) {
+            console.warn(`[API delete_from_parts_bank] Item with abbr "${item_abbr}" not found in parts bank.`);
+            return { success: false, error: `Item with abbr "${item_abbr}" not found.` };
+        }
+
+        const saved = this.save_settings();
+        return { success: saved, error: saved ? null : "Failed to save settings after deleting from parts bank." };
+    } catch (error) {
+        console.error(`[API delete_from_parts_bank] Error deleting from parts bank: ${error.message}`);
+        return { success: false, error: error.message };
+    }
+  }
+
+} // END OF SearchPatternAPI CLASS
+
 
 // Create and export the API instance
 const api = new SearchPatternAPI();

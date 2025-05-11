@@ -22,8 +22,10 @@
   "build": {
     "appId": "com.searchassistant.app",
     "win": {
-      "target": "nsis",
-      "icon": "public/icon.ico"
+      "target": [
+        "nsis",
+        "portable"
+      ]
     }
   }
 } 

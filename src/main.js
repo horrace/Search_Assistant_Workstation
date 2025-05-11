@@ -2,6 +2,12 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { api } = require('./api'); // Import the JavaScript API
+console.log(">>>> MAIN.JS DEBUG: api object is:", api);
+console.log(">>>> MAIN.JS DEBUG: typeof api.create_pattern is:", typeof api.create_pattern);
+console.log(">>>> MAIN.JS DEBUG: 'create_pattern' in api:", ('create_pattern' in api));
+if (api && typeof api.create_pattern === 'function') {
+    console.log(">>>> MAIN.JS DEBUG: api.create_pattern function body (first 100 chars):", api.create_pattern.toString().substring(0, 100));
+}
 
 // Set NODE_ENV for development mode
 process.env.NODE_ENV = 'development';

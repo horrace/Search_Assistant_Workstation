@@ -6,6 +6,8 @@ const patternItems = document.getElementById('pattern-items');
 const partsBankItems = document.getElementById('parts-bank-items');
 const contextMenu = document.getElementById('context-menu');
 const newPatternDialog = document.getElementById('new-pattern-dialog');
+const newPatternDialogOverlay = document.getElementById('new-pattern-dialog-overlay');
+const newPatternDialogContent = document.getElementById('new-pattern-dialog-content'); // Keep if direct interaction with content needed
 const newPatternNameInput = document.getElementById('new-pattern-name');
 const dialogOkBtn = document.getElementById('dialog-ok-btn');
 const dialogCancelBtn = document.getElementById('dialog-cancel-btn');
@@ -1499,52 +1501,159 @@ function removeFromChunk(itemIndex) {
 
 // (Make sure handleApiResponse is defined correctly)
 // Helper for handling API responses and reloading (if not already present and correct)
-function handleApiResponse(apiMethod, actionDescription) {
-    // Ensure only one listener is active per action
-    // REMOVED: const listenerId = `${apiMethod}_${Date.now()}`; // Unique ID for listener - Not needed with returned unsubscribe function
-
-    let unsubscribe = null; // Variable to hold the unsubscribe function
+function handleApiResponse(apiMethod, actionDescription, params = {}) {
+    console.log(`[handleApiResponse] Listening for ${apiMethod} (Action: ${actionDescription})`);
+    let unsubscribeHandler = null; // To store the unsubscribe function
 
     const handleResponse = (data) => {
+        console.log(`[handleApiResponse] Received response for ${data.responseFor}:`, data);
         if (data && data.responseFor === apiMethod) {
-            if (unsubscribe) { // Check if unsubscribe function exists
-                 console.log(`[EDITOR] Unsubscribing listener for ${apiMethod}`); // Use console.log
-                 unsubscribe(); // Call the returned unsubscribe function
-                 unsubscribe = null; // Clear it after use
+            if (unsubscribeHandler) {
+                unsubscribeHandler(); // Call the unsubscribe function obtained from onAPIResponse
+                unsubscribeHandler = null;
             } else {
-                 console.warn(`[EDITOR] No unsubscribe function found for ${apiMethod} listener.`); // Use console.warn
+                console.warn("[handleApiResponse] Unsubscribe handler was not set or already called.");
             }
-            // window.electronAPI.removeAPIResponseListener(listenerId); // REMOVED: Incorrect usage
-            if (data.result && data.result.success) {
-                console.log(`[EDITOR] Success ${actionDescription}. Reloading pattern.`); // Use console.log
-                loadPattern(currentPattern);
-            } else if (data.error) {
-                console.error(`[EDITOR] Error ${actionDescription}:`, data.error); // Use console.error
-                alert(`Error ${actionDescription}: ${data.error}`);
-                loadPattern(currentPattern); // Reload even on error to ensure consistency
-            } else {
-                 console.error(`[EDITOR] Unknown error/response ${actionDescription}:`, data); // Use console.error
-                 alert(`An unknown error occurred while ${actionDescription}.`);
-                 loadPattern(currentPattern);
+
+            if (data.error) { // Top-level IPC error
+                console.error(`Error ${actionDescription}:`, data.error);
+                alert(`Failed to ${actionDescription}. IPC Error: ${data.error}`);
+            } else if (apiMethod === 'create_pattern') {
+                // Specific handling for create_pattern response
+                if (data.result && data.result.success && params.newPatternName) {
+                    const newPatternName = params.newPatternName; 
+                    console.log(`New pattern '${newPatternName}' created successfully. Adding 5 blank items and selecting.`);
+
+                    for (let i = 0; i < 5; i++) {
+                        const newItemData = { 
+                            view_plane: 'ax', 
+                            abbr: `Part ${i+1}`, 
+                            strategy: '', 
+                            chapter: '', 
+                            chunkID: 0 
+                        };
+                        window.electronAPI.callAPI('add_item', {
+                            pattern_name: newPatternName,
+                            item_data: newItemData,
+                            index: i
+                        });
+                    }
+                    
+                    const option = document.createElement('option');
+                    option.value = newPatternName;
+                    option.textContent = newPatternName;
+                    patternSelector.appendChild(option);
+                    if (!patterns.includes(newPatternName)) {
+                        patterns.push(newPatternName);
+                    }
+                    patternSelector.value = newPatternName;
+                    
+                    loadPattern(newPatternName); 
+
+                } else {
+                    const errorMessage = data.result && data.result.error ? data.result.error : "Unknown error creating pattern.";
+                    console.error(`Error ${actionDescription}:`, errorMessage, "Full response data.result:", data.result);
+                    alert(`Failed to ${actionDescription}. Error: ${errorMessage}`);
+                }
+            } else { 
+                console.log(`Successfully ${actionDescription}. Result:`, data.result);
+                if (apiMethod === 'add_item' || apiMethod === 'delete_item' || apiMethod === 'update_item' || 
+                           apiMethod === 'move_item' || apiMethod === 'create_chunk' || apiMethod === 'disband_chunk' ||
+                           apiMethod === 'delete_chapter' || apiMethod === 'rename_chapter' || 
+                           apiMethod === 'update_item_chapter' || apiMethod === 'update_chunk' || 
+                           apiMethod === 'rename_chunk_id' || apiMethod === 'delete_chunk' ||
+                           apiMethod === 'duplicate_item') {
+                    if (currentPattern) {
+                        console.log(`Reloading pattern '${currentPattern}' after ${actionDescription}.`);
+                        loadPattern(currentPattern); 
+                    }
+                }
             }
         }
     };
+    
+    // Store the unsubscribe function returned by onAPIResponse
+    unsubscribeHandler = window.electronAPI.onAPIResponse(handleResponse);
 
-    // Call onAPIResponse and store the returned unsubscribe function
-    unsubscribe = window.electronAPI.onAPIResponse(handleResponse);
-    // Pass listener ID
-    // REMOVED: window.electronAPI.onAPIResponse(handleResponse, listenerId);
+    // Optional: Timeout for responses 
+    // setTimeout(() => {
+    //   if (unsubscribeHandler) {
+    //       unsubscribeHandler();
+    //       unsubscribeHandler = null;
+    //       console.warn(`Timeout waiting for API response for ${apiMethod}`);
+    //   }
+    // }, 10000); 
 }
 
-// Ensure add_item handles chapter correctly (already modified above)
-// Ensure delete_item handles chunks correctly (already modified above)
-// Ensure rename_chapter calls API (modified above)
-// Ensure delete_chapter calls API (modified above)
-// Ensure assign_chapter calls API (modified above)
-// Ensure create_chapter_here calls addNewItem (modified above)
-// Ensure create_chunk_first/last are using correct indices (modified above)
-// Ensure remove_from_chunk calls API (modified above)
-// Ensure disband_chunk calls API using chunkId (modified above)
+// --- New Pattern Dialog Functions ---
+function showNewPatternDialog() {
+  newPatternNameInput.value = '';
+  newPatternDialogOverlay.style.display = 'flex'; // Use flex to center content
+  newPatternNameInput.focus();
+}
+
+function hideNewPatternDialog() {
+  newPatternDialogOverlay.style.display = 'none';
+}
+
+async function createNewPattern() {
+  const patternName = newPatternNameInput.value.trim();
+  if (patternName) {
+    // Check if pattern already exists
+    if (patterns.includes(patternName)) {
+      alert('A pattern with this name already exists.');
+      return;
+    }
+
+    console.log(`Requesting creation of new pattern: ${patternName}`);
+    // Call API to create the pattern
+    window.electronAPI.callAPI('create_pattern', { pattern_name: patternName });
+    
+    // Pass the new pattern name to handleApiResponse for post-creation steps
+    handleApiResponse('create_pattern', `creating new pattern '${patternName}'`, { newPatternName: patternName });
+    
+    hideNewPatternDialog(); // Hide dialog immediately (optimistic)
+  } else {
+    alert('Pattern name cannot be empty.');
+  }
+}
+
+// Event Listeners
+// ... existing code ...
+// Initialize
+init();
+
+// Make sure drag handles are ignored by SortableJS if they are inside an item
+// This is often handled by the `filter` option in SortableJS or by stopping event propagation.
+
+// Ensure all contenteditable fields allow text selection and normal input behavior
+document.addEventListener('mousedown', function(event) {
+  let target = event.target;
+  while (target && target !== document.body) {
+    if (target.isContentEditable) {
+      // If the target is contenteditable, stop propagation to prevent SortableJS from interfering
+      // but also ensure default text selection behavior is not prevented.
+      // The main concern here is if a drag starts on a contenteditable field.
+      // SortableJS usually handles this well with its `filter` option for inputs/contenteditables.
+      // Explicitly stopping propagation might be too aggressive if not needed.
+      // For now, let's rely on SortableJS's filter. If issues persist, revisit.
+      // event.stopPropagation(); // Potentially uncomment if needed
+      return; // Allow default behavior for contenteditable
+    }
+    target = target.parentNode;
+  }
+}, true); // Use capture phase to catch event early
+
+
+// Add this function to ensure items are properly deselected
+function deselectAllItems() {
+    selectedIndex = -1;
+    selectedIndices = [];
+    multiSelectionMode = false;
+    document.querySelectorAll('.draggable-item.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+}
 
 // ... rest of editor.js ...
 
@@ -1588,45 +1697,6 @@ function handleFieldEdit(e) {
          console.error("Could not determine valid index for field edit from:", fieldElement);
     }
   }
-}
-
-// Show new pattern dialog
-function showNewPatternDialog() {
-  newPatternDialog.style.display = 'block';
-  newPatternNameInput.value = '';
-  newPatternNameInput.focus();
-}
-
-// Hide new pattern dialog
-function hideNewPatternDialog() {
-  newPatternDialog.style.display = 'none';
-}
-
-// Create a new pattern
-function createNewPattern() {
-  const patternName = newPatternNameInput.value.trim();
-  
-  if (!patternName) {
-    alert('Please enter a pattern name');
-    return;
-  }
-  
-  // Send create pattern request to backend
-  window.electronAPI.callAPI('update_pattern', {
-    pattern_name: patternName,
-    pattern_data: []
-  });
-  
-  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'update_pattern') {
-      unsubscribe();
-      
-      hideNewPatternDialog();
-      
-      // Reload patterns to include the new one
-      loadPatterns();
-    }
-  });
 }
 
 // Handler for view dropdown change
