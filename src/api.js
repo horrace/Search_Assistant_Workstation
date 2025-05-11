@@ -851,6 +851,56 @@ class SearchPatternAPI {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Duplicate an item in a pattern.
+   */
+  duplicate_item(pattern_name, item_index) {
+    try {
+      const pattern = this.patterns[pattern_name] || [];
+      if (!pattern.length || !(0 <= item_index && item_index < pattern.length)) {
+        console.error(`duplicate_item: Invalid pattern or index. Pattern: ${pattern_name}, Index: ${item_index}`);
+        return { success: false, error: "Invalid pattern or item index" };
+      }
+
+      const item_to_duplicate = pattern[item_index];
+      // Deep clone the item to ensure no shared references, especially for complex objects
+      const duplicated_item = JSON.parse(JSON.stringify(item_to_duplicate));
+      
+      // Reset chunkID for the duplicated item if it was part of a chunk,
+      // as duplicating an item should typically create a new, independent item.
+      // If specific chunk behavior is needed for duplicates, this can be adjusted.
+      if (duplicated_item.chunkID && duplicated_item.chunkID > 0) {
+        console.log(`Duplicate_item: Resetting chunkID for duplicated item (original chunkID: ${duplicated_item.chunkID})`);
+        duplicated_item.chunkID = 0; 
+      }
+
+
+      console.log(`API: duplicate_item received: pattern='${pattern_name}', index=${item_index}, item=`, item_to_duplicate);
+
+      // Insert the duplicated item right after the original
+      pattern.splice(item_index + 1, 0, duplicated_item);
+
+      this.patterns[pattern_name] = pattern;
+      const saved = this.save_patterns();
+      
+      if (saved) {
+        console.log(`API: duplicate_item successful for pattern '${pattern_name}'. New item added at index ${item_index + 1}`);
+        return { success: true, new_item_index: item_index + 1, item_data: duplicated_item };
+      } else {
+        console.error(`API: duplicate_item failed during save for pattern '${pattern_name}'.`);
+        // Attempt to reload patterns to revert state in memory if save fails
+        this.load_patterns(); 
+        return { success: false, error: "Failed to save updated pattern after duplication" };
+      }
+
+    } catch (error) {
+      console.error(`Error in duplicate_item: ${error.message}\n${error.stack}`);
+      // Attempt to reload patterns on unexpected error
+      this.load_patterns();
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 // Create and export the API instance

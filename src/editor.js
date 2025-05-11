@@ -220,18 +220,21 @@ function loadPattern(patternName) {
           clearTimeout(retryTimeout);
         }
         
-        // Filter out duplicate items (by abbr)
-        const seenAbbrs = new Set();
-        currentPatternItems = data.result.filter(item => {
-          const abbr = item.abbr;
-          if (seenAbbrs.has(abbr)) {
-            console.log(`Filtered out duplicate item: ${abbr}`);
-            return false;
-          }
-          seenAbbrs.add(abbr);
-          return true;
-        }).map(item => ({
-          ...item
+        // REMOVED: Filter out duplicate items (by abbr)
+        // const seenAbbrs = new Set();
+        // currentPatternItems = data.result.filter(item => {
+        //   const abbr = item.abbr;
+        //   if (seenAbbrs.has(abbr)) {
+        //     console.log(`Filtered out duplicate item: ${abbr}`);
+        //     return false;
+        //   }
+        //   seenAbbrs.add(abbr);
+        //   return true;
+        // }).map(item => ({
+        //   ...item
+        // }));
+        currentPatternItems = data.result.map(item => ({ // Directly map without filtering
+            ...item
         }));
         
         renderPatternItems();
@@ -596,6 +599,7 @@ function handleContextMenu(e) {
 
       menuItems.push({ text: 'Add New Item Here', action: 'add_item_here', enabled: true }); // 'here' means after this specific item
       menuItems.push({ text: 'Delete Item', action: 'delete_item', enabled: true }); // Targets specificIndex
+      menuItems.push({ text: 'Duplicate Part', action: 'duplicate_part', enabled: true, itemIndex: contextMenuTargetSpecificIndex }); // Added Duplicate Part
 
       // Assign/Change Chunk for this specific item
       menuItems.push({ text: 'Assign/Change Chunk', action: 'assign_change_chunk', enabled: true, itemIndex: contextMenuTargetSpecificIndex });
@@ -828,6 +832,22 @@ function handleContextMenuAction(e) {
     case 'separator':
         // Do nothing
         break;
+
+    case 'duplicate_part':
+      // itemIndexFromMenu should be set by the context menu item for 'duplicate_part'
+      // specificItemIdx is also a reliable source for the item to duplicate
+      const indexToDuplicate = itemIndexFromMenu !== undefined ? itemIndexFromMenu : specificItemIdx;
+      if (indexToDuplicate !== -1 && indexToDuplicate < currentPatternItems.length) {
+        console.log(`Requesting duplication of item at index ${indexToDuplicate}`);
+        window.electronAPI.callAPI('duplicate_item', {
+          pattern_name: currentPattern,
+          item_index: indexToDuplicate
+        });
+        handleApiResponse('duplicate_item', 'duplicating item');
+      } else {
+        console.warn("Duplicate part action called with invalid index:", indexToDuplicate);
+      }
+      break;
 
      default:
        console.warn("Unhandled context menu action:", action);

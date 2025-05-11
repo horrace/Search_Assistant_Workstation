@@ -434,6 +434,10 @@ ipcMain.on('api-request', (event, data) => {
                 result = api[method](params.pattern_name, params.chunk_id);
                 break;
             
+          case 'duplicate_item':
+            result = api[method](params.pattern_name, params.item_index);
+            break;
+            
           case 'set_transparency':
             result = api[method](params.value);
             break;
