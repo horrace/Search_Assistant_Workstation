@@ -69,5 +69,22 @@ contextBridge.exposeInMainWorld('electronAPI', {
   log: {
     info: (...args) => log.info(...args),
     error: (...args) => log.error(...args)
+  },
+  
+  // Method for invoking main process handlers that return promises
+  invoke: (channel, ...args) => ipcRenderer.invoke(channel, ...args),
+  
+  // Send simple one-way messages (e.g., window controls)
+  send: (channel, data) => ipcRenderer.send(channel, data),
+
+  // Listen for one-way messages from main (e.g., pattern selection for tumbler)
+  on: (channel, callback) => {
+    const handler = (event, ...args) => callback(...args);
+    ipcRenderer.on(channel, handler);
+    return () => {
+      ipcRenderer.removeListener(channel, handler);
+    };
   }
-}); 
+});
+
+console.log('Preload script executed, electronAPI exposed.'); 

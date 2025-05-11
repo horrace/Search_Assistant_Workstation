@@ -9,6 +9,8 @@ class SearchPatternAPI {
     this.patterns = {};
     this.current_pattern = "CThead";
     this.settings = { "transparency": 1.0, "tumbler": {} };
+    this.patternHistory = {}; // Added for undo functionality
+    this.maxHistoryLength = 20; // Max history states per pattern
     
     // Initialize paths
     this.appPath = app.getAppPath();
@@ -61,6 +63,8 @@ class SearchPatternAPI {
       // Try to find sp_list.json in any of our locations
       const sp_list_path = this.findFile('sp_list.json');
       
+      this.patternHistory = {}; // Reset history on load
+
       if (sp_list_path) {
         const data = fs.readFileSync(sp_list_path, 'utf8');
         this.patterns = JSON.parse(data);
@@ -203,6 +207,97 @@ class SearchPatternAPI {
   }
   
   /**
+   * Private helper to save pattern state to history for undo
+   */
+  _saveStateToHistory(pattern_name) {
+    if (!this.patterns.hasOwnProperty(pattern_name)) {
+      console.warn(`_saveStateToHistory: Attempted to save history for non-existent pattern '${pattern_name}'`);
+      return;
+    }
+    if (!this.patternHistory[pattern_name]) {
+      this.patternHistory[pattern_name] = [];
+    }
+    // Deep clone the current state of the pattern
+    const currentState = JSON.parse(JSON.stringify(this.patterns[pattern_name]));
+    this.patternHistory[pattern_name].push(currentState);
+
+    // Keep history length in check
+    if (this.patternHistory[pattern_name].length > this.maxHistoryLength) {
+      this.patternHistory[pattern_name].shift(); // Remove the oldest state
+    }
+    console.log(`_saveStateToHistory: Saved state for '${pattern_name}'. History size: ${this.patternHistory[pattern_name].length}`);
+  }
+
+  /**
+   * Undo the last action for a given pattern.
+   */
+  undo_last_action(pattern_name) {
+    console.log(`[API undo_last_action] Attempting to undo for pattern: ${pattern_name}`);
+    if (!this.patternHistory[pattern_name] || this.patternHistory[pattern_name].length === 0) {
+      console.warn(`[API undo_last_action] No history available for pattern '${pattern_name}' to undo.`);
+      return { success: false, error: "No actions to undo.", can_undo_more: false, reverted_pattern_data: null };
+    }
+
+    try {
+      // The last element is the current state IF _saveStateToHistory is called *before* modification.
+      // If it's called *after*, then the history stores previous states.
+      // For a typical undo, we want to revert to the state *before* the last change.
+      // So, pop the current state (which was just saved before the action that we now want to undo).
+      // The new "current" state will be the one at the top of the history stack.
+      
+      // If _saveStateToHistory is called *before* the change, the history stack looks like:
+      // [StateA, StateB (current state before change C happened)]
+      // After change C, current this.patterns[pattern_name] is StateC.
+      // To undo C, we want to restore StateB.
+      
+      // Let's adjust: _saveStateToHistory should save the state *before* it's modified.
+      // Then, undo will pop the last saved state and apply it.
+
+      const previousState = this.patternHistory[pattern_name].pop();
+      if (!previousState) {
+         console.warn(`[API undo_last_action] Popped undefined state for '${pattern_name}'. This shouldn't happen if history was not empty.`);
+         return { success: false, error: "Internal error: Corrupted history.", can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0, reverted_pattern_data: null };
+      }
+
+      // Deep clone to avoid reference issues, though previousState should already be a clone.
+      this.patterns[pattern_name] = JSON.parse(JSON.stringify(previousState));
+      
+      console.log(`[API undo_last_action] Reverted '${pattern_name}' to previous state. History size now: ${this.patternHistory[pattern_name]?.length || 0}`);
+
+      const saved = this.save_patterns();
+      if (saved) {
+        console.log(`[API undo_last_action] Successfully reverted and saved pattern '${pattern_name}'.`);
+        return { 
+          success: true, 
+          reverted_pattern_data: this.patterns[pattern_name], 
+          can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0 
+        };
+      } else {
+        console.error(`[API undo_last_action] Failed to save pattern '${pattern_name}' after undo. CRITICAL: State might be inconsistent.`);
+        // Attempt to restore the state we tried to pop (put it back on history)
+        this.patternHistory[pattern_name].push(previousState); 
+        // Optionally, try to reload patterns from disk to ensure consistency, though this might lose the "current" state that failed to save.
+        // this.load_patterns(); // This is a drastic measure.
+        return { 
+          success: false, 
+          error: "Failed to save pattern after undo. State might be inconsistent.", 
+          can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0,
+          reverted_pattern_data: null
+        };
+      }
+    } catch (e) {
+      console.error(`[API undo_last_action] Error during undo for ${pattern_name}: ${e.message}`);
+      console.error(e.stack);
+      return { 
+        success: false, 
+        error: `Error during undo: ${e.message}`, 
+        can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0,
+        reverted_pattern_data: null
+      };
+    }
+  }
+  
+  /**
    * Update a specific pattern
    */
   update_pattern(pattern_name, pattern_data) {
@@ -212,6 +307,7 @@ class SearchPatternAPI {
     }
 
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       // Deep clone to ensure we have plain objects and to avoid potential IPC proxy issues.
       const plain_pattern_data = JSON.parse(JSON.stringify(pattern_data));
       this.patterns[pattern_name] = plain_pattern_data;
@@ -249,6 +345,7 @@ class SearchPatternAPI {
     }
     try {
         this.patterns[pattern_name] = []; // Create new pattern with an empty list of items
+        this.patternHistory[pattern_name] = []; // Initialize history for the new pattern
         const saved = this.save_patterns(); // Save the changes
         if (saved) {
             console.log(`[API create_pattern] Successfully created pattern: ${pattern_name}`);
@@ -270,6 +367,7 @@ class SearchPatternAPI {
    */
   move_item(pattern_name, from_index, to_index, count = 1, new_chapter = undefined, moved_chapter_name = undefined) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
       if (!pattern.length) {
         console.error(`move_item: Pattern not found - ${pattern_name}`);
@@ -361,6 +459,7 @@ class SearchPatternAPI {
    */
   update_item(pattern_name, index, field, value) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
       if (!pattern.length || !(0 <= index && index < pattern.length)) {
         return { success: false, error: "Invalid pattern or index" };
@@ -382,6 +481,7 @@ class SearchPatternAPI {
    */
   create_chunk(pattern_name, start_index, end_index) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
       if (!pattern.length) {
         return { success: false, error: "Pattern not found" };
@@ -431,6 +531,7 @@ class SearchPatternAPI {
    */
   disband_chunk(pattern_name, chunk_id) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
       if (!pattern.length || chunk_id <= 0) {
         return { success: false, error: "Invalid pattern or chunk ID" };
@@ -457,6 +558,7 @@ class SearchPatternAPI {
    */
   remove_from_chunk(pattern_name, index) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
       if (!pattern.length || !(0 <= index && index < pattern.length)) {
         return { success: false, error: "Invalid pattern or index" };
@@ -590,6 +692,7 @@ class SearchPatternAPI {
    */
   add_item(pattern_name, item_data, index) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
       // Validate index (allow insertion at the end)
       if (index < 0 || index > pattern.length) { // Also allow index === pattern.length for appending
@@ -626,6 +729,7 @@ class SearchPatternAPI {
    */
   delete_item(pattern_name, index, count = 1) {
     try {
+        this._saveStateToHistory(pattern_name); // Save state before modification
         const pattern = this.patterns[pattern_name] || [];
         count = Math.max(1, parseInt(count)); // Ensure count is at least 1
 
@@ -655,6 +759,7 @@ class SearchPatternAPI {
    */
   delete_chapter(pattern_name, chapter_name) {
     try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const original_pattern = this.patterns[pattern_name] || [];
       if (!original_pattern.length && Object.keys(this.patterns).includes(pattern_name)) { 
         // Pattern exists but is empty, so deleting a chapter from it is fine (no-op)
@@ -688,6 +793,7 @@ class SearchPatternAPI {
    */
   update_item_chapter(pattern_name, item_index, new_chapter, is_chunk = false, chunk_id = 0) {
     try {
+       this._saveStateToHistory(pattern_name); // Save state before modification
        let pattern = this.patterns[pattern_name] || [];
        if (!pattern.length && pattern_name !== '-') { // Allow '-' for initial load maybe? Check usage.
          // If pattern_name is not '-', it should exist. If it's empty, that's fine.
@@ -797,6 +903,7 @@ class SearchPatternAPI {
    */
   update_chunk(pattern_name, item_index, new_chunk_id) {
      try {
+       this._saveStateToHistory(pattern_name); // Save state before modification
        const pattern = this.patterns[pattern_name] || [];
        if (!this.patterns.hasOwnProperty(pattern_name)) {
             console.error(`update_chunk: Pattern not found - ${pattern_name}`);
@@ -877,6 +984,7 @@ class SearchPatternAPI {
         console.error(`delete_chunk: Pattern not found - ${pattern_name}`);
         return { success: false, error: "Pattern not found" };
       }
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const original_pattern = this.patterns[pattern_name] || []; // Get pattern, even if empty
 
       if (chunk_id <= 0) {
@@ -913,6 +1021,7 @@ class SearchPatternAPI {
         console.error(`duplicate_item: Pattern not found - ${pattern_name}`);
         return { success: false, error: "Pattern not found" };
       }
+      this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
 
       if (!(0 <= item_index && item_index < pattern.length)) {

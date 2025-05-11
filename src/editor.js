@@ -2,6 +2,7 @@
 const patternSelector = document.getElementById('pattern-selector');
 const newPatternBtn = document.getElementById('new-pattern-btn');
 const backBtn = document.getElementById('back-btn');
+const undoBtn = document.getElementById('undo-btn'); // Get reference to existing Undo button
 const patternItems = document.getElementById('pattern-items');
 const partsBankItems = document.getElementById('parts-bank-items');
 const contextMenu = document.getElementById('context-menu');
@@ -46,6 +47,7 @@ let contextMenuTargetIsChunkContainer = false;
 let contextMenuTargetChunkId = null; 
 let chunkAssignmentContext = null; // For storing context for the chunk assignment dialog
 let isDragging = false; // Declare isDragging
+let currentPatternData = []; 
 
 // Load available patterns
 async function loadPatterns() {
@@ -1548,7 +1550,9 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
                     }
                     patternSelector.value = newPatternName;
                     
-                    loadPattern(newPatternName); 
+                    loadPattern(newPatternName); // This will call loadPattern, which itself doesn't disable undo. 
+                                               // The select change event is what should disable undo for a fresh pattern load.
+                                               // After items are added, undo should be available for those add operations.
 
                 } else {
                     const errorMessage = data.result && data.result.error ? data.result.error : "Unknown error creating pattern.";
@@ -1556,13 +1560,30 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
                     alert(`Failed to ${actionDescription}. Error: ${errorMessage}`);
                 }
             } else { 
+                // Generic success case for other methods
                 console.log(`Successfully ${actionDescription}. Result:`, data.result);
-                if (apiMethod === 'add_item' || apiMethod === 'delete_item' || apiMethod === 'update_item' || 
-                           apiMethod === 'move_item' || apiMethod === 'create_chunk' || apiMethod === 'disband_chunk' ||
-                           apiMethod === 'delete_chapter' || apiMethod === 'rename_chapter' || 
-                           apiMethod === 'update_item_chapter' || apiMethod === 'update_chunk' || 
-                           apiMethod === 'rename_chunk_id' || apiMethod === 'delete_chunk' ||
-                           apiMethod === 'duplicate_item') {
+                
+                let successfulModification = false;
+                if (data.result && typeof data.result === 'object' && data.result.hasOwnProperty('success')) {
+                    successfulModification = data.result.success === true;
+                } else if (typeof data.result === 'boolean') {
+                    successfulModification = data.result === true;
+                }
+
+                if (successfulModification) {
+                    if (undoBtn) undoBtn.disabled = false; // Enable Undo for successful modifications
+                }
+                
+                // Reload pattern data if it was a known modifying operation
+                // This list ensures we only reload for relevant API methods.
+                const modifyingMethods = [
+                    'add_item', 'delete_item', 'update_item', 'move_item', 
+                    'create_chunk', 'disband_chunk', 'delete_chapter', 'rename_chapter',
+                    'update_item_chapter', 'update_chunk', 'rename_chunk_id', 
+                    'delete_chunk', 'duplicate_item'
+                    // 'update_pattern' is handled by saveCurrentPattern directly
+                ];
+                if (modifyingMethods.includes(apiMethod) && successfulModification) {
                     if (currentPattern) {
                         console.log(`Reloading pattern '${currentPattern}' after ${actionDescription}.`);
                         loadPattern(currentPattern); 
@@ -1764,6 +1785,7 @@ async function saveCurrentPattern() {
       // Modify success check: Check if data.result is simply true
       if (data.result === true) { 
         console.log('Save successful (result was true)');
+        if (undoBtn) undoBtn.disabled = false; // Enable Undo on successful save
       } else if (data.error) { // Check for explicit error first
         console.error('Error saving pattern:', data.error);
         errorMessage = `Failed to save pattern: ${data.error}`;
@@ -2322,6 +2344,7 @@ function init() {
   // Set up event listeners
   patternSelector.addEventListener('change', () => {
     loadPattern(patternSelector.value);
+    if (undoBtn) undoBtn.disabled = true; // Disable undo when user manually selects a new pattern
   });
   
   newPatternBtn.addEventListener('click', showNewPatternDialog);
@@ -2414,6 +2437,24 @@ function init() {
            hideChapterInputDialog();
        }
    });
+
+  // Event listener for the Undo button
+  if (undoBtn) {
+    undoBtn.addEventListener('click', handleUndo);
+  }
+
+  // Keyboard shortcut for Undo (Ctrl+Z or Cmd+Z)
+  document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+      event.preventDefault(); // Prevent default browser undo (e.g., in text fields)
+      if (!undoBtn.disabled) {
+        handleUndo();
+      }
+    }
+  });
+
+  // Load initial pattern
+  loadPatternData(currentPattern);
 }
 
 // Initialize when the DOM is ready
@@ -2520,3 +2561,237 @@ function deselectAllItems() {
   console.log('All items deselected.');
   // No re-render needed usually, class removal should suffice for visuals.
 }
+
+// --- Undo Functionality ---
+async function handleUndo() {
+  if (!currentPattern || currentPattern === '-') { 
+    console.warn("Undo action attempted without a valid pattern selected.");
+    console.error("No pattern selected to undo action for."); 
+    if(undoBtn) undoBtn.disabled = true;
+    return;
+  }
+
+  console.log(`[UNDO] Attempting to undo last action for pattern: ${currentPattern}`); 
+  try {
+    const result = await window.electronAPI.invoke('undo-last-action', currentPattern); 
+    console.log("[UNDO] API response received:", JSON.stringify(result, null, 2));
+
+    if (result.success) {
+      console.log("[UNDO] Action undone successfully according to API."); 
+      if (result.reverted_pattern_data) {
+        console.log("[UNDO] Reverted pattern data received. Item count:", result.reverted_pattern_data.length);
+        // console.log("[UNDO] Reverted data sample (first item):", JSON.stringify(result.reverted_pattern_data[0], null, 2));
+        
+        currentPatternData = result.reverted_pattern_data; // Update local data store
+        console.log("[UNDO] currentPatternData updated. Item count:", currentPatternData.length);
+        // console.log("[UNDO] currentPatternData sample (first item):", JSON.stringify(currentPatternData[0], null, 2));
+
+        currentPatternItems = currentPatternData; // <--- ****** ADD THIS LINE ******
+        console.log("[UNDO] currentPatternItems is now updated from currentPatternData. Item count:", currentPatternItems.length);
+
+
+        // Destroy existing Sortable instances before re-rendering
+        // This is crucial if SortableJS is active on the elements being re-rendered.
+        if (typeof Sortable !== 'undefined') { // Check if Sortable is loaded
+            if (window.mainSortableInstance) {
+                try {
+                    window.mainSortableInstance.destroy();
+                    console.log("[UNDO] Main Sortable instance destroyed for undo.");
+                } catch (e) { console.error("[UNDO] Error destroying main sortable:", e); }
+                window.mainSortableInstance = null;
+            }
+            document.querySelectorAll('.chapter-items.sortable-group').forEach(group => {
+                if (group.sortableInstance) {
+                    try {
+                        group.sortableInstance.destroy();
+                        console.log("[UNDO] Chapter Sortable instance destroyed for undo.");
+                    } catch (e) { console.error("[UNDO] Error destroying chapter sortable:", e); }
+                    group.sortableInstance = null;
+                }
+            });
+        }
+
+        console.log("[UNDO] About to call renderPatternItems. Current patternItems.innerHTML before render:", patternItems.innerHTML.substring(0, 200) + "...");
+        renderPatternItems(); // Call without arguments as per its definition
+        console.log("[UNDO] renderPatternItems called. Current patternItems.innerHTML after render:", patternItems.innerHTML.substring(0, 200) + "...");
+        
+        // If you had other UI elements that depend on this data (e.g., a chapter dropdown that is separate),
+        // you would update them here too. Since updateChapterDropdown was removed, we assume
+        // renderPatternItems handles all necessary visual updates for the main list.
+
+      } else {
+        // This fallback should ideally not be hit if API always returns data on success.
+        console.warn("[UNDO] Undo successful but no reverted pattern data received. Performing full reload as fallback.");
+        await loadPattern(currentPattern); // Full reload for the current pattern
+      }
+      if(undoBtn) undoBtn.disabled = !result.can_undo_more;
+    } else {
+      console.error("[UNDO] Failed to undo last action:", result.error || "Unknown error from API."); 
+      if(undoBtn) undoBtn.disabled = true; 
+    }
+  } catch (error) {
+    console.error("[UNDO] Error calling undo-last-action via invoke:", error);
+    if(undoBtn) undoBtn.disabled = true; 
+  }
+}
+
+// --- MODIFICATIONS TO EXISTING FUNCTIONS ---
+
+// Modify loadPatternData (or your equivalent pattern loading function)
+async function loadPatternData(patternName, dataToRender = null) { // Added dataToRender for clarity
+  // ... (existing initial checks for patternName)
+  if (!patternName || patternName === '-') {
+    // ... (clear editor state)
+    if (undoBtn) undoBtn.disabled = true; // Disable undo when no pattern
+    return;
+  }
+  // `currentPattern` should be updated here if `patternName` is valid and different.
+  // However, `loadPattern` is the main function that sets `currentPattern`.
+  // This function `loadPatternData` seems to be a helper or an older version.
+  // Let's assume `currentPattern` is correctly set by the calling context (e.g., `loadPattern`)
+  // before this or `handleUndo` is invoked.
+
+  try { // Ensure TRY block is present
+    // ... (existing logic to show loading indicator)
+    
+    if (dataToRender) { // If data is directly provided (e.g., from undo/redo that doesn't use this for reload)
+      currentPatternData = dataToRender;
+      // ... (render pattern, update dropdowns etc.)
+    } else {
+      // ... (existing logic to fetch pattern data using window.electronAPI.callAPI or invoke)
+      // ... (on successful fetch:)
+      // currentPatternData = fetchedData;
+      // ... (render pattern, update dropdowns etc.)
+    }
+    
+    // After successfully loading and rendering a pattern (unless it was a render from an undo operation itself):
+    // If dataToRender was null, it means a fresh load, so reset undo availability for this pattern in this session view.
+    if (!dataToRender && undoBtn) {
+        // The backend history is separate. Here, we mean no actions in *this editor session* have been taken yet on this freshly loaded pattern.
+        undoBtn.disabled = true;
+    }
+
+  } catch (error) { // Ensure CATCH block is present
+    console.error(`Error in loadPatternData for ${patternName}:`, error);
+    // ... (existing error handling, e.g., show error message in UI)
+    if (undoBtn) undoBtn.disabled = true; // Disable undo on load error
+  }
+}
+
+// Example modification for an action handler (apply this pattern to ALL relevant action handlers)
+// This is a generic example; your actual function names and parameters will vary.
+async function genericActionHandler(params) {
+  try {
+    // ... (existing logic to prepare for API call)
+    const result = await window.electronAPI.callAPI('some_api_method', params.apiPayload);
+    // OR: const result = await window.electronAPI.invoke('some_api_method', params.invokePayload);
+
+    if (result && (result.success || result === true)) { // Check for success based on API response structure
+      console.log(params.successMessage || "Action successful.", "success");
+      if (undoBtn) undoBtn.disabled = false; // ENABLE UNDO on successful action
+      await loadPattern(currentPattern); // Use currentPattern
+    } else {
+      const errorMsg = (result && result.error) ? result.error : (params.errorMessage || "Action failed.");
+      console.error(errorMsg, "error");
+      // Optionally, disable undo if the action failed in a way that might corrupt history, though usually not necessary.
+    }
+  } catch (error) {
+    console.error(`Error in ${params.actionName || 'genericActionHandler'}:`, error);
+    console.error(`Error performing action: ${error.message}`, "error");
+  }
+}
+
+// Apply to saveCurrentPattern (or your save function)
+async function saveCurrentPattern() {
+  // ... (existing logic to prepare saveData)
+  try {
+    const result = await window.electronAPI.callAPI('update_pattern', {
+      pattern_name: currentPattern, // Use currentPattern 
+      pattern_data: itemsToSave 
+    });
+    if (result && result.success) { // Or however your API signals success
+        console.log("Pattern saved.", "success");
+        if (undoBtn) undoBtn.disabled = false; // ENABLE UNDO
+        await loadPattern(currentPattern); // Use currentPattern
+    } else {
+        console.error(result.error || "Failed to save pattern.", "error");
+    }
+  } catch (error) {
+     console.error("Error saving pattern:", error);
+     console.error("Error saving pattern.", "error");
+  }
+}
+
+
+// --- INITIALIZATION (within DOMContentLoaded or your existing init function) ---
+// Make sure this is inside your main DOMContentLoaded or init function that runs after DOM is ready.
+
+// Example placement for init logic within DOMContentLoaded:
+document.addEventListener('DOMContentLoaded', async () => {
+  // ... (existing init code: query selectors for undoBtn, patternSelector, etc.)
+  // const undoBtn = document.getElementById('undo-btn'); // Ensure undoBtn is defined
+
+  if (undoBtn) {
+    undoBtn.addEventListener('click', handleUndo);
+  }
+
+  document.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
+      event.preventDefault();
+      if (undoBtn && !undoBtn.disabled) {
+        handleUndo();
+      }
+    }
+  });
+  
+  // ... (rest of your existing init logic, e.g., loading initial patterns)
+  // await loadInitialPatternsAndSelect(); or similar
+  
+  // Ensure undo button is initially disabled if no pattern loaded or history is unknown
+  if (undoBtn) {
+    undoBtn.disabled = true;
+  }
+});
+
+// IMPORTANT: The above is a template. You need to integrate these changes 
+// into your actual `editor.js` structure.
+// Key points:
+// 1. Define `handleUndo`.
+// 2. Add event listeners for the undo button and Ctrl+Z within your DOM ready handler.
+// 3. Modify `loadPatternData` to correctly handle `try...catch` and disable undo button on fresh loads/errors.
+// 4. Crucially, in EVERY function that successfully modifies the pattern via an API call 
+//    (e.g., adding, deleting, moving items/chunks/chapters, updating properties, saving), 
+//    add the line `if (undoBtn) undoBtn.disabled = false;` AFTER the successful API call 
+//    and BEFORE reloading the pattern data.
+
+// Replace the following with the actual modifications to your specific action handlers:
+// For example, in your `handleDeleteItem`:
+/*
+async function handleDeleteItem(patternName, index, count = 1) {
+  if (confirm(...)) {
+    try {
+      const result = await window.electronAPI.deleteItem(patternName, index, count);
+      if (result.success) {
+        showTemporaryMessage("Item(s) deleted successfully.", "success");
+        if (undoBtn) undoBtn.disabled = false; // <<< ADD THIS
+        await loadPatternData(patternName);
+      } else { ... }
+    } catch (error) { ... }
+  }
+}
+*/
+
+// In your `handleAddItem`:
+/*
+async function handleAddItem(patternName, itemData, index = -1) {
+  try {
+    const result = await window.electronAPI.addItem(patternName, itemData, index);
+    if (result.success) {
+      showTemporaryMessage("Item added successfully.", "success");
+      if (undoBtn) undoBtn.disabled = false; // <<< ADD THIS
+      await loadPatternData(patternName);
+    } else { ... }
+  } catch (error) { ... }
+}
+*/
+// ... and so on for ALL functions that change pattern data and call the backend.

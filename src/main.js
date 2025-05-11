@@ -495,6 +495,14 @@ ipcMain.on('api-request', (event, data) => {
   }
 });
 
+ipcMain.handle('duplicate-item', async (event, pattern_name, item_index) => {
+  return api.duplicate_item(pattern_name, item_index);
+});
+
+ipcMain.handle('undo-last-action', async (event, pattern_name) => {
+  return api.undo_last_action(pattern_name);
+});
+
 // App lifecycle events
 app.whenReady().then(() => {
   createMainWindow();
