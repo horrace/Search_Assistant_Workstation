@@ -75,6 +75,13 @@ function init() {
   
   // Start the timer
   startTimer();
+
+  const nextItemButton = document.getElementById('next-item-button');
+  if (nextItemButton) {
+    nextItemButton.addEventListener('click', () => {
+      nextItem();
+    });
+  }
 }
 
 // Set up drag handling for the window

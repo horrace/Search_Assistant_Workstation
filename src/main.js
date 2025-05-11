@@ -2,12 +2,11 @@ const { app, BrowserWindow, ipcMain, screen } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { api } = require('./api'); // Import the JavaScript API
-console.log(">>>> MAIN.JS DEBUG: api object is:", api);
-console.log(">>>> MAIN.JS DEBUG: typeof api.create_pattern is:", typeof api.create_pattern);
-console.log(">>>> MAIN.JS DEBUG: 'create_pattern' in api:", ('create_pattern' in api));
-if (api && typeof api.create_pattern === 'function') {
-    console.log(">>>> MAIN.JS DEBUG: api.create_pattern function body (first 100 chars):", api.create_pattern.toString().substring(0, 100));
-}
+//console.log(">>>> MAIN.JS DEBUG: api object is:", api);
+//console.log(">>>> MAIN.JS DEBUG: 'create_pattern' in api:", ('create_pattern' in api));
+//if (api && typeof api.create_pattern === 'function') {
+    //console.log(">>>> MAIN.JS DEBUG: api.create_pattern function body (first 100 chars):", api.create_pattern.toString().substring(0, 100));
+//}
 
 // Set NODE_ENV for development mode
 process.env.NODE_ENV = 'development';
@@ -17,8 +16,8 @@ try {
   if (process.env.NODE_ENV === 'development') {
     console.log('Hot reload enabled for development');
     require('electron-reloader')(module, {
-      debug: true,
-      watchRenderer: true,
+      //debug: true,
+      //watchRenderer: true,
       ignore: ['*.json', 'sp_list.json', 'settings.json']
     });
   }
@@ -40,9 +39,9 @@ function createMainWindow() {
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
     initialX = savedPosition.x;
     initialY = savedPosition.y;
-    console.log(`Found saved Main window position: x=${initialX}, y=${initialY}`);
+    //console.log(`Found saved Main window position: x=${initialX}, y=${initialY}`);
   } else {
-    console.log("No saved Main window position found, using default.");
+    //console.log("No saved Main window position found, using default.");
   }
 
   mainWindow = new BrowserWindow({
@@ -74,7 +73,7 @@ function createMainWindow() {
     moveTimeout = setTimeout(() => {
       if (mainWindow && !mainWindow.isDestroyed()) {
         const [x, y] = mainWindow.getPosition();
-        console.log(`Main window moved to: x=${x}, y=${y}. Saving position.`);
+        //console.log(`Main window moved to: x=${x}, y=${y}. Saving position.`);
         api.save_main_window_position({ x, y });
       }
     }, 500);
@@ -85,7 +84,7 @@ function createMainWindow() {
     clearTimeout(moveTimeout); // Clear any pending save on move
     if (mainWindow && !mainWindow.isDestroyed()) {
       const [x, y] = mainWindow.getPosition();
-      console.log(`Main window about to close at: x=${x}, y=${y}. Saving final position.`);
+      //console.log(`Main window about to close at: x=${x}, y=${y}. Saving final position.`);
       api.save_main_window_position({ x, y });
     }
   });
@@ -100,7 +99,7 @@ function createMainWindow() {
     // Save initial position once shown
     if (mainWindow && !mainWindow.isDestroyed()) {
         const [x, y] = mainWindow.getPosition();
-        console.log(`Main window shown at: x=${x}, y=${y}. Saving initial position.`);
+        //console.log(`Main window shown at: x=${x}, y=${y}. Saving initial position.`);
         api.save_main_window_position({ x, y });
     }
   });
@@ -112,9 +111,9 @@ function createEditorWindow() {
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
     initialX = savedPosition.x;
     initialY = savedPosition.y;
-    console.log(`Found saved Editor window position: x=${initialX}, y=${initialY}`);
+    //console.log(`Found saved Editor window position: x=${initialX}, y=${initialY}`);
   } else {
-    console.log("No saved Editor window position found, using default.");
+    //console.log("No saved Editor window position found, using default.");
   }
 
   editorWindow = new BrowserWindow({
@@ -147,7 +146,7 @@ function createEditorWindow() {
     editorMoveTimeout = setTimeout(() => {
       if (editorWindow && !editorWindow.isDestroyed()) {
         const [x, y] = editorWindow.getPosition();
-        console.log(`Editor window moved to: x=${x}, y=${y}. Saving position.`);
+        //console.log(`Editor window moved to: x=${x}, y=${y}. Saving position.`);
         api.save_editor_window_position({ x, y });
       }
     }, 500);
@@ -158,7 +157,7 @@ function createEditorWindow() {
     clearTimeout(editorMoveTimeout); // Clear any pending save on move
     if (editorWindow && !editorWindow.isDestroyed()) {
       const [x, y] = editorWindow.getPosition();
-      console.log(`Editor window about to close at: x=${x}, y=${y}. Saving final position.`);
+      //console.log(`Editor window about to close at: x=${x}, y=${y}. Saving final position.`);
       api.save_editor_window_position({ x, y });
     }
   });
@@ -174,7 +173,7 @@ function createEditorWindow() {
     // Save initial position once shown
     if (editorWindow && !editorWindow.isDestroyed()) {
         const [x, y] = editorWindow.getPosition();
-        console.log(`Editor window shown at: x=${x}, y=${y}. Saving initial position.`);
+        //console.log(`Editor window shown at: x=${x}, y=${y}. Saving initial position.`);
         api.save_editor_window_position({ x, y });
     }
   });
@@ -187,7 +186,7 @@ function createTumblerWindow(patternName) {
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
     initialX = savedPosition.x;
     initialY = savedPosition.y;
-    console.log(`Found saved Tumbler position: x=${initialX}, y=${initialY}`);
+    //console.log(`Found saved Tumbler position: x=${initialX}, y=${initialY}`);
   } else {
     // Default position if none saved (e.g., centered on parent or primary display)
     // For now, let Electron handle default positioning if nothing is saved.
@@ -231,7 +230,7 @@ function createTumblerWindow(patternName) {
     moveTimeout = setTimeout(() => {
       if (tumblerWindow) { // Check if window still exists
         const [x, y] = tumblerWindow.getPosition();
-        console.log(`Tumbler moved to: x=${x}, y=${y}. Saving position.`);
+        //console.log(`Tumbler moved to: x=${x}, y=${y}. Saving position.`);
         api.save_tumbler_window_position({ x, y });
       }
     }, 500); // Debounce for 500ms
@@ -245,7 +244,7 @@ function createTumblerWindow(patternName) {
     // This check is more of a safeguard; 'close' should fire before destruction.
     if (tumblerWindow && !tumblerWindow.isDestroyed()) {
       const [x, y] = tumblerWindow.getPosition();
-      console.log(`Tumbler about to close at: x=${x}, y=${y}. Saving final position.`);
+      //console.log(`Tumbler about to close at: x=${x}, y=${y}. Saving final position.`);
       api.save_tumbler_window_position({ x, y });
     } else {
       console.log("Tumbler window was already destroyed or null before 'close' event finished processing for saving position.");
@@ -268,7 +267,7 @@ function createTumblerWindow(patternName) {
     // Save initial position once shown, in case it's a new window or position was defaulted
     if (tumblerWindow) {
         const [x, y] = tumblerWindow.getPosition();
-        console.log(`Tumbler shown at: x=${x}, y=${y}. Saving initial position.`);
+        //console.log(`Tumbler shown at: x=${x}, y=${y}. Saving initial position.`);
         api.save_tumbler_window_position({ x, y });
     }
   });
@@ -468,11 +467,11 @@ ipcMain.on('api-request', (event, data) => {
     }
     
     // Send the result back to the renderer
-    console.log(`Sending response for ${method}:`, 
-      typeof result === 'object' ? 
-        JSON.stringify(result).substring(0, 100) + (JSON.stringify(result).length > 100 ? '...' : '') : 
-        result
-    );
+    // console.log(`Sending response for ${method}:`, 
+    //   typeof result === 'object' ? 
+    //     JSON.stringify(result).substring(0, 100) + (JSON.stringify(result).length > 100 ? '...' : '') : 
+    //     result
+    // );
     
     // If result is undefined, send an empty array to prevent errors
     if (result === undefined) {

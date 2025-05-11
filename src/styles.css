@@ -54,10 +54,10 @@ footer {
 
 /* Controls section */
 .controls {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  z-index: 1000; /* Ensure it's above other elements */
 }
 
 /* Right justify edit button */
@@ -1084,4 +1084,19 @@ footer {
 /* Specific ID if needed, but class reuse is preferred */
 #chapter-input-dialog .dialog-content {
   /* Add specific overrides if needed */
+}
+
+#next-item-button {
+  background-color: transparent;
+  color: #696969;
+  border: none;
+  padding: 10px 15px;
+  font-size: 30px;
+  border-radius: 5px;
+  cursor: pointer;
+  -webkit-app-region: no-drag; /* Make button clickable */
+}
+
+#next-item-button:hover {
+  background-color: #555;
 }

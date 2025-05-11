@@ -1691,6 +1691,7 @@ function handleFieldEdit(e) {
 
   const itemIndex = parseInt(fieldElement.getAttribute('data-index'));
   const newValue = fieldElement.textContent.trim(); // Trim whitespace
+  console.log(`[handleFieldEdit START] Target element:`, fieldElement, `Field: ${fieldName}, Index: ${itemIndex}, NewValue: '${newValue}'`); // <<< ADDED LOG
 
   // Find the correct item (handle items within chunks)
   let actualItemIndex = -1;
@@ -1698,13 +1699,16 @@ function handleFieldEdit(e) {
     const parentDraggable = fieldElement.closest('.draggable-item');
     if (parentDraggable && parentDraggable.dataset.isChunk === 'true') {
       actualItemIndex = parseInt(fieldElement.closest('.chunk-item-part')?.dataset.chunkIndex);
+       console.log(`[handleFieldEdit] Determined actualItemIndex from chunk: ${actualItemIndex}`); // <<< ADDED LOG
     } else if (parentDraggable && parentDraggable.dataset.isChunk === 'false') {
       actualItemIndex = itemIndex;
+       console.log(`[handleFieldEdit] Determined actualItemIndex from single item: ${actualItemIndex}`); // <<< ADDED LOG
     }
   }
 
   if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && currentPatternItems[actualItemIndex] && fieldName && currentPatternItems[actualItemIndex][fieldName] !== newValue) {
-    console.log(`Field Edit: Index=${actualItemIndex}, Field=${fieldName}, NewValue='${newValue}'`);
+    console.log(`[handleFieldEdit BEFORE UPDATE] Current item data:`, JSON.parse(JSON.stringify(currentPatternItems[actualItemIndex]))); // <<< ADDED LOG (Deep copy)
+    console.log(`[handleFieldEdit] Field Edit: Index=${actualItemIndex}, Field=${fieldName}, NewValue='${newValue}'`);
     currentPatternItems[actualItemIndex][fieldName] = newValue;
 
     // Debounce save operation
@@ -2700,28 +2704,6 @@ async function genericActionHandler(params) {
     console.error(`Error performing action: ${error.message}`, "error");
   }
 }
-
-// Apply to saveCurrentPattern (or your save function)
-async function saveCurrentPattern() {
-  // ... (existing logic to prepare saveData)
-  try {
-    const result = await window.electronAPI.callAPI('update_pattern', {
-      pattern_name: currentPattern, // Use currentPattern 
-      pattern_data: itemsToSave 
-    });
-    if (result && result.success) { // Or however your API signals success
-        console.log("Pattern saved.", "success");
-        if (undoBtn) undoBtn.disabled = false; // ENABLE UNDO
-        await loadPattern(currentPattern); // Use currentPattern
-    } else {
-        console.error(result.error || "Failed to save pattern.", "error");
-    }
-  } catch (error) {
-     console.error("Error saving pattern:", error);
-     console.error("Error saving pattern.", "error");
-  }
-}
-
 
 // --- INITIALIZATION (within DOMContentLoaded or your existing init function) ---
 // Make sure this is inside your main DOMContentLoaded or init function that runs after DOM is ready.
