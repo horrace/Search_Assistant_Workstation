@@ -12,7 +12,8 @@ try {
     console.log('Hot reload enabled for development');
     require('electron-reloader')(module, {
       debug: true,
-      watchRenderer: true
+      watchRenderer: true,
+      ignore: ['*.json', 'sp_list.json', 'settings.json']
     });
   }
 } catch (err) {
