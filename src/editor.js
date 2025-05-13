@@ -517,6 +517,7 @@ function renderPatternItems() {
 // Handle context menu
 function handleContextMenu(e) {
   e.preventDefault();
+  e.stopPropagation(); // Prevent event from bubbling to parent draggable items
   const exactTarget = e.target; // The most specific element clicked
   const currentTargetElement = e.currentTarget; // The .draggable-item element the listener is on
 
@@ -679,8 +680,37 @@ function showContextMenu(x, y, items) {
   contextMenu.innerHTML = html;
   
   // Position menu
+  // First, set initial position to measure dimensions
   contextMenu.style.left = x + 'px';
   contextMenu.style.top = y + 'px';
+  contextMenu.style.display = 'block'; // Make it visible to get dimensions, but off-screen if needed
+
+  const menuWidth = contextMenu.offsetWidth;
+  const menuHeight = contextMenu.offsetHeight;
+  const windowWidth = window.innerWidth;
+  const windowHeight = window.innerHeight;
+
+  // Adjust y position if menu overflows bottom
+  if (y + menuHeight > windowHeight) {
+    y = y - menuHeight;
+    // Ensure menu doesn't go off the top of the screen
+    if (y < 0) {
+      y = 0;
+    }
+  }
+
+  // Adjust x position if menu overflows right
+  if (x + menuWidth > windowWidth) {
+    x = x - menuWidth;
+    // Ensure menu doesn't go off the left of the screen
+    if (x < 0) {
+      x = 0;
+    }
+  }
+  
+  contextMenu.style.left = x + 'px';
+  contextMenu.style.top = y + 'px';
+  // Ensure it's still visible after position adjustment
   contextMenu.style.display = 'block';
   
   // Add click event listeners to menu items
