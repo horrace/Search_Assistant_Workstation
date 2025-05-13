@@ -22,9 +22,7 @@ const chapterDialogCancelBtn = document.getElementById('chapter-dialog-cancel-bt
 const chunkAssignmentDialog = document.getElementById('chunk-assignment-dialog');
 const chunkAssignmentDialogTitle = document.getElementById('chunk-assignment-dialog-title');
 const chunkAssignItemName = document.getElementById('chunk-assign-item-name');
-const chunkAssignCurrentId = document.getElementById('chunk-assign-current-id');
 const chunkAssignSelect = document.getElementById('chunk-assign-select');
-const chunkAssignNewIdInput = document.getElementById('chunk-assign-new-id');
 const chunkAssignDialogOkBtn = document.getElementById('chunk-assign-dialog-ok-btn');
 const chunkAssignDialogCancelBtn = document.getElementById('chunk-assign-dialog-cancel-btn');
 
@@ -340,9 +338,9 @@ function renderPatternItems() {
               >
               <div class="chunk-header">
                  <div class="drag-handle" data-handle="true"></div>
-                 <div class="chunk-id-label" contenteditable="true" data-field="chunk-id" data-current-chunk-id="${chunkID}">${chunkID}</div>
               </div>
-              <div class="chunk-items">
+              <div class="chunk-content-wrapper"> 
+                <div class="chunk-items">
           `;
 
           chunkItemsInOrder.forEach((chunkItem, chunkIdx) => {
@@ -364,6 +362,7 @@ function renderPatternItems() {
           });
 
           html += `
+                </div>
               </div>
             </div>
           `;
@@ -482,19 +481,6 @@ function renderPatternItems() {
     console.log('[renderPatternItems] Attaching listeners to chapter-label:', label);
     label.removeEventListener('blur', handleFieldEdit); // Remove generic field edit
     label.addEventListener('blur', handleHeaderEdit); // Add specific header edit
-    if (!label.hasAttribute('listener-keydown-set')) {
-        label.addEventListener('keydown', handleFieldKeydown);
-        label.setAttribute('listener-keydown-set', 'true');
-    }
-    label.addEventListener('mousedown', (e) => { e.stopPropagation(); });
-    label.addEventListener('touchstart', (e) => { e.stopPropagation(); });
-  });
-
-  // Add listeners for editable chunk IDs
-  document.querySelectorAll('.chunk-id-label[contenteditable="true"]').forEach(label => {
-    console.log('[renderPatternItems] Attaching listeners to chunk-id-label:', label);
-    label.removeEventListener('blur', handleFieldEdit); // Remove generic field edit
-    label.addEventListener('blur', handleHeaderEdit);   // Add specific header edit
     if (!label.hasAttribute('listener-keydown-set')) {
         label.addEventListener('keydown', handleFieldKeydown);
         label.setAttribute('listener-keydown-set', 'true');
@@ -1408,23 +1394,39 @@ function assignItemToChunk(itemIndex) {
 
     const item = currentPatternItems[itemIndex];
     const currentChunkId = item.chunkID || 0;
-    const existingChunkIds = [...new Set(currentPatternItems.map(i => i.chunkID).filter(id => id && id > 0))];
+    
+    // Gather detailed chunk information: ID and concatenated abbreviations
+    const chunkDetails = {}; // Store { chunkId: { id: chunkId, abbrs: ['abbr1', 'abbr2'] } }
+    currentPatternItems.forEach(it => {
+        if (it.chunkID && it.chunkID > 0) {
+            if (!chunkDetails[it.chunkID]) {
+                chunkDetails[it.chunkID] = { id: it.chunkID, abbrs: [] };
+            }
+            if (it.abbr) { // Only add if abbr exists
+                chunkDetails[it.chunkID].abbrs.push(it.abbr);
+            }
+        }
+    });
+
+    const existingChunksForDialog = Object.values(chunkDetails).map(chunk => ({
+        id: chunk.id,
+        displayText: chunk.abbrs.length > 0 ? `${chunk.abbrs.join(', ')}` : `Chunk ${chunk.id} (empty)`
+    })).sort((a, b) => a.id - b.id);
     
     chunkAssignmentContext = { itemIndex, itemName: item.abbr, currentChunkId }; // Store context
 
-    showChunkAssignmentDialog(item.abbr, currentChunkId, existingChunkIds);
+    showChunkAssignmentDialog(item.abbr, currentChunkId, existingChunksForDialog);
 }
 
 
 // --- Chunk Assignment Dialog Functions ---
-function showChunkAssignmentDialog(itemName, currentChunkId, existingChunkIds) {
+function showChunkAssignmentDialog(itemName, currentChunkId, existingChunks) { // existingChunks is now an array of objects {id, displayText}
     if (!chunkAssignmentDialog) {
         console.error("Chunk assignment dialog element not found!");
         return;
     }
 
     chunkAssignItemName.textContent = itemName;
-    chunkAssignCurrentId.textContent = currentChunkId === 0 ? 'None' : currentChunkId;
 
     chunkAssignSelect.innerHTML = ''; // Clear previous options
     const noneOption = document.createElement('option');
@@ -1432,16 +1434,15 @@ function showChunkAssignmentDialog(itemName, currentChunkId, existingChunkIds) {
     noneOption.textContent = '(None) - Remove from chunk';
     chunkAssignSelect.appendChild(noneOption);
 
-    existingChunkIds.sort((a, b) => a - b).forEach(id => {
+    existingChunks.forEach(chunk => {
         const option = document.createElement('option');
-        option.value = id;
-        option.textContent = `Chunk ${id}`;
+        option.value = chunk.id;
+        option.textContent = chunk.displayText; // Use the generated display text
         chunkAssignSelect.appendChild(option);
     });
 
     // Set select to current chunk or '0' if not in a chunk
     chunkAssignSelect.value = currentChunkId === 0 ? '0' : currentChunkId.toString();
-    chunkAssignNewIdInput.value = ''; // Clear new ID input
 
     chunkAssignmentDialog.style.display = 'flex';
     chunkAssignSelect.focus();
@@ -1467,39 +1468,23 @@ function handleChunkAssignmentDialogOk() {
         return;
     }
 
-    const { itemIndex, currentChunkId } = chunkAssignmentContext;
+    const { itemIndex, currentChunkId } = chunkAssignmentContext; // currentChunkId from context is still useful for comparison
     let chosenChunkId = parseInt(chunkAssignSelect.value);
-    const newChunkIdRaw = chunkAssignNewIdInput.value.trim();
-
-    if (newChunkIdRaw !== '') {
-        const newId = parseInt(newChunkIdRaw);
-        if (isNaN(newId) || newId <= 0) {
-            alert("New Chunk ID must be a positive number if specified.");
-            chunkAssignNewIdInput.focus();
-            return;
-        }
-        // User entered a new ID, this takes precedence
-        chosenChunkId = newId;
-        console.log(`User specified new chunk ID: ${chosenChunkId}`);
-    } else {
-        console.log(`User selected from existing/none: ${chosenChunkId}`);
-    }
 
     if (isNaN(chosenChunkId) || chosenChunkId < 0) {
-        alert("Invalid Chunk ID selected or entered. Must be a non-negative number (0 for None).");
+        alert("Invalid Chunk ID selected. Must be a non-negative number (0 for None).");
         return;
     }
 
+    // The comparison to currentChunkId might still be useful to prevent redundant API calls
+    // if the user selects the same chunk the item is already in.
     if (chosenChunkId === currentChunkId) {
-        alert("Item is already in this chunk state. No changes made.");
+        // alert("Item is already in this chunk state. No changes made."); // Optional: User might want to click OK even if no change
+        console.log("Item is already in this chunk state. No API call needed.")
         hideChunkAssignmentDialog();
         return;
     }
     
-    // If chosenChunkId > 0 and it's a *new* ID not in existing list (excluding 0 for 'None'),
-    // it implies creating a new chunk with just this item.
-    // The backend API 'update_chunk' should handle this logic of assigning to new or existing.
-
     console.log(`Calling API: update_chunk pattern='${currentPattern}', item_index=${itemIndex}, new_chunk_id=${chosenChunkId}`);
     window.electronAPI.callAPI('update_chunk', {
         pattern_name: currentPattern,
@@ -2528,41 +2513,43 @@ function handleHeaderEdit(e) {
       // This can happen if user clicks in, makes no change, and clicks out.
       fieldElement.textContent = originalChapterName; 
     }
-  } else if (fieldName === 'chunk-id') {
-    const currentChunkIdStr = fieldElement.getAttribute('data-current-chunk-id');
-    const currentChunkIdInt = parseInt(currentChunkIdStr, 10);
-    const newChunkIdParsed = parseInt(newValue, 10);
+  } 
+  // REMOVED: else if (fieldName === 'chunk-id') block as the element is removed
+  // else if (fieldName === 'chunk-id') {
+  //   const currentChunkIdStr = fieldElement.getAttribute('data-current-chunk-id');
+  //   const currentChunkIdInt = parseInt(currentChunkIdStr, 10);
+  //   const newChunkIdParsed = parseInt(newValue, 10);
 
-    if (isNaN(newChunkIdParsed) || newChunkIdParsed <= 0) {
-      alert("Chunk ID must be a positive number.");
-      fieldElement.textContent = currentChunkIdStr; // Revert
-      return;
-    }
+  //   if (isNaN(newChunkIdParsed) || newChunkIdParsed <= 0) {
+  //     alert("Chunk ID must be a positive number.");
+  //     fieldElement.textContent = currentChunkIdStr; // Revert
+  //     return;
+  //   }
 
-    const newChunkIdStr = newChunkIdParsed.toString();
+  //   const newChunkIdStr = newChunkIdParsed.toString();
 
-    if (newChunkIdStr !== currentChunkIdStr) {
-      const otherChunkIDs = [...new Set(currentPatternItems.map(item => item.chunkID).filter(id => id && id !== currentChunkIdInt).map(id => id.toString()))];
-      if (otherChunkIDs.includes(newChunkIdStr)) {
-          alert(`Error: Chunk ID "${newChunkIdStr}" already exists. Please choose a unique ID.`);
-          fieldElement.textContent = currentChunkIdStr; // Revert
-          return;
-      }
+  //   if (newChunkIdStr !== currentChunkIdStr) {
+  //     const otherChunkIDs = [...new Set(currentPatternItems.map(item => item.chunkID).filter(id => id && id !== currentChunkIdInt).map(id => id.toString()))];
+  //     if (otherChunkIDs.includes(newChunkIdStr)) {
+  //         alert(`Error: Chunk ID "${newChunkIdStr}" already exists. Please choose a unique ID.`);
+  //         fieldElement.textContent = currentChunkIdStr; // Revert
+  //         return;
+  //     }
 
-      console.log(`Updating client data: Changing Chunk ID from ${currentChunkIdInt} to ${newChunkIdParsed}`);
-      currentPatternItems = currentPatternItems.map(item => {
-        if (item.chunkID === currentChunkIdInt) {
-          return { ...item, chunkID: newChunkIdParsed };
-        }
-        return item;
-      });
-      saveCurrentPattern(); // Save the entire modified pattern
-      renderPatternItems(); // Re-render from updated client data
-    } else {
-      // If no actual change, ensure original value is displayed.
-      fieldElement.textContent = currentChunkIdStr; 
-    }
-  }
+  //     console.log(`Updating client data: Changing Chunk ID from ${currentChunkIdInt} to ${newChunkIdParsed}`);
+  //     currentPatternItems = currentPatternItems.map(item => {
+  //       if (item.chunkID === currentChunkIdInt) {
+  //         return { ...item, chunkID: newChunkIdParsed };
+  //       }
+  //       return item;
+  //     });
+  //     saveCurrentPattern(); // Save the entire modified pattern
+  //     renderPatternItems(); // Re-render from updated client data
+  //   } else {
+  //     // If no actual change, ensure original value is displayed.
+  //     fieldElement.textContent = currentChunkIdStr; 
+  //   }
+  // }
 }
 
 // Function to deselect all currently selected items
