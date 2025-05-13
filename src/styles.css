@@ -455,7 +455,7 @@ footer {
   width: 100%;
   background-color: #424242;
   border-radius: 4px;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
   padding: 8px;
   border-left: 5px solid rgb(153, 153, 153);
   cursor: default;
@@ -465,7 +465,7 @@ footer {
 }
 
 .draggable-item:not(.chunk-container):not(.chapter-container) {
-  height: 40px;
+  height: 34px;
 }
 
 .draggable-item.selected {
@@ -492,7 +492,6 @@ footer {
 .chunk-header {
   font-size: 12px;
   color: #3e7f9d;
-  margin-bottom: 8px;
   font-weight: bold;
   display: flex;
   align-items: center;
@@ -510,7 +509,7 @@ footer {
   opacity: 0.5;
   transition: opacity 0.2s ease, color 0.2s ease;
   color: #888;
-  display: flex;
+  display: inline-table;
   justify-content: center;
   margin-right: 2px;
   position: relative;
@@ -549,7 +548,7 @@ footer {
   align-items: center; /* Align items vertically */
   gap: 8px; /* Space between view, abbr, strategy */
   margin-bottom: 0; /* Remove margin, use gap instead */
-  margin-left: 3px;
+  margin-left: 2px;
   border-bottom: 1px solid rgba(79, 195, 247, 0.3);
   padding-bottom: 8px;
   /* Remove explicit height/width constraints if any */
@@ -571,14 +570,13 @@ footer {
   /* width: 100px; */ /* Consider a fixed or max-width */
   flex-shrink: 0; /* Prevent shrinking too much */
   margin-right: 0; /* Remove margin, use gap instead */
-  font-weight: bold;
   color: #FFFFFF;
 }
 
 .chunk-item-part .item-strategy {
   flex-grow: 1; /* Allow strategy to take remaining space */
   color: #AAAAAA;
-  font-size: 14px;
+  font-size: smaller;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -596,7 +594,6 @@ footer {
 
 .item-abbr {
   min-width: 120px;
-  font-weight: bold;
   color: #FFFFFF;
   margin-right: 16px;
 }
@@ -607,7 +604,7 @@ footer {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 14px;
+  font-size: smaller;
 }
 
 /* Context menu */
@@ -888,7 +885,7 @@ footer {
 }
 
 .item-view-select {
-  padding: 2px 4px;
+  padding: 1px 3px;
   font-size: small;
   font-weight: bold;
   border: 0px solid #555;
@@ -936,10 +933,14 @@ footer {
 .chapter-container {
   border: 1px solid #666666; /* Gray border */
   border-radius: 6px;
-  margin-bottom: 10px; /* Space between chapters/items */
+  margin-bottom: -1px; /* Space between chapters/items */
+  margin-left: -7px;
+  width: calc(100% + 12px);
   background-color: transparent; /* Transparent fill */
   position: relative; /* For absolute positioning of label/handle if needed */
   padding: 5px; /* Add some padding around the chapter content */
+  padding-bottom: 3px;
+  padding-left: 1px;
   overflow: hidden; /* ADDED: To ensure it contains its children correctly */
 }
 
@@ -990,12 +991,12 @@ footer {
 /* Style adjustments for items inside chapters if needed */
 .chapter-items .draggable-item {
   /* Example: slightly different margin */
-  margin-bottom: 5px;
+  margin-bottom: 2px;
 }
 
 .chapter-items .chunk-container {
    /* Example: slightly different margin */
-   margin-bottom: 5px;
+   margin-bottom: 2px;
 }
 
 /* Ensure drag-over state is visible on chapter items container */
