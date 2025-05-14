@@ -42,6 +42,7 @@
   <div class="tumbler-container">
     <div class="tumbler-header">
 	  <div class="tumbler-header-left">
+		<div id="tumbler-chapter-label" class="tumbler-chapter-label"></div>
       </div>
 
       <div class="tumbler-header-right">
@@ -57,7 +58,15 @@
     </div>
     
     <div class="tumbler-content">
-      <div id="tumbler-chapter-label" class="tumbler-chapter-label"></div>
+
+      <!-- Wrapper for unchunked item details -->
+      <div id="unchunked-item-row" class="unchunked-item-row" style="display: none;">
+        <div id="tumbler-view-dynamic" class="tumbler-view"></div> <!-- For view text -->
+        <!-- New wrapper for abbr and strategy -->
+        <div id="abbr-strategy-wrapper" class="abbr-strategy-wrapper"></div>
+        <!-- The existing #tumbler-abbr and #tumbler-strategy will be moved into abbr-strategy-wrapper by JS -->
+      </div>
+
       <div id="tumbler-abbr" class="tumbler-abbr"></div>
       <div id="tumbler-strategy" class="tumbler-strategy"></div>
       

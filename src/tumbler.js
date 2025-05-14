@@ -23,9 +23,9 @@ let fontScaleFactor = 1.0;
 let hideBackground = false;
 
 // Font size base values
-const abbrBaseFontSize = 24;
+const abbrBaseFontSize = 20;
 const strategyBaseFontSize = 14;
-const chunkItemAbbrBaseFontSize = 16;
+const chunkItemAbbrBaseFontSize = 20;
 const chunkItemStrategyBaseFontSize = 14;
 
 // Added: Font size base for chapter
@@ -183,10 +183,10 @@ function updateFontSizes() {
   tumblerAbbr.style.fontSize = `${abbrBaseFontSize * fontScaleFactor}px`;
   tumblerStrategy.style.fontSize = `${strategyBaseFontSize * fontScaleFactor}px`;
   
-  // Ensure view font size is also updated (make it slightly smaller than abbr)
-  const tumblerView = document.getElementById('tumbler-view');
-  if (tumblerView) {
-      tumblerView.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`; // Adjust base size as needed
+  // Ensure view font size is also updated for the dynamic view element
+  const tumblerViewDynamic = document.getElementById('tumbler-view-dynamic');
+  if (tumblerViewDynamic) {
+      tumblerViewDynamic.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`; // Adjust base size as needed
   }
   
   // Update chapter label font size
@@ -211,11 +211,19 @@ function displayCurrentItem() {
     tumblerAbbr.textContent = '';
     tumblerStrategy.textContent = '';
     tumblerChunk.style.display = 'none';
-    const tumblerView = document.getElementById('tumbler-view');
-    if (tumblerView) tumblerView.style.display = 'none';
+    // Also hide the unchunked row and its dynamic view if they exist
+    const unchunkedRow = document.getElementById('unchunked-item-row');
+    if (unchunkedRow) unchunkedRow.style.display = 'none';
+    const dynamicView = document.getElementById('tumbler-view-dynamic');
+    if (dynamicView) dynamicView.style.display = 'none';
     if (tumblerChapterLabel) tumblerChapterLabel.style.display = 'none';
     return;
   }
+
+  // Get references to the new elements for unchunked display
+  const unchunkedItemRow = document.getElementById('unchunked-item-row');
+  const tumblerViewDynamic = document.getElementById('tumbler-view-dynamic');
+  const abbrStrategyWrapper = document.getElementById('abbr-strategy-wrapper');
 
   // Get the representative item for the current display unit
   const representativeItem = displayableUnits[currentDisplayIndex];
@@ -226,10 +234,8 @@ function displayCurrentItem() {
   const chunkID = representativeItem.chunkID || 0;
   const itemAbbr = representativeItem.abbr || '';
   const itemStrategy = representativeItem.strategy || '';
-  const itemView = representativeItem.view_plane || 'ax';
+  const itemView = representativeItem.view_plane || 'ax'; // Default to 'ax' or ensure it can be empty
   const itemChapter = representativeItem.chapter || '';
-
-  let tumblerView = document.getElementById('tumbler-view');
 
   // --- Update Chapter Display ---
   if (tumblerChapterLabel) {
@@ -245,50 +251,68 @@ function displayCurrentItem() {
     }
   }
 
-  if (!tumblerView) {
-    tumblerView = document.createElement('div');
-    tumblerView.id = 'tumbler-view';
-    tumblerView.className = 'tumbler-view';
-    tumblerAbbr.parentNode.insertBefore(tumblerView, tumblerAbbr);
-  }
+  if (chunkID > 0) { // CHUNK DISPLAY
+    // Hide the unchunked item row. This hides view, abbr, and strategy IF they are inside.
+    if (unchunkedItemRow) unchunkedItemRow.style.display = 'none';
 
-  if (chunkID > 0) {
-    // --- Chunk Item Display ---
-    // This representativeItem is part of a chunk, display all items in that chunk.
+    // Explicitly hide the original tumblerAbbr and tumblerStrategy elements
+    // to prevent them from taking up space if they are outside unchunkedItemRow
+    // (e.g., when a chunk is the first item displayed).
     tumblerAbbr.style.display = 'none';
     tumblerStrategy.style.display = 'none';
-    tumblerView.style.display = 'none';
-
-    const chunkItems = patternItems.filter(i => (i.chunkID || 0) === chunkID);
-    let html = '';
-    chunkItems.forEach(chunkItem => {
-      const chunkItemView = chunkItem.view_plane || 'ax';
-      html += `
+    
+    tumblerChunk.style.display = 'block';
+    let chunkHTML = '';
+    const itemsInChunk = patternItems.filter(item => item.chunkID === chunkID);
+    itemsInChunk.forEach(item => {
+      // Make sure to use item.view_plane for chunk item view
+      const chunkItemViewText = item.view_plane ? `${item.view_plane} ` : '';
+      chunkHTML += `
         <div class="chunk-item">
-          <div class="chunk-item-view">${chunkItemView}</div>
-          <div class="chunk-item-abbr">${chunkItem.abbr || ''}</div> 
-          ${chunkItem.strategy ? `<div class="chunk-item-strategy">${chunkItem.strategy}</div>` : ''}
+          <span class="chunk-item-view">${chunkItemViewText}</span>
+          <span class="chunk-item-abbr">${item.abbr}</span>
+          <span class="chunk-item-strategy">${item.strategy}</span>
         </div>
       `;
     });
+    tumblerChunk.innerHTML = chunkHTML;
 
-    tumblerChunk.innerHTML = html;
-    tumblerChunk.style.display = 'block';
-  } else {
-    // --- Single Item Display ---
-    // This representativeItem is a single, non-chunk item.
-    tumblerChunk.style.display = 'none';
+  } else { // UNCHUNKED ITEM DISPLAY
+    tumblerChunk.style.display = 'none'; // Hide chunk container
 
+    // Ensure correct parenting structure for unchunked items
+    // Parent unchunkedItemRow should contain tumblerViewDynamic and abbrStrategyWrapper
+    if (tumblerViewDynamic.parentNode !== unchunkedItemRow) {
+        unchunkedItemRow.appendChild(tumblerViewDynamic);
+    }
+    if (abbrStrategyWrapper.parentNode !== unchunkedItemRow) {
+        unchunkedItemRow.appendChild(abbrStrategyWrapper);
+    }
+
+    // Parent abbrStrategyWrapper should contain tumblerAbbr and tumblerStrategy
+    if (tumblerAbbr.parentNode !== abbrStrategyWrapper) {
+        abbrStrategyWrapper.appendChild(tumblerAbbr);
+    }
+    if (tumblerStrategy.parentNode !== abbrStrategyWrapper) {
+        abbrStrategyWrapper.appendChild(tumblerStrategy);
+    }
+
+    // Set content for unchunked items
+    tumblerViewDynamic.textContent = itemView ? itemView : ''; // Display view or empty
     tumblerAbbr.textContent = itemAbbr;
     tumblerStrategy.textContent = itemStrategy;
-    tumblerView.textContent = itemView;
 
-    tumblerAbbr.style.display = 'block';
-    tumblerStrategy.style.display = itemStrategy ? 'block' : 'none';
-    tumblerView.style.display = 'block';
+    // Set visibility of individual elements within the row
+    tumblerViewDynamic.style.display = itemView ? 'block' : 'none'; // Show if itemView exists
+    tumblerAbbr.style.display = itemAbbr ? 'block' : 'none'; // Show if itemAbbr exists
+    tumblerStrategy.style.display = itemStrategy ? 'block' : 'none'; // Show if itemStrategy exists
+
+    unchunkedItemRow.style.display = 'flex'; // Show the row (CSS handles flex properties)
+
+    // Removed the requestAnimationFrame block for wrapped-indented logic
   }
 
-  updateFontSizes();
+  updateFontSizes(); // Call to update font sizes for all relevant elements
 }
 
 // Go to the next item
