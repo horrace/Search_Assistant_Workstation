@@ -68,7 +68,7 @@ class SearchPatternAPI {
       if (sp_list_path) {
         const data = fs.readFileSync(sp_list_path, 'utf8');
         this.patterns = JSON.parse(data);
-        console.log(`Loaded patterns for ${Object.keys(this.patterns).length} modality/parts`);
+        //console.log(`Loaded patterns for ${Object.keys(this.patterns).length} modality/parts`);
         
         // Remember this directory for future saves
         this.dataDir = path.dirname(sp_list_path);
@@ -95,7 +95,7 @@ class SearchPatternAPI {
       if (settings_path) {
         const data = fs.readFileSync(settings_path, 'utf8');
         this.settings = JSON.parse(data);
-        console.log("Settings loaded successfully");
+        //console.log("Settings loaded successfully");
         
         // Remember this directory for future saves if not already set
         if (!this.dataDir) {
@@ -151,7 +151,7 @@ class SearchPatternAPI {
       
       const settings_path = path.join(this.dataDir, 'settings.json');
       fs.writeFileSync(settings_path, JSON.stringify(this.settings, null, 2));
-      console.log("Settings saved successfully to:", settings_path);
+      //console.log("Settings saved successfully to:", settings_path);
       return true;
     } catch (error) {
       console.error(`Error saving settings: ${error.message}`);
@@ -167,8 +167,8 @@ class SearchPatternAPI {
     try {
       // Get patterns from saved data
       let patterns = Object.keys(this.patterns);
-      console.log("Patterns in memory:", patterns);
-      console.log(`Retrieved ${patterns.length} patterns: ${patterns}`);
+      //console.log("Patterns in memory:", patterns);
+      //console.log(`Retrieved ${patterns.length} patterns: ${patterns}`);
       
       // Ensure we always return a list, even if empty
       return patterns.length ? patterns : [];
@@ -191,7 +191,7 @@ class SearchPatternAPI {
     
     try {
       if (pattern_name in this.patterns) {
-        console.log(`Pattern data for ${pattern_name}: Found ${this.patterns[pattern_name].length} items`);
+        //console.log(`Pattern data for ${pattern_name}: Found ${this.patterns[pattern_name].length} items`);
         return this.patterns[pattern_name];
       } else {
         console.log(`Pattern not found: ${pattern_name}`);
@@ -301,7 +301,7 @@ class SearchPatternAPI {
    * Update a specific pattern
    */
   update_pattern(pattern_name, pattern_data) {
-    console.log(`[API update_pattern] Received request for ${pattern_name}. Incoming pattern_data has ${pattern_data?.length} items.`);
+    //console.log(`[API update_pattern] Received request for ${pattern_name}. Incoming pattern_data has ${pattern_data?.length} items.`);
     if (pattern_data && pattern_data.length > 0) {
       console.log(`[API update_pattern] Incoming first item chapter: ${pattern_data[0]?.chapter}, chunkID: ${pattern_data[0]?.chunkID}`);
     }
@@ -1068,16 +1068,16 @@ class SearchPatternAPI {
 
   // --- Parts Bank Methods ---
   get_parts_bank() {
-    console.log('[API get_parts_bank] Retrieving parts bank.');
+    //console.log('[API get_parts_bank] Retrieving parts bank.');
     if (!this.settings || !this.settings.parts_bank) {
-        console.warn('[API get_parts_bank] Parts bank not found in settings, returning empty array.');
+        //console.warn('[API get_parts_bank] Parts bank not found in settings, returning empty array.');
         return []; // Ensure it returns an array even if undefined
     }
     return this.settings.parts_bank;
   }
 
   save_parts_bank(parts_bank_data) {
-    console.log('[API save_parts_bank] Saving parts bank data.');
+    //console.log('[API save_parts_bank] Saving parts bank data.');
     try {
         if (!this.settings) {
             this.settings = {}; // Initialize settings if it doesn't exist
@@ -1092,7 +1092,7 @@ class SearchPatternAPI {
   }
 
   add_to_parts_bank(item_data) {
-    console.log('[API add_to_parts_bank] Adding item to parts bank:', item_data);
+    //console.log('[API add_to_parts_bank] Adding item to parts bank:', item_data);
     try {
         if (!this.settings) {
             this.settings = {};

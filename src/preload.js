@@ -20,7 +20,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // API communication with JavaScript backend
   callAPI: (method, params) => {
-    log.info('Sending message to backend', { method, params });
+    //log.info('Sending message to backend', { method, params });
     ipcRenderer.send('api-request', { method, params });
   },
   
@@ -28,12 +28,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onAPIResponse: (callback) => {
     // Create a handler function
     const handler = (event, data) => {
-      log.info('Received response from backend', { 
-        method: data.responseFor,
-        hasError: !!data.error,
-        hasResult: !!data.result,
-        resultType: data.result ? (Array.isArray(data.result) ? 'array' : typeof data.result) : 'none'
-      });
+    //   log.info('Received response from backend', { 
+    //     method: data.responseFor,
+    //     hasError: !!data.error,
+    //     hasResult: !!data.result,
+    //     resultType: data.result ? (Array.isArray(data.result) ? 'array' : typeof data.result) : 'none'
+    //   });
       
       if (data.error) {
         log.error('Response contains error', data.error);
@@ -51,14 +51,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     
     // Return a function to remove this specific handler
     return () => {
-      log.info('Removing message handler');
+      //log.info('Removing message handler');
       ipcRenderer.removeListener('api-response', handler);
     };
   },
   
   onPatternSelected: (callback) => {
     const handler = (event, patternName) => {
-      log.info('Pattern selected', patternName);
+      //log.info('Pattern selected', patternName);
       callback(patternName);
     };
     ipcRenderer.on('pattern-selected', handler);
@@ -76,6 +76,25 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Send simple one-way messages (e.g., window controls)
   send: (channel, data) => ipcRenderer.send(channel, data),
+
+  // New function to send errors to the main process
+  sendErrorToMain: (error) => {
+    // Basic serialization for an Error object
+    const serializableError = {
+      message: error.message,
+      name: error.name,
+      stack: error.stack,
+      source: error.source, // Keep these as they might be useful
+      lineno: error.lineno,
+      colno: error.colno
+    };
+    try {
+      ipcRenderer.send('renderer-error', serializableError);
+    } catch (e) {
+      // Fallback log if send itself fails, using original console.error if preload's log is broken
+      (console.error || console.log)('[Preload] CRITICAL: Error during ipcRenderer.send in sendErrorToMain:', e, 'Failed to send:', serializableError);
+    }
+  },
 
   // Listen for one-way messages from main (e.g., pattern selection for tumbler)
   on: (channel, callback) => {

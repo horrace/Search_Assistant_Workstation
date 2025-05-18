@@ -318,6 +318,19 @@ ipcMain.on('close-tumbler', () => {
   if (tumblerWindow) tumblerWindow.close();
 });
 
+// Listen for errors from the renderer process
+ipcMain.on('renderer-error', (event, error) => {
+  console.error('--- Renderer Process Error ---');
+  console.error('Name:', error.name);
+  console.error('Message:', error.message);
+  if (error.stack) {
+    console.error('Stack:', error.stack);
+  }
+  // You could also log to a file here if needed
+  // const fs = require('fs');
+  // fs.appendFileSync('renderer-errors.log', `${new Date().toISOString()} - ${error.name}: ${error.message}\n${error.stack || ''}\n\n`);
+});
+
 // Handle moving the tumbler window
 ipcMain.on('move-tumbler-window', (event, data) => {
   if (tumblerWindow) {
@@ -353,7 +366,7 @@ ipcMain.on('set-transparency', (event, value) => {
 
 // Handle API requests from the renderer process
 ipcMain.on('api-request', (event, data) => {
-  console.log('Received API request:', data);
+  //console.log('Received API request:', data);
   
   try {
     const { method, params = {} } = data;
@@ -364,7 +377,7 @@ ipcMain.on('api-request', (event, data) => {
       // Convert snake_case to camelCase if needed (for future compatibility)
       const jsMethod = method.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
       
-      console.log(`Calling API method: ${jsMethod || method}`);
+      //console.log(`Calling API method: ${jsMethod || method}`);
       
       // Call the method with parameters
       if (typeof api[method] === 'function') {

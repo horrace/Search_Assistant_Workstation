@@ -1,3 +1,72 @@
+document.body.style.backgroundColor = ''; // Clear visual test
+// Capture and send renderer errors to the main process
+if (window.electronAPI && typeof window.electronAPI.sendErrorToMain === 'function') {
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    originalConsoleError.apply(console, args);
+    try {
+      let errorToSend;
+      if (args[0] instanceof Error) {
+        const err = args[0];
+        errorToSend = { name: err.name, message: err.message, stack: err.stack };
+      } else {
+        const message = args.map(arg => {
+          if (typeof arg === 'object' && arg !== null) {
+            try {
+              return JSON.stringify(arg);
+            } catch (e) {
+              return '[Unserializable Object]';
+            }
+          }
+          return String(arg);
+        }).join(' ');
+        errorToSend = { name: 'ConsoleError', message: message, stack: (new Error(message)).stack };
+      }
+      window.electronAPI.sendErrorToMain(errorToSend);
+    } catch (e) {
+      originalConsoleError('[Editor] Error sending console.error to main process:', e, e.stack);
+    }
+  };
+
+  const originalWindowOnError = window.onerror;
+  window.onerror = (message, source, lineno, colno, error) => {
+    if(originalWindowOnError) originalWindowOnError(message, source, lineno, colno, error);
+    try {
+      let errorToSend;
+      if (error) {
+        errorToSend = { name: error.name, message: error.message, stack: error.stack, source: source, lineno: lineno, colno: colno };
+      } else {
+        errorToSend = { name: 'GlobalError', message: String(message), stack: (new Error(String(message))).stack, source: source, lineno: lineno, colno: colno };
+      }
+      window.electronAPI.sendErrorToMain(errorToSend);
+    } catch (e) {
+      originalConsoleError('[Editor] Error sending window.onerror to main process:', e, e.stack);
+    }
+    return false; 
+  };
+
+  const originalWindowOnUnhandledRejection = window.onunhandledrejection;
+  window.onunhandledrejection = (event) => {
+    if(originalWindowOnUnhandledRejection) originalWindowOnUnhandledRejection(event);
+    try {
+      let errorToSend;
+      if (event.reason instanceof Error) {
+        const err = event.reason;
+        errorToSend = { name: err.name, message: err.message, stack: err.stack };
+      } else {
+        const message = String(event.reason || 'Unhandled promise rejection');
+        errorToSend = { name: 'UnhandledPromiseRejection', message: message, stack: (new Error(message)).stack };
+      }
+      window.electronAPI.sendErrorToMain(errorToSend);
+    } catch (e) {
+      originalConsoleError('[Editor] Error sending onunhandledrejection to main process:', e, e.stack);
+    }
+  };
+
+} else {
+  console.error("[Editor] CRITICAL SETUP FAILURE: 'window.electronAPI' or 'window.electronAPI.sendErrorToMain' is not available. Error reporting to main process is DISABLED.");
+}
+
 // DOM Elements
 const patternSelector = document.getElementById('pattern-selector');
 const newPatternBtn = document.getElementById('new-pattern-btn');
@@ -80,7 +149,7 @@ async function loadPatterns() {
     
     // Listen for response
     const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-      console.log('Received API response in editor:', data);
+      //console.log('Received API response in editor:', data);
       
       // Only process responses for the patterns request
       if (data && data.responseFor === 'get_available_patterns') {
@@ -187,7 +256,7 @@ function loadPattern(patternName) {
   
   // Listen for response
   const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    console.log('Received pattern data response:', data);
+    //console.log('Received pattern data response:', data);
     
     // Only process responses for this pattern request
     if (data && data.responseFor === 'get_pattern') {
@@ -478,7 +547,7 @@ function renderPatternItems() {
 
   // Add listeners for editable chapter names
   document.querySelectorAll('.chapter-label[contenteditable="true"]').forEach(label => {
-    console.log('[renderPatternItems] Attaching listeners to chapter-label:', label);
+    //console.log('[renderPatternItems] Attaching listeners to chapter-label:', label);
     label.removeEventListener('blur', handleFieldEdit); // Remove generic field edit
     label.addEventListener('blur', handleHeaderEdit); // Add specific header edit
     if (!label.hasAttribute('listener-keydown-set')) {
@@ -832,7 +901,10 @@ function handleContextMenuAction(e) {
        case 'create_chapter_here':
             // If context is a chunk container, insert after it. If an item, insert after it.
             const baseIndexForNewChapter = specificItemIdx !== -1 ? specificItemIdx : (isChunkContTarget ? targetDataIdx : currentPatternItems.length);
+            console.log(`[create_chapter_here] baseIndexForNewChapter: ${baseIndexForNewChapter}`);
+            console.log(`[create_chapter_here] Calling calculateInsertionIndex with: baseIndex=${baseIndexForNewChapter}, isChapTarget=${isChapTarget}, isCreatingChapter=true, isChunkContTarget=${isChunkContTarget}, chunkId=${currentCtxChunkId}`);
             const insertAtIndexChapter = calculateInsertionIndex(baseIndexForNewChapter, isChapTarget, true, isChunkContTarget, currentCtxChunkId);
+            console.log(`[create_chapter_here] calculateInsertionIndex returned: ${insertAtIndexChapter}`);
            createNewChapterHere(insertAtIndexChapter);
            break;
        case 'add_item_to_chapter':
@@ -958,7 +1030,10 @@ function disbandChunkByChunkId(chunkId) {
 // === ADDED: Dialog Functions ===
 // --- New Dialog Functions ---
 function showChapterInputDialog(context) {
-    console.log("Showing chapter input dialog for context:", context);
+    console.log("[showChapterInputDialog] Entered. Context received:", JSON.stringify(context));
+    if (context && context.action === 'create_chapter') {
+        console.log("[showChapterInputDialog] For 'create_chapter', context.insertionIndex is:", context.insertionIndex);
+    }
     chapterDialogContext = context; // Store context
 
     // Customize dialog based on action
@@ -992,7 +1067,7 @@ function showChapterInputDialog(context) {
          case 'create_chapter': // Renamed from 'create'
               chapterDialogTitle.textContent = 'Enter Name for New Chapter';
               chapterInputName.value = '';
-              chapterInputName.placeholder = "New Chapter Name (cannot be blank)";
+              chapterInputName.placeholder = "New Chapter Name (leave blank for no name)"; // MODIFIED PLACEHOLDER
               clearSelectAndMakeInput(chapterInputName); // Ensure it's an input field
              break;
         case 'rename_chunk':
@@ -1029,7 +1104,7 @@ function showChapterInputDialog(context) {
         chapterInputName.focus();
     }
 
-    console.log('Attaching listeners in showChapterInputDialog');
+    //console.log('Attaching listeners in showChapterInputDialog');
     if (chapterDialogOkBtn) {
         chapterDialogOkBtn.removeEventListener('click', handleChapterDialogOk);
         chapterDialogOkBtn.addEventListener('click', handleChapterDialogOk);
@@ -1102,7 +1177,11 @@ function clearSelectAndMakeInput(element) {
 
 
 function handleChapterDialogOk() {
-    console.log('handleChapterDialogOk called');
+    console.log('[handleChapterDialogOk] Entered. Current chapterDialogContext:', JSON.stringify(chapterDialogContext));
+    if (chapterDialogContext && chapterDialogContext.action === 'create_chapter') {
+        console.log('[handleChapterDialogOk] For "create_chapter", chapterDialogContext.insertionIndex is:', chapterDialogContext.insertionIndex);
+    }
+
     const inputElement = chapterInputName; // chapterInputName can now be <input> or <select>
     const newNameRaw = inputElement.value;
     const newName = newNameRaw.trim();
@@ -1151,45 +1230,45 @@ function handleChapterDialogOk() {
                     break;
                 }
                 // Find the first item of the chunk to get its current chapter
-                const firstChunkItem = currentPatternItems.find(it => it.chunkID === context.chunkId);
-                const currentChunkChapter = firstChunkItem?.chapter || '';
+                const firstChunkItemToAssign = currentPatternItems.find(it => it.chunkID === context.chunkId); // Renamed variable
+                const currentChunkChapterToAssign = firstChunkItemToAssign?.chapter || ''; // Renamed variable
 
-                if (newName !== currentChunkChapter) {
-                    console.log(`Calling API: update_item_chapter (for whole chunk) pattern='${currentPattern}', chunk_id=${context.chunkId}, new_chapter='${newName}'`);
-                    // The API 'update_item_chapter' needs an item_index, so we give the index of the first item of the chunk.
-                    // The API backend should then iterate through all items of that chunk.
-                    const firstItemIndexOfChunk = currentPatternItems.findIndex(it => it.chunkID === context.chunkId);
-                    if (firstItemIndexOfChunk === -1) {
-                        console.error(`Could not find first item for chunk ID ${context.chunkId} to assign chapter.`);
-                        alert(`Error: Could not find chunk ${context.chunkId}.`);
-                        break;
-                    }
-                    window.electronAPI.callAPI('update_item_chapter', {
+                if (newName !== currentChunkChapterToAssign) {
+                    console.log(`Calling API: update_chunk_chapter pattern='${currentPattern}', chunk_id=${context.chunkId}, new_chapter='${newName}'`);
+                    window.electronAPI.callAPI('update_chunk_chapter', { // This API call will update all items in the chunk
                         pattern_name: currentPattern,
-                        item_index: firstItemIndexOfChunk, // API will use this to identify the chunk via chunk_id
-                        new_chapter: newName,
-                        is_chunk: true, // Crucial: tells the API this is for a whole chunk
-                        chunk_id: context.chunkId
+                        chunk_id: context.chunkId,
+                        new_chapter: newName
                     });
-                    handleApiResponse('update_item_chapter', `assigning chapter to chunk ${context.chunkId}`);
+                    handleApiResponse('update_chunk_chapter', `assigning chapter to chunk`);
                 } else {
-                    console.log(`No change in chapter assignment for chunk ${context.chunkId}.`);
+                    console.log("No change in chapter assignment for chunk.");
                 }
                 break;
-
             case 'create_chapter':
-                 if (newName) {
-                      if (context.insertAtIndex === undefined) {
-                          console.error("Missing insertAtIndex in context for create chapter action.");
-                           alert("Error: Cannot determine where to create chapter.");
-                           break;
-                      }
-                      console.log(`Creating chapter '${newName}' by adding new item at index ${context.insertAtIndex}`);
-                      addNewItem(context.insertAtIndex, newName);
-                 } else {
-                      alert("Chapter name cannot be empty.");
-                      return;
-                 }
+                if (context.insertionIndex === undefined) { // Use the stored insertion index
+                    console.error("Insertion index not found in context for create_chapter");
+                    alert("Error: Cannot determine where to create the chapter.");
+                    break;
+                }
+                // REMOVED: if (!newName) { alert("Chapter name cannot be blank."); return; }
+
+                // Check if chapter already exists (only if a name is provided)
+                if (newName && currentPatternItems.some(item => item.isChapter && item.chapter === newName)) {
+                    alert(`Chapter \"${newName}\" already exists.`);
+                    return; // Prevent creating duplicate chapter names
+                }
+
+                // Call API to create chapter (add a chapter marker item)
+                // For a "blank" chapter, we still pass newName which will be ""
+                // The backend and rendering should handle "" as a chapter name signifying "no chapter" or "root level"
+                console.log(`Calling API: create_chapter_item pattern='${currentPattern}', chapter_name='${newName}', index=${context.insertionIndex}`);
+                window.electronAPI.callAPI('create_chapter_item', {
+                    pattern_name: currentPattern,
+                    chapter_name: newName, // newName can be ""
+                    index: context.insertionIndex
+                });
+                handleApiResponse('create_chapter_item', 'creating new chapter');
                 break;
 
              default:
@@ -2352,9 +2431,9 @@ function init() {
   });
 
   // *** Debugging: Check if button elements exist before adding listeners ***
-  console.log('Checking Chapter Dialog Buttons in init:');
-  console.log(' - chapterDialogOkBtn:', chapterDialogOkBtn);
-  console.log(' - chapterDialogCancelBtn:', chapterDialogCancelBtn);
+  //console.log('Checking Chapter Dialog Buttons in init:');
+  //console.log(' - chapterDialogOkBtn:', chapterDialogOkBtn);
+  //console.log(' - chapterDialogCancelBtn:', chapterDialogCancelBtn);
   // *** End Debugging ***
 
   // Load available patterns

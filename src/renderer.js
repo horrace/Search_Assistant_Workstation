@@ -1,3 +1,71 @@
+// Capture and send renderer errors to the main process
+if (window.electronAPI && typeof window.electronAPI.sendErrorToMain === 'function') {
+  const originalConsoleError = console.error;
+  console.error = (...args) => {
+    originalConsoleError.apply(console, args);
+    try {
+      let errorToSend;
+      if (args[0] instanceof Error) {
+        const err = args[0];
+        errorToSend = { name: err.name, message: err.message, stack: err.stack };
+      } else {
+        const message = args.map(arg => {
+          if (typeof arg === 'object' && arg !== null) {
+            try {
+              return JSON.stringify(arg);
+            } catch (e) {
+              return '[Unserializable Object]';
+            }
+          }
+          return String(arg);
+        }).join(' ');
+        errorToSend = { name: 'ConsoleError', message: message, stack: (new Error(message)).stack };
+      }
+      window.electronAPI.sendErrorToMain(errorToSend);
+    } catch (e) {
+      originalConsoleError('[Renderer] Error sending console.error to main process:', e, e.stack);
+    }
+  };
+
+  const originalWindowOnError = window.onerror;
+  window.onerror = (message, source, lineno, colno, error) => {
+    if(originalWindowOnError) originalWindowOnError(message, source, lineno, colno, error);
+    try {
+      let errorToSend;
+      if (error) {
+        errorToSend = { name: error.name, message: error.message, stack: error.stack, source: source, lineno: lineno, colno: colno };
+      } else {
+        errorToSend = { name: 'GlobalError', message: String(message), stack: (new Error(String(message))).stack, source: source, lineno: lineno, colno: colno };
+      }
+      window.electronAPI.sendErrorToMain(errorToSend);
+    } catch (e) {
+      originalConsoleError('[Renderer] Error sending window.onerror to main process:', e, e.stack);
+    }
+    return false; 
+  };
+
+  const originalWindowOnUnhandledRejection = window.onunhandledrejection;
+  window.onunhandledrejection = (event) => {
+    if(originalWindowOnUnhandledRejection) originalWindowOnUnhandledRejection(event);
+    try {
+      let errorToSend;
+      if (event.reason instanceof Error) {
+        const err = event.reason;
+        errorToSend = { name: err.name, message: err.message, stack: err.stack };
+      } else {
+        const message = String(event.reason || 'Unhandled promise rejection');
+        errorToSend = { name: 'UnhandledPromiseRejection', message: message, stack: (new Error(message)).stack };
+      }
+      window.electronAPI.sendErrorToMain(errorToSend);
+    } catch (e) {
+      originalConsoleError('[Renderer] Error sending onunhandledrejection to main process:', e, e.stack);
+    }
+  };
+
+} else {
+  console.error("[Renderer] CRITICAL SETUP FAILURE: 'window.electronAPI' or 'window.electronAPI.sendErrorToMain' is not available. Error reporting to main process is DISABLED.");
+}
+
 // Main renderer process for the application
 document.addEventListener('DOMContentLoaded', function() {
   // DOM elements
