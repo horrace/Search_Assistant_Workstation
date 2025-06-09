@@ -134,3 +134,7 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+data/SP_CT_Chest_AP.docx
+my-vscode-extension/extension.js
+my-vscode-extension/package-lock.json
+my-vscode-extension/package.json

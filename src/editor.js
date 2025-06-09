@@ -95,6 +95,20 @@ const chunkAssignSelect = document.getElementById('chunk-assign-select');
 const chunkAssignDialogOkBtn = document.getElementById('chunk-assign-dialog-ok-btn');
 const chunkAssignDialogCancelBtn = document.getElementById('chunk-assign-dialog-cancel-btn');
 
+const togglePartsBankBtn = document.getElementById('toggle-parts-bank-btn');
+const partsBankContainer = document.getElementById('parts-bank-container');
+
+if (togglePartsBankBtn && partsBankContainer) {
+    togglePartsBankBtn.addEventListener('click', () => {
+        partsBankContainer.classList.toggle('collapsed');
+        if (partsBankContainer.classList.contains('collapsed')) {
+            togglePartsBankBtn.textContent = '▶';
+        } else {
+            togglePartsBankBtn.textContent = '◀';
+        }
+    });
+}
+
 // State
 let patterns = [];
 let currentPattern = '';
@@ -377,6 +391,7 @@ function renderPatternItems() {
     // --- Item/Chunk Rendering Logic ---
     const isSelected = selectedIndex === itemIndexCounter || selectedIndices.includes(itemIndexCounter);
     const isInChunk = item.chunkID > 0;
+    const isChunkStart = chunkFirstItemIndex === itemIndexCounter;
 
     if (isInChunk) {
       // Find all items belonging to this chunk *starting from the current index*
@@ -414,18 +429,36 @@ function renderPatternItems() {
 
           chunkItemsInOrder.forEach((chunkItem, chunkIdx) => {
             const chunkItemActualIndex = chunkIndices[chunkIdx];
-            const chunkItemView = chunkItem.view_plane || 'ax';
+            const chunkItemView = chunkItem.view_plane || '';
+            const chunkItemWindow = chunkItem.window || '';
             html += `
               <div class="chunk-item-part" data-chunk-index="${chunkItemActualIndex}">
                 <div class="item-view">
                   <select class="item-view-select" data-index="${chunkItemActualIndex}">
+                    <option value="" ${!chunkItemView ? 'selected' : ''}>-</option>
                     <option value="ax" ${chunkItemView === 'ax' ? 'selected' : ''}>ax</option>
                     <option value="cor" ${chunkItemView === 'cor' ? 'selected' : ''}>cor</option>
                     <option value="sag" ${chunkItemView === 'sag' ? 'selected' : ''}>sag</option>
                   </select>
                 </div>
+                <div class="item-window">
+                  <select class="item-window-select" data-index="${chunkItemActualIndex}">
+                    <option value="" ${!chunkItemWindow ? 'selected' : ''}>-</option>
+                    <option value="ST" ${chunkItemWindow === 'ST' ? 'selected' : ''}>ST</option>
+                    <option value="bone" ${chunkItemWindow === 'bone' ? 'selected' : ''}>bone</option>
+                    <option value="brain" ${chunkItemWindow === 'brain' ? 'selected' : ''}>brain</option>
+                    <option value="lung" ${chunkItemWindow === 'lung' ? 'selected' : ''}>lung</option>
+                    <option value="Stroke" ${chunkItemWindow === 'Stroke' ? 'selected' : ''}>Stroke</option>
+                    <option value="CTA" ${chunkItemWindow === 'CTA' ? 'selected' : ''}>CTA</option>
+                    <option value="CTV" ${chunkItemWindow === 'CTV' ? 'selected' : ''}>CTV</option>
+                    <option value="MIP" ${chunkItemWindow === 'MIP' ? 'selected' : ''}>MIP</option>
+                    <option value="MinIP" ${chunkItemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
+                    <option value="Thin" ${chunkItemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
+                    <option value="3D" ${chunkItemWindow === '3D' ? 'selected' : ''}>3D</option>
+                  </select>
+                </div>
                 <div class="item-abbr" contenteditable="true" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
-                <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${chunkItemActualIndex}">${chunkItem.strategy || ''}</div>
+                <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${chunkItemActualIndex}">${formatStrategyText(chunkItem.strategy || '')}</div>
               </div>
             `;
           });
@@ -445,9 +478,10 @@ function renderPatternItems() {
       }
     } else {
       // Regular single item
+      const itemWindow = item.window || '';
       html += `
         <div
-          class="draggable-item ${isSelected ? 'selected' : ''}"
+          class="draggable-item ${isSelected ? 'selected' : ''} ${isChunkStart ? 'chunk-start' : ''}"
           data-item-index="${itemIndexCounter}"
           data-rendered-index="${renderedItemIndex}"
           data-is-chunk="false"
@@ -458,13 +492,30 @@ function renderPatternItems() {
             <div class="drag-handle" data-handle="true"></div>
             <div class="item-view">
               <select class="item-view-select" data-index="${itemIndexCounter}">
+                <option value="" ${!item.view_plane ? 'selected' : ''}>-</option>
                 <option value="ax" ${item.view_plane === 'ax' ? 'selected' : ''}>ax</option>
                 <option value="cor" ${item.view_plane === 'cor' ? 'selected' : ''}>cor</option>
                 <option value="sag" ${item.view_plane === 'sag' ? 'selected' : ''}>sag</option>
               </select>
             </div>
+            <div class="item-window">
+                <select class="item-window-select" data-index="${itemIndexCounter}">
+                    <option value="" ${!itemWindow ? 'selected' : ''}>-</option>
+                    <option value="ST" ${itemWindow === 'ST' ? 'selected' : ''}>ST</option>
+                    <option value="bone" ${itemWindow === 'bone' ? 'selected' : ''}>bone</option>
+                    <option value="brain" ${itemWindow === 'brain' ? 'selected' : ''}>brain</option>
+                    <option value="lung" ${itemWindow === 'lung' ? 'selected' : ''}>lung</option>
+                    <option value="Stroke" ${itemWindow === 'Stroke' ? 'selected' : ''}>Stroke</option>
+                    <option value="CTA" ${itemWindow === 'CTA' ? 'selected' : ''}>CTA</option>
+                    <option value="CTV" ${itemWindow === 'CTV' ? 'selected' : ''}>CTV</option>
+                    <option value="MIP" ${itemWindow === 'MIP' ? 'selected' : ''}>MIP</option>
+                    <option value="MinIP" ${itemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
+                    <option value="Thin" ${itemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
+                    <option value="3D" ${itemWindow === '3D' ? 'selected' : ''}>3D</option>
+                </select>
+            </div>
             <div class="item-abbr" contenteditable="true" data-field="abbr" data-index="${itemIndexCounter}">${item.abbr || ''}</div>
-            <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${itemIndexCounter}">${item.strategy || ''}</div>
+            <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${itemIndexCounter}">${formatStrategyText(item.strategy || '')}</div>
           </div>
         </div>
       `;
@@ -561,6 +612,12 @@ function renderPatternItems() {
   // Add change listener for the view dropdowns
   document.querySelectorAll('.item-view-select').forEach(selectElement => {
     selectElement.addEventListener('change', handleViewChange);
+    selectElement.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    selectElement.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+  });
+
+  document.querySelectorAll('.item-window-select').forEach(selectElement => {
+    selectElement.addEventListener('change', handleWindowChange);
     selectElement.addEventListener('mousedown', (e) => { e.stopPropagation(); });
     selectElement.addEventListener('touchstart', (e) => { e.stopPropagation(); });
   });
@@ -808,12 +865,64 @@ function handleContextMenuAction(e) {
     // --- Chunk Actions ---
     case 'create_chunk_first':
        // This action originates from right-clicking an item to be the first. specificItemIdx is that item.
-       if (specificItemIdx !== -1) setChunkFirstItem(specificItemIdx);
+       if (specificItemIdx !== -1) {
+            // Remove indicator from previously selected first item
+            const existingStart = patternItems.querySelector('.chunk-start');
+            if(existingStart) {
+                existingStart.classList.remove('chunk-start');
+            }
+
+            if (chunkFirstItemIndex === specificItemIdx) {
+                // User clicked the same item again, so cancel the operation
+                chunkFirstItemIndex = -1;
+                console.log("Chunk creation cancelled.");
+            } else {
+                chunkFirstItemIndex = specificItemIdx;
+                console.log(`Item at index ${specificItemIdx} set as the first item for chunk creation.`);
+
+                // Add indicator to the new first item
+                const itemElement = patternItems.querySelector(`[data-item-index="${specificItemIdx}"]`);
+                if (itemElement) {
+                    itemElement.classList.add('chunk-start');
+                }
+            }
+       }
        else console.warn("Create chunk first: specificItemIdx was -1");
       break;
     case 'create_chunk_last':
       // This action originates from right-clicking an item to be the last. specificItemIdx is that item.
-      if (specificItemIdx !== -1) createChunkWithRange(specificItemIdx);
+      if (specificItemIdx !== -1) {
+        if (chunkFirstItemIndex < 0) {
+            console.warn("Cannot create chunk: First item not selected.");
+            // Make sure to remove any stray 'chunk-start' class
+            const existingStart = patternItems.querySelector('.chunk-start');
+            if(existingStart) {
+                existingStart.classList.remove('chunk-start');
+            }
+            return;
+        }
+
+        const firstItemIndex = chunkFirstItemIndex;
+        const lastItemIndex = specificItemIdx;
+        const start = Math.min(firstItemIndex, lastItemIndex);
+        const end = Math.max(firstItemIndex, lastItemIndex);
+        
+        // API call expects start_index and count
+        const count = end - start + 1;
+
+        console.log(`Requesting chunk creation from index ${start} to ${end} (count: ${count})`);
+        
+        // Reset chunk selection state BEFORE the async call
+        chunkFirstItemIndex = -1;
+        
+        window.electronAPI.callAPI('create_chunk', {
+            pattern_name: currentPattern,
+            start_index: start,
+            end_index: end
+        });
+
+        handleApiResponse('create_chunk', `creating chunk`);
+      }
       else console.warn("Create chunk last: specificItemIdx was -1");
       break;
     case 'remove_from_chunk':
@@ -1303,6 +1412,7 @@ function addNewItem(insertAtIndex, chapter = '') {
         groupID: 0, // groupID might need logic if you group new items
         chunkID: 0, // New items are not in chunks initially
         view_plane: "ax",
+        window: "",
         chapter: chapter // Assign chapter context
     };
 
@@ -1364,6 +1474,60 @@ function deleteItemOrChunk(itemIndex) {
     }
 }
 
+function setChunkFirstItem(index) {
+    // Remove indicator from previously selected first item
+    const existingStart = patternItems.querySelector('.chunk-start');
+    if(existingStart) {
+        existingStart.classList.remove('chunk-start');
+    }
+
+    if (chunkFirstItemIndex === index) {
+        // User clicked the same item again, so cancel the operation
+        chunkFirstItemIndex = -1;
+        console.log("Chunk creation cancelled.");
+    } else {
+        chunkFirstItemIndex = index;
+        console.log(`Item at index ${index} set as the first item for chunk creation.`);
+
+        // Add indicator to the new first item
+        const itemElement = patternItems.querySelector(`[data-item-index="${index}"]`);
+        if (itemElement) {
+            itemElement.classList.add('chunk-start');
+        }
+    }
+}
+
+function createChunkWithRange(lastItemIndex) {
+    if (chunkFirstItemIndex < 0) {
+        console.warn("Cannot create chunk: First item not selected.");
+        // Make sure to remove any stray 'chunk-start' class
+        const existingStart = patternItems.querySelector('.chunk-start');
+        if(existingStart) {
+            existingStart.classList.remove('chunk-start');
+        }
+        return;
+    }
+
+    const firstItemIndex = chunkFirstItemIndex;
+    const start = Math.min(firstItemIndex, lastItemIndex);
+    const end = Math.max(firstItemIndex, lastItemIndex);
+    
+    // API call expects start_index and count
+    const count = end - start + 1;
+
+    console.log(`Requesting chunk creation from index ${start} to ${end} (count: ${count})`);
+    
+    // Reset chunk selection state BEFORE the async call
+    chunkFirstItemIndex = -1;
+    
+    window.electronAPI.callAPI('create_chunk', {
+        pattern_name: currentPattern,
+        start_index: start,
+        end_index: end
+    });
+
+    handleApiResponse('create_chunk', `creating chunk`);
+}
 
 
 function deleteChapter(chapterName) {
@@ -1433,6 +1597,7 @@ function addNewItemToChunk(chunkId) {
         groupID: firstItemOfChunk ? firstItemOfChunk.groupID : 0, // Inherit groupID from chunk
         chunkID: chunkId, // Assign to the target chunk
         view_plane: "ax",
+        window: "",
         chapter: chapterOfChunk // Inherit chapter from chunk
     };
 
@@ -1844,6 +2009,25 @@ function handleViewChange(e) {
   }
 }
 
+// Handler for window dropdown change
+function handleWindowChange(e) {
+  const selectElement = e.target;
+  const newWindow = selectElement.value;
+  const itemIndex = parseInt(selectElement.dataset.index, 10);
+
+  console.log(`Window changed for data index: ${itemIndex}, new window: ${newWindow}`);
+
+  if (!isNaN(itemIndex) && itemIndex >= 0 && itemIndex < currentPatternItems.length) {
+    currentPatternItems[itemIndex].window = newWindow;
+    console.log(`Updated item at index ${itemIndex} window:`, currentPatternItems[itemIndex]);
+    saveCurrentPattern();
+  } else {
+    console.error("Could not find valid item index for window change:", itemIndex, selectElement);
+    alert("Error updating window. Reloading pattern to ensure data integrity.");
+    loadPattern(currentPattern);
+  }
+}
+
 // --- Save Function ---
 let saveTimeout; // For debouncing saves
 
@@ -1860,7 +2044,8 @@ async function saveCurrentPattern() {
     // Ensure the items sent for saving have the view_plane property
     items: patternDataToSave.map(item => ({
         ...item,
-        view_plane: item.view_plane || 'ax' // Ensure default if somehow missing
+        view_plane: item.view_plane || 'ax', // Ensure default if somehow missing
+        window: item.window || ''
       }))
   };
 
@@ -1914,7 +2099,8 @@ function addItemFromBank(partData) {
         abbr: partData.abbr || '',
         strategy: partData.strategy || '',
         chunkID: 0, // New items are not in chunks initially
-        view_plane: 'ax' // Default view for new items
+        view_plane: 'ax', // Default view for new items
+        window: partData.window || ''
     };
 
     // Add to the end of the current pattern list
@@ -1934,7 +2120,7 @@ async function loadPartsBank() {
         if (data && data.responseFor === 'get_parts_bank') {
             unsubscribe();
             if (data.result && Array.isArray(data.result)) {
-                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || 'ax' })); // Add default view
+                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || 'ax', window: item.window || '' })); // Add default view
                 renderPartsBank();
             } else if (data.error) {
                 console.error('Error loading parts bank:', data.error);
@@ -2027,12 +2213,22 @@ function handleItemClick(e, itemElement) { // itemElement is e.currentTarget (th
     return;
   }
 
+  // If user is in the middle of creating a chunk, a normal click should cancel it.
+  if (chunkFirstItemIndex >= 0) {
+      const prevItemElement = patternItems.querySelector('.chunk-start');
+      if (prevItemElement) {
+          prevItemElement.classList.remove('chunk-start');
+      }
+      chunkFirstItemIndex = -1;
+      console.log("Chunk creation cancelled by click.");
+  }
+
   // If the click wasn't on an interactive element, try to get the data-item-index for selection from the .draggable-item.
-  const clickedItemIndex = parseInt(itemElement.getAttribute('data-item-index'));
+  const dataIndex = parseInt(itemElement.getAttribute('data-item-index'));
 
   // If the .draggable-item doesn't have a valid data-item-index (e.g., it's a chapter container),
   // then it's not selectable in this way.
-  if (isNaN(clickedItemIndex)) {
+  if (isNaN(dataIndex)) {
     // console.warn('handleItemClick: Clicked on a draggable element without a valid data-item-index for selection (e.g., chapter header area).', itemElement);
     return;
   }
@@ -2040,18 +2236,18 @@ function handleItemClick(e, itemElement) { // itemElement is e.currentTarget (th
   // If we have a valid index, proceed with selection logic.
   const isChunk = itemElement.dataset.isChunk === 'true'; // Check if the draggable item is a chunk container
 
-  console.log(`Item clicked: Index=${clickedItemIndex}, MultiSelect: ${multiSelectionMode}`);
+  console.log(`Item clicked: Index=${dataIndex}, MultiSelect: ${multiSelectionMode}`);
 
   if (multiSelectionMode) {
     // Multi-selection mode (Shift key held)
-    const indexPosition = selectedIndices.indexOf(clickedItemIndex);
+    const indexPosition = selectedIndices.indexOf(dataIndex);
     if (indexPosition > -1) {
       // Already selected, deselect it
       selectedIndices.splice(indexPosition, 1);
       itemElement.classList.remove('selected');
     } else {
       // Not selected, select it
-      selectedIndices.push(clickedItemIndex);
+      selectedIndices.push(dataIndex);
       itemElement.classList.add('selected');
     }
     // Ensure single select index is cleared in multi-mode
@@ -2062,7 +2258,7 @@ function handleItemClick(e, itemElement) { // itemElement is e.currentTarget (th
     selectedIndices = []; 
     document.querySelectorAll('.draggable-item.selected').forEach(el => el.classList.remove('selected'));
 
-    if (selectedIndex === clickedItemIndex) {
+    if (selectedIndex === dataIndex) {
       // Clicked the same item again, deselect it
       selectedIndex = -1;
       itemElement.classList.remove('selected');
@@ -2075,7 +2271,7 @@ function handleItemClick(e, itemElement) { // itemElement is e.currentTarget (th
         }
       }
       // Select the new item
-      selectedIndex = clickedItemIndex;
+      selectedIndex = dataIndex;
       itemElement.classList.add('selected');
     }
   }
@@ -2873,3 +3069,11 @@ async function handleAddItem(patternName, itemData, index = -1) {
 }
 */
 // ... and so on for ALL functions that change pattern data and call the backend.
+
+function formatStrategyText(text) {
+    if (!text) return '';
+    // Use a regex to wrap parenthesized content in a span
+    return text.replace(/(\(.*?\))/g, '<span class="parenthesized">$1</span>');
+}
+
+// TEST COMMENT

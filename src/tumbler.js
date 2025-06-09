@@ -204,6 +204,15 @@ function updateFontSizes() {
   });
 }
 
+function formatStrategyText(text) {
+    if (!text) return '';
+    // Use a regex to find all occurrences of text within parentheses.
+    // The 'g' flag ensures all matches are replaced, not just the first.
+    // The regex captures the content *inside* the parentheses.
+    // We then wrap the entire match (including parentheses) in a span.
+    return text.replace(/\((.*?)\)/g, '<span class="parenthesized">($1)</span>');
+}
+
 // Display the current item
 function displayCurrentItem() {
   if (!displayableUnits || displayableUnits.length === 0) {
@@ -271,7 +280,7 @@ function displayCurrentItem() {
         <div class="chunk-item">
           <span class="chunk-item-view">${chunkItemViewText}</span>
           <span class="chunk-item-abbr">${item.abbr}</span>
-          <span class="chunk-item-strategy">${item.strategy}</span>
+          <span class="chunk-item-strategy">${formatStrategyText(item.strategy)}</span>
         </div>
       `;
     });
@@ -300,7 +309,7 @@ function displayCurrentItem() {
     // Set content for unchunked items
     tumblerViewDynamic.textContent = itemView ? itemView : ''; // Display view or empty
     tumblerAbbr.textContent = itemAbbr;
-    tumblerStrategy.textContent = itemStrategy;
+    tumblerStrategy.innerHTML = formatStrategyText(itemStrategy);
 
     // Set visibility of individual elements within the row
     tumblerViewDynamic.style.display = itemView ? 'block' : 'none'; // Show if itemView exists

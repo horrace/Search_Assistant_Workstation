@@ -414,7 +414,7 @@ footer {
 }
 
 .tumbler-strategy {
-  color: #AAAAAA;
+  color: #888888;
   font-size: 14px;
   padding: 8px;
   background-color: rgba(48, 48, 48, 0.95); /* Almost opaque background */
@@ -445,9 +445,24 @@ footer {
 }
 
 .chunk-item-strategy {
-  color: #AAAAAA;
+  color: #888888;
   font-size: 14px;
   margin-top: 5px;
+}
+
+.item-strategy {
+  flex: 1;
+  color: #888888;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: smaller;
+}
+
+.item-strategy .parenthesized,
+.chunk-item-strategy .parenthesized,
+.tumbler-strategy .parenthesized {
+  color: #5a5a5a; /* A darker gray for parenthesized text */
 }
 
 /* Draggable list item */
@@ -470,6 +485,11 @@ footer {
 
 .draggable-item.selected {
   background-color: #3949AB;
+}
+
+.draggable-item.chunk-start {
+  background-color: #3949ab6b; /* A lighter, transparent version of the selected color */
+  border-left: 5px solid #4FC3F7;
 }
 
 /* Remove the old chunk styling */
@@ -586,7 +606,7 @@ footer {
 
 .chunk-item-part .item-strategy {
   flex-grow: 1; /* Allow strategy to take remaining space */
-  color: #AAAAAA;
+  color: #888888;
   font-size: smaller;
   white-space: nowrap;
   overflow: hidden;
@@ -600,7 +620,7 @@ footer {
     color: #576475;
     background-color: transparent; /* Match non-chunk version */
     border: 0px solid #555; /* Match non-chunk version */
-    padding: 1px 3px; /* Slightly smaller padding */
+    padding: 1px 1px 1px 16px;
 }
 
 .item-abbr {
@@ -609,7 +629,7 @@ footer {
   margin-right: 16px;
 }
 
-.item-strategy {
+.item-subparts {
   flex: 1;
   color: #AAAAAA;
   white-space: nowrap;
@@ -706,6 +726,11 @@ footer {
 
 .tumbler-container.no-background .settings-item {
   color: #FFFFFF;
+}
+
+.tumbler-container.no-background .tumbler-strategy .parenthesized,
+.tumbler-container.no-background .chunk-item-strategy .parenthesized {
+    color: #5a5a5a;
 }
 
 .pattern-items {
@@ -898,13 +923,18 @@ footer {
 }
 
 .item-view-select {
-  padding: 1px 3px;
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 1px 1px 1px 16px; /* top, right, bottom, left */
   font-size: small;
   font-weight: bold;
   border: 0px solid #555;
   background-color: transparent;
   color: #576475;
   border-radius: 3px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23576475' d='M2.5 4L6 7.5 9.5 4 11 5.5 6 10.5 1 5.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 2px center;
 }
 
 .item-view-select:focus {
@@ -1165,4 +1195,90 @@ footer {
 
 #next-item-button:hover {
   background-color: #555;
+}
+
+.item-window {
+  /* No specific container styling needed for now */
+}
+
+.item-window-select {
+  -webkit-appearance: none;
+  appearance: none;
+  padding: 1px 1px 1px 16px; /* top, right, bottom, left */
+  font-size: small;
+  font-weight: bold;
+  border: 0px solid #555;
+  background-color: transparent;
+  color: #576475;
+  border-radius: 3px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23576475' d='M2.5 4L6 7.5 9.5 4 11 5.5 6 10.5 1 5.5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: left 2px center;
+}
+
+.item-view-select:focus {
+  outline: 1px solid var(--accent-color);
+  border-color: var(--accent-color);
+}
+
+/* Parts Bank */
+.parts-bank-container {
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  width: 350px; /* Adjust as needed */
+  flex-shrink: 0;
+  border-left: 1px solid #444;
+}
+
+.parts-bank-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  background-color: #252525;
+}
+
+.parts-bank-header h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.btn-toggle-bank {
+  background: none;
+  border: 1px solid #666;
+  color: #ccc;
+  cursor: pointer;
+  width: 24px;
+  height: 24px;
+  line-height: 22px;
+  text-align: center;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.parts-bank-container.collapsed {
+  width: 50px; /* Collapsed width */
+}
+
+.parts-bank-container.collapsed .parts-bank {
+  display: none;
+}
+
+.parts-bank-container.collapsed .parts-bank-header h2 {
+  display: none;
+}
+
+.parts-bank-container.collapsed .btn-toggle-bank {
+}
+
+.parts-bank {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.parts-bank-items {
+    height: 100%;
+    overflow-y: auto;
 }

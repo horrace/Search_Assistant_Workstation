@@ -1,6 +1,18 @@
 {
-  "transparency": 0.95,
+  "transparency": 1,
   "tumbler": {
     "hideBackground": true
+  },
+  "mainWindowPosition": {
+    "x": 1432,
+    "y": 346
+  },
+  "editorWindowPosition": {
+    "x": 834,
+    "y": 162
+  },
+  "tumblerWindowPosition": {
+    "x": 614,
+    "y": 184
   }
 }

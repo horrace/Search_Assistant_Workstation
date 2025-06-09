@@ -38,12 +38,16 @@
       </div>
       
       <!-- Right side - Parts Bank -->
-      <div class="parts-bank">
-        <h2 class="editor-section-header">Parts Bank</h2>
-        
-        <div id="parts-bank-items" class="parts-bank-items">
-          <!-- Parts bank items will be loaded here -->
-          <div class="loading-indicator">Loading parts bank...</div>
+      <div id="parts-bank-container" class="parts-bank-container collapsed">
+        <div class="parts-bank-header">
+          <h2 class="editor-section-header">Parts Bank</h2>
+          <button id="toggle-parts-bank-btn" class="btn-toggle-bank">▶</button>
+        </div>
+        <div class="parts-bank">
+          <div id="parts-bank-items" class="parts-bank-items">
+            <!-- Parts bank items will be loaded here -->
+            <div class="loading-indicator">Loading parts bank...</div>
+          </div>
         </div>
       </div>
     </div>
