@@ -33,12 +33,57 @@ let mainWindow;
 let editorWindow;
 let tumblerWindow;
 
+// Helper function to ensure window position is within visible bounds
+function ensureWindowInBounds(x, y, width, height) {
+  // Get all displays
+  const displays = screen.getAllDisplays();
+  
+  // Check if the window would be visible on any display
+  let isVisible = false;
+  
+  for (const display of displays) {
+    const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = display.bounds;
+    
+    // Check if at least 50 pixels of the window would be visible on this display
+    const windowRight = x + width;
+    const windowBottom = y + height;
+    const displayRight = displayX + displayWidth;
+    const displayBottom = displayY + displayHeight;
+    
+    // Check if window intersects with display (with 50px minimum visibility)
+    if (x < displayRight - 50 && windowRight > displayX + 50 &&
+        y < displayBottom - 50 && windowBottom > displayY + 50) {
+      isVisible = true;
+      break;
+    }
+  }
+  
+  // If window would not be visible, center it on the primary display
+  if (!isVisible) {
+    const primaryDisplay = screen.getPrimaryDisplay();
+    const { x: displayX, y: displayY, width: displayWidth, height: displayHeight } = primaryDisplay.bounds;
+    
+    // Center the window on the primary display
+    x = displayX + Math.floor((displayWidth - width) / 2);
+    y = displayY + Math.floor((displayHeight - height) / 2);
+    
+    console.log(`Window position was off-screen, centering on primary display at: x=${x}, y=${y}`);
+  }
+  
+  return { x, y };
+}
+
 function createMainWindow() {
   const savedPosition = api.get_main_window_position();
   let initialX, initialY;
+  const windowWidth = 500;
+  const windowHeight = 400;
+  
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
-    initialX = savedPosition.x;
-    initialY = savedPosition.y;
+    // Validate the saved position
+    const validatedPos = ensureWindowInBounds(savedPosition.x, savedPosition.y, windowWidth, windowHeight);
+    initialX = validatedPos.x;
+    initialY = validatedPos.y;
     //console.log(`Found saved Main window position: x=${initialX}, y=${initialY}`);
   } else {
     //console.log("No saved Main window position found, using default.");
@@ -47,8 +92,8 @@ function createMainWindow() {
   mainWindow = new BrowserWindow({
     x: initialX,
     y: initialY,
-    width: 500,
-    height: 400,
+    width: windowWidth,
+    height: windowHeight,
     frame: false,
     titleBarStyle: 'hidden',
     webPreferences: {
@@ -108,9 +153,14 @@ function createMainWindow() {
 function createEditorWindow() {
   const savedPosition = api.get_editor_window_position();
   let initialX, initialY;
+  const windowWidth = 800;
+  const windowHeight = 700;
+  
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
-    initialX = savedPosition.x;
-    initialY = savedPosition.y;
+    // Validate the saved position
+    const validatedPos = ensureWindowInBounds(savedPosition.x, savedPosition.y, windowWidth, windowHeight);
+    initialX = validatedPos.x;
+    initialY = validatedPos.y;
     //console.log(`Found saved Editor window position: x=${initialX}, y=${initialY}`);
   } else {
     //console.log("No saved Editor window position found, using default.");
@@ -119,8 +169,8 @@ function createEditorWindow() {
   editorWindow = new BrowserWindow({
     x: initialX,
     y: initialY,
-    width: 800,
-    height: 700,
+    width: windowWidth,
+    height: windowHeight,
     parent: mainWindow,
     modal: false,
     frame: false,
@@ -182,10 +232,14 @@ function createEditorWindow() {
 function createTumblerWindow(patternName) {
   const savedPosition = api.get_tumbler_window_position();
   let initialX, initialY;
+  const windowWidth = 500;
+  const windowHeight = 300;
 
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
-    initialX = savedPosition.x;
-    initialY = savedPosition.y;
+    // Validate the saved position
+    const validatedPos = ensureWindowInBounds(savedPosition.x, savedPosition.y, windowWidth, windowHeight);
+    initialX = validatedPos.x;
+    initialY = validatedPos.y;
     //console.log(`Found saved Tumbler position: x=${initialX}, y=${initialY}`);
   } else {
     // Default position if none saved (e.g., centered on parent or primary display)
@@ -196,8 +250,8 @@ function createTumblerWindow(patternName) {
   tumblerWindow = new BrowserWindow({
     x: initialX, // Apply saved X or undefined
     y: initialY, // Apply saved Y or undefined
-    width: 500,
-    height: 300,
+    width: windowWidth,
+    height: windowHeight,
     parent: mainWindow,
     modal: false,
     frame: false,  // No title bar
@@ -233,7 +287,7 @@ function createTumblerWindow(patternName) {
         //console.log(`Tumbler moved to: x=${x}, y=${y}. Saving position.`);
         api.save_tumbler_window_position({ x, y });
       }
-    }, 500); // Debounce for 500ms
+    }, 500);
   });
   
   // Use 'close' event to save position *before* the window is destroyed
@@ -338,8 +392,12 @@ ipcMain.on('move-tumbler-window', (event, data) => {
     const targetX = data.screenX - data.offsetX;
     const targetY = data.screenY - data.offsetY;
     
-    // Use setPosition with calculated absolute coordinates
-    tumblerWindow.setPosition(targetX, targetY, false); // false = don't animate
+    // Validate the target position to ensure it's within bounds
+    const [width, height] = tumblerWindow.getSize();
+    const validatedPos = ensureWindowInBounds(targetX, targetY, width, height);
+    
+    // Use setPosition with validated coordinates
+    tumblerWindow.setPosition(validatedPos.x, validatedPos.y, false); // false = don't animate
   }
 });
 
@@ -519,10 +577,56 @@ ipcMain.handle('undo-last-action', async (event, pattern_name) => {
 app.whenReady().then(() => {
   createMainWindow();
   
+  // Listen for display changes and revalidate window positions
+  screen.on('display-added', handleDisplayChange);
+  screen.on('display-removed', handleDisplayChange);
+  screen.on('display-metrics-changed', handleDisplayChange);
+  
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
   });
 });
+
+// Handle display configuration changes
+function handleDisplayChange() {
+  console.log('Display configuration changed, validating window positions...');
+  
+  // Check and reposition main window if needed
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    const [x, y] = mainWindow.getPosition();
+    const [width, height] = mainWindow.getSize();
+    const validatedPos = ensureWindowInBounds(x, y, width, height);
+    
+    if (validatedPos.x !== x || validatedPos.y !== y) {
+      mainWindow.setPosition(validatedPos.x, validatedPos.y);
+      console.log(`Repositioned main window to: x=${validatedPos.x}, y=${validatedPos.y}`);
+    }
+  }
+  
+  // Check and reposition editor window if needed
+  if (editorWindow && !editorWindow.isDestroyed()) {
+    const [x, y] = editorWindow.getPosition();
+    const [width, height] = editorWindow.getSize();
+    const validatedPos = ensureWindowInBounds(x, y, width, height);
+    
+    if (validatedPos.x !== x || validatedPos.y !== y) {
+      editorWindow.setPosition(validatedPos.x, validatedPos.y);
+      console.log(`Repositioned editor window to: x=${validatedPos.x}, y=${validatedPos.y}`);
+    }
+  }
+  
+  // Check and reposition tumbler window if needed
+  if (tumblerWindow && !tumblerWindow.isDestroyed()) {
+    const [x, y] = tumblerWindow.getPosition();
+    const [width, height] = tumblerWindow.getSize();
+    const validatedPos = ensureWindowInBounds(x, y, width, height);
+    
+    if (validatedPos.x !== x || validatedPos.y !== y) {
+      tumblerWindow.setPosition(validatedPos.x, validatedPos.y);
+      console.log(`Repositioned tumbler window to: x=${validatedPos.x}, y=${validatedPos.y}`);
+    }
+  }
+}
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
