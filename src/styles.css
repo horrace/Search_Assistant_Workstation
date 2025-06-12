@@ -513,8 +513,9 @@ footer {
 /* New wrapper for the content that needs background */
 .chunk-content-wrapper {
   background-color: #1f1f1f; /*#1d1d1d; */
-  margin-left: 24px; /* (24px desired item indent - 8px container's left padding) - to align background with where items visually start */
+  margin-left: -9px; /* (24px desired item indent - 8px container's left padding) - to align background with where items visually start */
   padding: 3px 0px;
+  padding-left: 20px;
   padding-bottom: 5px;
   border-radius: 6px; /* Optional: if chunks should have rounded corners like draggable-items */
 }
@@ -543,7 +544,7 @@ footer {
   color: #888;
   display: inline-table;
   justify-content: center;
-  margin-right: 2px;
+  margin-right: 12px;
   position: relative;
   flex-shrink: 0; /* Prevent the handle from shrinking */
   height: 100%; /* Take full height of parent */
@@ -581,7 +582,7 @@ footer {
   align-items: center; /* Align items vertically */
   gap: 8px; /* Space between view, abbr, strategy */
   margin-bottom: 0; /* Remove margin, use gap instead */
-  margin-left: 2px;
+  margin-left: -2px;
   /* Remove explicit height/width constraints if any */
 }
 
@@ -621,6 +622,32 @@ footer {
     background-color: transparent; /* Match non-chunk version */
     border: 0px solid #555; /* Match non-chunk version */
     padding: 1px 1px 1px 16px;
+	margin-left: 14px;
+}
+
+/* Drag handle styling for chunk items */
+.chunk-item-part .drag-handle {
+  cursor: grab;
+  opacity: 0.7;
+  color: #888;
+  font-size: 16px;
+  margin-right: 5px;
+  transition: opacity 0.2s ease, color 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chunk-item-part .drag-handle:hover {
+  opacity: 1;
+  color: #4FC3F7;
+  background-color: rgba(79, 195, 247, 0.1);
+  border-radius: 3px;
+}
+
+.chunk-item-part .drag-handle::before {
+  content: "≡";
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
 }
 
 .item-abbr {
@@ -1053,6 +1080,13 @@ footer {
 .sortable-ghost-inner {
   opacity: 0.5;
   background-color: #5a6bac; /* Slightly different color */
+}
+
+/* Ghost class for chunk items being reordered within a chunk */
+.sortable-ghost-chunk {
+  opacity: 0.6;
+  background-color: #7b6bac; /* Different color for chunk item reordering */
+  border: 1px dashed #ffffff;
 }
 
 /* === Context menu === */

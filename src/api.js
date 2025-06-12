@@ -574,6 +574,89 @@ class SearchPatternAPI {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * Reorder items within a chunk
+   */
+  reorder_chunk_items(pattern_name, chunk_id, new_order) {
+    try {
+      this._saveStateToHistory(pattern_name); // Save state before modification
+      const pattern = this.patterns[pattern_name] || [];
+      if (!pattern.length) {
+        return { success: false, error: "Pattern not found" };
+      }
+
+      console.log(`API: reorder_chunk_items received: pattern='${pattern_name}', chunk_id=${chunk_id}, new_order=[${new_order.join(', ')}]`);
+
+      // Validate chunk_id
+      if (!chunk_id || chunk_id <= 0) {
+        return { success: false, error: "Invalid chunk ID" };
+      }
+
+      // Validate new_order array
+      if (!Array.isArray(new_order) || new_order.length === 0) {
+        return { success: false, error: "Invalid new order array" };
+      }
+
+      // Get all items belonging to this chunk
+      const chunkItems = [];
+      const chunkItemIndices = [];
+      for (let i = 0; i < pattern.length; i++) {
+        if (pattern[i].chunkID === chunk_id) {
+          chunkItems.push(pattern[i]);
+          chunkItemIndices.push(i);
+        }
+      }
+
+      if (chunkItems.length === 0) {
+        return { success: false, error: "No items found for this chunk" };
+      }
+
+      if (chunkItems.length !== new_order.length) {
+        return { success: false, error: "New order length doesn't match chunk size" };
+      }
+
+      // Validate that all indices in new_order are valid and belong to this chunk
+      for (const index of new_order) {
+        if (!chunkItemIndices.includes(index)) {
+          return { success: false, error: `Index ${index} is not part of chunk ${chunk_id}` };
+        }
+      }
+
+      // Create reordered chunk items based on new_order
+      const reorderedItems = new_order.map(index => {
+        const originalItem = pattern[index];
+        if (!originalItem) {
+          throw new Error(`Item at index ${index} not found`);
+        }
+        return { ...originalItem }; // Create a copy
+      });
+
+      // Replace the chunk items in the pattern with the reordered items
+      // We need to replace them in their original positions to maintain the overall pattern structure
+      for (let i = 0; i < chunkItemIndices.length; i++) {
+        const patternIndex = chunkItemIndices[i];
+        pattern[patternIndex] = reorderedItems[i];
+      }
+
+      this.patterns[pattern_name] = pattern;
+      const saved = this.save_patterns();
+
+      if (saved) {
+        console.log(`API: reorder_chunk_items successful for pattern '${pattern_name}', chunk ${chunk_id}`);
+        return { success: true };
+      } else {
+        console.error(`API: reorder_chunk_items failed during save for pattern '${pattern_name}'`);
+        this.load_patterns(); // Try to reload from the last saved state
+        return { success: false, error: "Failed to save updated pattern" };
+      }
+
+    } catch (error) {
+      console.error(`Error in reorder_chunk_items: ${error.message}\n${error.stack}`);
+      this.load_patterns();
+      return { success: false, error: error.message };
+    }
+  }
   
   /**
    * Get the current app transparency value

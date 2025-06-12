@@ -432,7 +432,8 @@ function renderPatternItems() {
             const chunkItemView = chunkItem.view_plane || '';
             const chunkItemWindow = chunkItem.window || '';
             html += `
-              <div class="chunk-item-part" data-chunk-index="${chunkItemActualIndex}">
+              <div class="chunk-item-part draggable-item" data-chunk-index="${chunkItemActualIndex}" data-item-index="${chunkItemActualIndex}">
+                <div class="drag-handle" data-handle="true"></div>
                 <div class="item-view">
                   <select class="item-view-select" data-index="${chunkItemActualIndex}">
                     <option value="" ${!chunkItemView ? 'selected' : ''}>-</option>
@@ -570,6 +571,16 @@ function renderPatternItems() {
       draggable: '.draggable-item:not(.chapter-container)', // Items within the chapter
       filter: 'select', // Add filter for select elements within chapters
       ghostClass: 'sortable-ghost-inner', // Different ghost class
+    });
+  });
+
+  // Initialize sortable for each chunk's item container
+  document.querySelectorAll('.chunk-items').forEach(chunkContainer => {
+    chunkContainer.sortableInstance = new Sortable(chunkContainer, {
+      ...sortableOptions, // This will also inherit preventOnFilter: false
+      draggable: '.chunk-item-part', // Individual chunk items within the chunk
+      filter: 'select', // Add filter for select elements within chunks
+      ghostClass: 'sortable-ghost-chunk', // Different ghost class for chunks
     });
   });
 
@@ -2311,6 +2322,65 @@ function handleFieldKeydown(e) {
   }
 }
 
+// Handle reordering of items within a chunk
+function handleChunkItemReorder(evt) {
+    const movedElement = evt.item;
+    const fromContainer = evt.from;
+    const toContainer = evt.to;
+    const oldIndex = evt.oldIndex;
+    const newIndex = evt.newIndex;
+
+    console.log("SortEnd: Handling chunk item reorder");
+
+    // Get the chunk container and chunk ID
+    const chunkContainer = toContainer.closest('.chunk-container');
+    if (!chunkContainer) {
+        console.error("Could not find chunk container for chunk item reorder");
+        loadPattern(currentPattern);
+        return;
+    }
+
+    const chunkId = parseInt(chunkContainer.dataset.chunkId);
+    if (isNaN(chunkId) || chunkId <= 0) {
+        console.error("Invalid chunk ID for chunk item reorder:", chunkId);
+        loadPattern(currentPattern);
+        return;
+    }
+
+    // Get all chunk items in their new visual order
+    const chunkItems = Array.from(toContainer.children).filter(child => 
+        child.classList.contains('chunk-item-part')
+    );
+
+    // Extract the data indices in the new order
+    const newOrderIndices = chunkItems.map(item => {
+        const dataIndex = parseInt(item.dataset.chunkIndex);
+        if (isNaN(dataIndex)) {
+            console.error("Invalid data index for chunk item:", item);
+            return -1;
+        }
+        return dataIndex;
+    }).filter(index => index !== -1);
+
+    if (newOrderIndices.length === 0) {
+        console.error("No valid indices found for chunk items");
+        loadPattern(currentPattern);
+        return;
+    }
+
+    console.log(`Reordering chunk ${chunkId} items to new order:`, newOrderIndices);
+
+    // Call API to reorder chunk items
+    window.electronAPI.callAPI('reorder_chunk_items', {
+        pattern_name: currentPattern,
+        chunk_id: chunkId,
+        new_order: newOrderIndices
+    });
+
+    // Handle API response
+    handleApiResponse('reorder_chunk_items', `reordering items in chunk ${chunkId}`);
+}
+
 // --- Updated SortableJS onEnd handler ---
 function handleSortEnd(evt) {
     const movedElement = evt.item; // The element that was moved
@@ -2329,6 +2399,17 @@ function handleSortEnd(evt) {
     console.log(` -> Moved Element:`, movedElement);
     console.log(` -> From Container:`, fromContainer, `(Old Index: ${oldIndex})`);
     console.log(` -> To Container:`, toContainer, `(New Index: ${newIndex})`);
+
+    // Check if this is a chunk item being reordered within a chunk
+    const isChunkItemPart = movedElement.classList.contains('chunk-item-part');
+    const isFromChunkContainer = fromContainer.classList.contains('chunk-items');
+    const isToChunkContainer = toContainer.classList.contains('chunk-items');
+
+    if (isChunkItemPart && isFromChunkContainer && isToChunkContainer) {
+        // Handle chunk item reordering within chunk
+        handleChunkItemReorder(evt);
+        return;
+    }
 
     const isChapterContainer = movedElement.dataset.isChapter === 'true';
     const isChunk = movedElement.dataset.isChunk === 'true';
