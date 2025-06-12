@@ -1360,24 +1360,36 @@ function handleChapterDialogOk() {
                     alert("Error: Cannot determine where to create the chapter.");
                     break;
                 }
-                // REMOVED: if (!newName) { alert("Chapter name cannot be blank."); return; }
 
                 // Check if chapter already exists (only if a name is provided)
-                if (newName && currentPatternItems.some(item => item.isChapter && item.chapter === newName)) {
+                if (newName && currentPatternItems.some(item => item.chapter === newName)) {
                     alert(`Chapter \"${newName}\" already exists.`);
                     return; // Prevent creating duplicate chapter names
                 }
 
-                // Call API to create chapter (add a chapter marker item)
-                // For a "blank" chapter, we still pass newName which will be ""
-                // The backend and rendering should handle "" as a chapter name signifying "no chapter" or "root level"
-                console.log(`Calling API: create_chapter_item pattern='${currentPattern}', chapter_name='${newName}', index=${context.insertionIndex}`);
-                window.electronAPI.callAPI('create_chapter_item', {
-                    pattern_name: currentPattern,
-                    chapter_name: newName, // newName can be ""
-                    index: context.insertionIndex
-                });
-                handleApiResponse('create_chapter_item', 'creating new chapter');
+                // Find the item that was right-clicked to create the chapter
+                // The insertionIndex should correspond to the item that was right-clicked
+                let targetItemIndex = context.insertionIndex;
+                
+                // If insertionIndex is at the end or beyond, use the last item
+                if (targetItemIndex >= currentPatternItems.length) {
+                    targetItemIndex = currentPatternItems.length - 1;
+                }
+                
+                // If we have a valid item, assign it to the new chapter
+                if (targetItemIndex >= 0 && targetItemIndex < currentPatternItems.length) {
+                    console.log(`Calling API: update_item_chapter pattern='${currentPattern}', item_index=${targetItemIndex}, new_chapter='${newName}'`);
+                    window.electronAPI.callAPI('update_item_chapter', {
+                        pattern_name: currentPattern,
+                        item_index: targetItemIndex,
+                        new_chapter: newName,
+                        is_chunk: false,
+                        chunk_id: 0
+                    });
+                    handleApiResponse('update_item_chapter', 'creating new chapter by assigning item');
+                } else {
+                    alert("Error: Cannot find the item to assign to the new chapter.");
+                }
                 break;
 
              default:
@@ -1562,7 +1574,7 @@ function assignChapterForChunk(chunkId) {
 
 function createNewChapterHere(insertAtIndex) {
     console.log("Action: Create New Chapter near index", insertAtIndex);
-    showChapterInputDialog({ action: 'create_chapter', insertAtIndex: insertAtIndex });
+    showChapterInputDialog({ action: 'create_chapter', insertionIndex: insertAtIndex });
 }
 
 // --- New/Modified Chunk Specific Functions ---
