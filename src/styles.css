@@ -574,7 +574,7 @@ footer {
   flex-direction: column;
   /* padding-left: 24px; */ /* This is now effectively handled by chunk-content-wrapper's margin */
   padding-left: 0; /* Content within chunk-items starts at the edge of chunk-content-wrapper */
-  gap: 4px; /* Add gap between chunk items */
+  /* gap: 4px;  too big of a gap between chunk items */
 }
 
 .chunk-item-part {

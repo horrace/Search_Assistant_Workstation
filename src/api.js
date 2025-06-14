@@ -16,21 +16,26 @@ class SearchPatternAPI {
     this.appPath = app.getAppPath();
     console.log('App path:', this.appPath);
     
-    // Try multiple locations for data files
+    // For portable apps, prioritize the directory next to the executable
+    const executableDir = path.dirname(process.execPath);
+    console.log('Executable directory:', executableDir);
+    
+    // Try multiple locations for data files (portable-first approach)
     this.dataLocations = [
+      executableDir,                                   // Directory next to executable (portable)
       path.join(this.appPath, 'src'),                  // Check in src directory
       path.join(this.appPath),                         // Check in app root
+      path.dirname(this.appPath),                      // Check in parent directory
       path.join(app.getPath('userData')),              // Check in user data directory
       path.join(app.getPath('userData'), 'data'),      // Check in user data/data directory
-      path.dirname(this.appPath)                       // Check in parent directory
     ];
     
     // Log all potential locations
     console.log('Checking these locations for data files:');
     this.dataLocations.forEach(location => console.log('- ' + location));
     
-    // Set default data directory
-    this.dataDir = this.dataLocations[3]; // Default to user data/data directory
+    // Set default data directory to executable directory (portable-first)
+    this.dataDir = this.dataLocations[0]; // Default to executable directory
     
     // Try to load existing patterns and settings
     this.load_patterns();

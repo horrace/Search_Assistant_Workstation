@@ -1318,7 +1318,7 @@
   "CT Chest": [
     {
       "abbr": "Heart",
-      "strategy": "prox R + L, pericard effusion, chambersthrombus, LA appendage, coronaries, dissection",
+      "strategy": "prox R + L, pericard effusion, chambers, thrombus, LA appendage, coronaries, dissection",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxHeart",
@@ -1450,7 +1450,7 @@
     },
     {
       "abbr": "Heart",
-      "strategy": "LV/RV (pseudo-)aneurysm",
+      "strategy": "LV/RV (pseudo)aneurysm",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CorHeartLV/RV (pseudo-)aneurysm",
@@ -2138,7 +2138,7 @@
     },
     {
       "abbr": "LN",
-      "strategy": "paratrach/subcarin, ax, subpec in F, supraclav, hilar; onc pt: detailedled prevasc, hilar",
+      "strategy": "paratrach/subcarin, ax/subpec in F, supraclav, hilar; onc pt: detailedled prevasc, hilar",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Lymph Nodes",
@@ -2323,7 +2323,7 @@
       "best_seen_on": "",
       "full_name": "AxPneumoperitoneum / Free fluid",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2335,7 +2335,7 @@
       "best_seen_on": "",
       "full_name": "AxLiver",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2347,7 +2347,7 @@
       "best_seen_on": "",
       "full_name": "AxGB",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2359,7 +2359,7 @@
       "best_seen_on": "",
       "full_name": "AxPanc",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2371,7 +2371,7 @@
       "best_seen_on": "",
       "full_name": "AxSpleen",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2383,19 +2383,19 @@
       "best_seen_on": "",
       "full_name": "AxAdrenal glands",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
     },
     {
-      "abbr": "Kidneysmore",
+      "abbr": "Kidneys",
       "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxKidneysmore",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2407,7 +2407,7 @@
       "best_seen_on": "",
       "full_name": "AxR Ureter, Bladder, L Ureter",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2419,7 +2419,7 @@
       "best_seen_on": "",
       "full_name": "AxPelvic Organs",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2431,7 +2431,7 @@
       "best_seen_on": "",
       "full_name": "AxRect -> cecum + appe",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 3,
       "chapter": "AbP",
       "view_plane": "ax",
       "window": ""
@@ -2478,18 +2478,6 @@
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Kidneys",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "Cor quick",
-      "view_plane": "cor",
-      "window": ""
-    },
-    {
-      "abbr": "Panc/CBD",
-      "strategy": "tail -> uncinate #1, slow down, look carefully, anything susp rec MRCP",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Pancreas/Common Bile Duct",
       "groupID": 0,
       "chunkID": 0,
       "chapter": "Cor quick",
@@ -2569,13 +2557,13 @@
       "window": ""
     },
     {
-      "abbr": "Ant abd wall/omentum, Perineum/perirectal, Post Abd wall",
+      "abbr": "Ant abd wall/omentum, peri-neum/rectal, Post Abd wall",
       "strategy": "keep eye on canal",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Anterior abdominal wall/omentum, Perineum/perirectal, Posterior abdominal wall",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 4,
       "chapter": "Bone/ST",
       "view_plane": "ax",
       "window": ""
@@ -2587,7 +2575,7 @@
       "best_seen_on": "",
       "full_name": "Ribs",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 4,
       "chapter": "Bone/ST",
       "view_plane": "ax",
       "window": ""
@@ -2599,7 +2587,7 @@
       "best_seen_on": "",
       "full_name": "Vertebral bodies",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 4,
       "chapter": "Bone/ST",
       "view_plane": "ax",
       "window": ""
@@ -2611,7 +2599,7 @@
       "best_seen_on": "",
       "full_name": "Pubic Rami, Hip, greater trochanter avulsion, iliac bone, sacrum, Transverse Processes",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 4,
       "chapter": "Bone/ST",
       "view_plane": "ax",
       "window": ""
@@ -2623,7 +2611,7 @@
       "best_seen_on": "",
       "full_name": "Hips",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "cor",
       "window": ""
@@ -2635,7 +2623,7 @@
       "best_seen_on": "",
       "full_name": "",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "cor",
       "window": ""
@@ -2647,7 +2635,7 @@
       "best_seen_on": "",
       "full_name": "Spinal Canal",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "sag",
       "window": ""
@@ -2659,7 +2647,7 @@
       "best_seen_on": "",
       "full_name": "Vertebral bodies",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "sag",
       "window": ""
@@ -2671,7 +2659,7 @@
       "best_seen_on": "",
       "full_name": "Sacrum",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "sag",
       "window": ""
@@ -2686,6 +2674,18 @@
       "chunkID": 0,
       "chapter": "",
       "view_plane": "ax",
+      "window": ""
+    },
+    {
+      "abbr": "Panc/CBD",
+      "strategy": "tail -> uncinate #1, slow down, look carefully, anything susp rec MRCP",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Pancreas/Common Bile Duct",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Cor quick",
+      "view_plane": "cor",
       "window": ""
     },
     {
