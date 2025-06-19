@@ -1978,14 +1978,19 @@ function handleFieldEdit(e) {
   // Find the correct item (handle items within chunks)
   let actualItemIndex = -1;
   if (!isNaN(itemIndex)) {
-    const parentDraggable = fieldElement.closest('.draggable-item');
-    if (parentDraggable && parentDraggable.dataset.isChunk === 'true') {
-      actualItemIndex = parseInt(fieldElement.closest('.chunk-item-part')?.dataset.chunkIndex);
-       console.log(`[handleFieldEdit] Determined actualItemIndex from chunk: ${actualItemIndex}`); // <<< ADDED LOG
-    } else if (parentDraggable && parentDraggable.dataset.isChunk === 'false') {
+    // First, check if we're inside a chunk item part
+    const chunkItemPart = fieldElement.closest('.chunk-item-part');
+    if (chunkItemPart) {
+      // We're editing a field inside a chunk item
+      actualItemIndex = parseInt(chunkItemPart.dataset.chunkIndex);
+      console.log(`[handleFieldEdit] Determined actualItemIndex from chunk-item-part: ${actualItemIndex}`);
+    } else {
+      // We're editing a field in a regular standalone item
       actualItemIndex = itemIndex;
-       console.log(`[handleFieldEdit] Determined actualItemIndex from single item: ${actualItemIndex}`); // <<< ADDED LOG
+      console.log(`[handleFieldEdit] Determined actualItemIndex from standalone item: ${actualItemIndex}`);
     }
+  } else {
+    console.warn(`[handleFieldEdit] itemIndex is NaN. fieldElement:`, fieldElement, `data-index attribute:`, fieldElement.getAttribute('data-index'));
   }
 
   if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && currentPatternItems[actualItemIndex] && fieldName && currentPatternItems[actualItemIndex][fieldName] !== newValue) {
@@ -1998,10 +2003,28 @@ function handleFieldEdit(e) {
     saveTimeout = setTimeout(() => {
       saveCurrentPattern();
     }, 300); // Save after 300ms of inactivity
-  } else if (isNaN(actualItemIndex) || actualItemIndex === -1) {
-    // Only log error if it wasn't an ignored header field and fieldName is present
+  } else {
+    // Provide detailed error information for debugging
     if (fieldName && fieldName !== 'chapter-name' && fieldName !== 'chunk-id') {
-         console.error("Could not determine valid index for field edit from:", fieldElement);
+      console.error("Could not determine valid index for field edit. Details:");
+      console.error("  fieldElement:", fieldElement);
+      console.error("  fieldName:", fieldName);
+      console.error("  itemIndex (from data-index):", itemIndex);
+      console.error("  actualItemIndex (calculated):", actualItemIndex);
+      console.error("  currentPatternItems.length:", currentPatternItems.length);
+      console.error("  newValue:", newValue);
+      
+      // Additional debugging for chunk items
+      const chunkItemPart = fieldElement.closest('.chunk-item-part');
+      if (chunkItemPart) {
+        console.error("  chunkItemPart found:", chunkItemPart);
+        console.error("  chunkItemPart.dataset.chunkIndex:", chunkItemPart.dataset.chunkIndex);
+      } else {
+        console.error("  No chunk-item-part parent found");
+      }
+      
+      // Show a user-friendly error
+      alert("Error: Could not save field changes. Please try refreshing the pattern.");
     }
   }
 }
@@ -2574,6 +2597,7 @@ function handleSortEnd(evt) {
 
     if (originalDataStartIndex < targetApiIndex && movedItemSize > 0) { // It's a downward move relative to data indices.
         const isMovingOutOfChapterToRoot = (movedItemOriginalChapter !== '' && targetChapterName === '');
+        const isMovingWithinSameChapter = (movedItemOriginalChapter === targetChapterName && movedItemOriginalChapter !== '');
 
         if (isMovingOutOfChapterToRoot) {
             // When moving out of a chapter downwards to the root,
@@ -2581,10 +2605,15 @@ function handleSortEnd(evt) {
             // and the standard +movedItemSize adjustment makes it land too low.
             console.log(` -> Downward move: ITEM OUT OF CHAPTER ('${movedItemOriginalChapter}') TO ROOT. Original Target API Index: ${targetApiIndex}. No +size adjustment for API call.`);
             // finalApiTargetIndex remains targetApiIndex (the pre-adjustment value for this specific case)
+        } else if (isMovingWithinSameChapter) {
+            // When moving within the same chapter, the targetApiIndex is already correctly calculated
+            // and adding movedItemSize would cause it to overshoot the intended position.
+            console.log(` -> Downward move: WITHIN SAME CHAPTER ('${movedItemOriginalChapter}'). Original Target API Index: ${targetApiIndex}. No +size adjustment needed.`);
+            // finalApiTargetIndex remains targetApiIndex (no adjustment needed for within-chapter moves)
         } else {
-            // Standard downward move (e.g., within root, within chapter, root to chapter, chapter to chapter).
+            // Standard downward move (e.g., within root, root to chapter, chapter to different chapter).
             // Apply adjustment to counteract API's potential subtraction.
-            console.log(` -> Downward move: Standard. Adjusting: ${targetApiIndex} + ${movedItemSize}`);
+            console.log(` -> Downward move: Standard (cross-chapter or root). Adjusting: ${targetApiIndex} + ${movedItemSize}`);
             finalApiTargetIndex = targetApiIndex + movedItemSize;
         }
     } else {

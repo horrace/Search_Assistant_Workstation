@@ -425,16 +425,33 @@ class SearchPatternAPI {
              }
          }
       } else if (new_chapter !== undefined) {
-        // Moving item(s)/chunk(s) into a potentially new chapter (or root '')
-         console.log(` -> Updating chapter for moved item(s) to '${new_chapter}'`);
-         for (let i = 0; i < count; i++) {
-             const currentItemIndex = adjusted_to_index + i;
-              if (pattern[currentItemIndex]) { // Check item exists
-                  pattern[currentItemIndex].chapter = new_chapter;
-              } else {
-                   console.warn(`move_item: Index out of bounds during chapter update: ${currentItemIndex}`);
-              }
-         }
+        // Only update chapter if it's actually different from each item's current chapter
+        // This prevents items from being moved out of their chapter when moving within the same chapter
+        console.log(` -> Checking if chapter update is needed for moved items to '${new_chapter}'`);
+        
+        let itemsUpdated = 0;
+        for (let i = 0; i < count; i++) {
+            const currentItemIndex = adjusted_to_index + i;
+            if (pattern[currentItemIndex]) {
+                const currentItemChapter = pattern[currentItemIndex].chapter || '';
+                // Only update if the target chapter is different from the item's current chapter
+                if (new_chapter !== currentItemChapter) {
+                    pattern[currentItemIndex].chapter = new_chapter;
+                    itemsUpdated++;
+                    console.log(`   -> Updated item ${currentItemIndex} chapter from '${currentItemChapter}' to '${new_chapter}'`);
+                } else {
+                    console.log(`   -> Item ${currentItemIndex} already in target chapter '${new_chapter}', no update needed`);
+                }
+            } else {
+                 console.warn(`move_item: Index out of bounds during chapter update: ${currentItemIndex}`);
+            }
+        }
+        
+        if (itemsUpdated === 0) {
+            console.log(` -> No items needed chapter updates - all items already in target chapter '${new_chapter}'`);
+        } else {
+            console.log(` -> Updated chapter for ${itemsUpdated} out of ${count} moved items`);
+        }
       }
 
       // --- Save ---

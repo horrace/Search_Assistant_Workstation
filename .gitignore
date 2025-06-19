@@ -10,6 +10,12 @@ lerna-debug.log*
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
+# Intermediate SP import files
+data/*.xml
+data/*.docx
+data/*.json
+data/*.rtf
+
 # Runtime data
 pids
 *.pid
