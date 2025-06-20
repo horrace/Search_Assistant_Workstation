@@ -2017,16 +2017,22 @@ function handleFieldEdit(e) {
     console.warn(`[handleFieldEdit] itemIndex is NaN. fieldElement:`, fieldElement, `data-index attribute:`, fieldElement.getAttribute('data-index'));
   }
 
-  if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && currentPatternItems[actualItemIndex] && fieldName && currentPatternItems[actualItemIndex][fieldName] !== newValue) {
-    console.log(`[handleFieldEdit BEFORE UPDATE] Current item data:`, JSON.parse(JSON.stringify(currentPatternItems[actualItemIndex]))); // <<< ADDED LOG (Deep copy)
-    console.log(`[handleFieldEdit] Field Edit: Index=${actualItemIndex}, Field=${fieldName}, NewValue='${newValue}'`);
-    currentPatternItems[actualItemIndex][fieldName] = newValue;
+  if (actualItemIndex !== -1 && actualItemIndex < currentPatternItems.length && currentPatternItems[actualItemIndex] && fieldName) {
+    // Check if the value actually changed (handles undefined/null cases)
+    const currentValue = currentPatternItems[actualItemIndex][fieldName] || '';
+    if (currentValue !== newValue) {
+      console.log(`[handleFieldEdit BEFORE UPDATE] Current item data:`, JSON.parse(JSON.stringify(currentPatternItems[actualItemIndex]))); // <<< ADDED LOG (Deep copy)
+      console.log(`[handleFieldEdit] Field Edit: Index=${actualItemIndex}, Field=${fieldName}, OldValue='${currentValue}', NewValue='${newValue}'`);
+      currentPatternItems[actualItemIndex][fieldName] = newValue;
 
-    // Debounce save operation
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-      saveCurrentPattern();
-    }, 300); // Save after 300ms of inactivity
+      // Debounce save operation
+      clearTimeout(saveTimeout);
+      saveTimeout = setTimeout(() => {
+        saveCurrentPattern();
+      }, 300); // Save after 300ms of inactivity
+    } else {
+      console.log(`[handleFieldEdit] No change detected: Index=${actualItemIndex}, Field=${fieldName}, Value='${newValue}'`);
+    }
   } else {
     // Provide detailed error information for debugging
     if (fieldName && fieldName !== 'chapter-name' && fieldName !== 'chunk-id') {

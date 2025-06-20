@@ -74,12 +74,14 @@ document.addEventListener('DOMContentLoaded', function() {
   const transparencySlider = document.getElementById('transparency-slider');
   const transparencyValue = document.getElementById('transparency-value');
   const hideBackgroundCheckbox = document.getElementById('hide-background');
+  const showChapterAsChunkCheckbox = document.getElementById('show-chapter-as-chunk');
   const errorMessage = document.getElementById('error-message');
   
   // Current state
   let patterns = [];
   let currentTransparency = 1.0;
   let hideBackground = false;
+  let showChapterAsChunk = false;
   
   // Initialize the application
   init();
@@ -167,6 +169,19 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
+    // Show chapter as chunk checkbox
+    if (showChapterAsChunkCheckbox) {
+       // Stop propagation on mousedown to prevent closing menu prematurely
+       showChapterAsChunkCheckbox.addEventListener('mousedown', (event) => {
+        event.stopPropagation();
+      });
+      showChapterAsChunkCheckbox.addEventListener('change', () => {
+        // No stopPropagation here
+        showChapterAsChunk = showChapterAsChunkCheckbox.checked;
+        saveSettings();
+      });
+    }
+    
     // Settings window management
     setupSettingsEventListeners();
   }
@@ -193,8 +208,12 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           
           hideBackground = data.result.hideBackground || false;
+          showChapterAsChunk = data.result.showChapterAsChunk || false;
           if (hideBackgroundCheckbox) {
             hideBackgroundCheckbox.checked = hideBackground;
+          }
+          if (showChapterAsChunkCheckbox) {
+            showChapterAsChunkCheckbox.checked = showChapterAsChunk;
           }
         }
       }
@@ -204,7 +223,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Save settings
   function saveSettings() {
     const settings = {
-      hideBackground: hideBackground
+      hideBackground: hideBackground,
+      showChapterAsChunk: showChapterAsChunk
     };
     
     // Send to backend

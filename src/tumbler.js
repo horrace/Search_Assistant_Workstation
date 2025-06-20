@@ -22,6 +22,7 @@ let elapsedSeconds = 0;
 let timerInterval = null;
 let fontScaleFactor = 1.0;
 let hideBackground = false;
+let showChapterAsChunk = false; // New setting for chapter display
 
 // Font size base values
 const abbrBaseFontSize = 20;
@@ -144,6 +145,7 @@ function loadSettings() {
         }
         
         hideBackground = data.result.hideBackground || false;
+        showChapterAsChunk = data.result.showChapterAsChunk || false; // Load the new setting
         updateBackgroundVisibility();
       }
     }
@@ -161,16 +163,53 @@ function loadPattern(patternName) {
       patternItems = data.result;
       displayableUnits = [];
       const processedChunkIDs = new Set();
+      const processedChapters = new Set();
 
+      // First, if showChapterAsChunk is enabled, identify chapters without chunks
+      const chaptersWithChunks = new Set();
+      const chaptersWithoutChunks = new Set();
+      
+      if (showChapterAsChunk) {
+        for (const item of patternItems) {
+          const chapter = item.chapter || '';
+          const chunkID = item.chunkID || 0;
+          
+          if (chapter) {
+            if (chunkID > 0) {
+              chaptersWithChunks.add(chapter);
+              chaptersWithoutChunks.delete(chapter); // Remove from without if it was there
+            } else if (!chaptersWithChunks.has(chapter)) {
+              chaptersWithoutChunks.add(chapter);
+            }
+          }
+        }
+      }
+
+      // Process items and create displayable units
       for (const item of patternItems) {
         const chunkID = item.chunkID || 0;
+        const chapter = item.chapter || '';
+        
+        // Check if this chapter should be displayed as a chunk-like group
+        const shouldGroupChapter = showChapterAsChunk && chapter && chaptersWithoutChunks.has(chapter);
+        
         if (chunkID > 0) {
+          // Regular chunk handling
           if (!processedChunkIDs.has(chunkID)) {
             displayableUnits.push(item); // Add the first item of the chunk as representative
             processedChunkIDs.add(chunkID);
           }
+        } else if (shouldGroupChapter) {
+          // Chapter without chunks - add only first item as representative
+          if (!processedChapters.has(chapter)) {
+            // Mark this item as a virtual chunk for chapter display
+            const chapterRepresentative = { ...item, virtualChapterChunk: chapter };
+            displayableUnits.push(chapterRepresentative);
+            processedChapters.add(chapter);
+          }
         } else {
-          displayableUnits.push(item); // Add non-chunk item
+          // Regular non-chunk item or chapter display is disabled
+          displayableUnits.push(item);
         }
       }
 
@@ -248,6 +287,7 @@ function displayCurrentItem() {
   tumblerCounter.textContent = `${currentDisplayIndex + 1}/${totalDisplayItems}`;
 
   const chunkID = representativeItem.chunkID || 0;
+  const virtualChapterChunk = representativeItem.virtualChapterChunk || null;
   const itemAbbr = representativeItem.abbr || '';
   const itemStrategy = representativeItem.strategy || '';
   const itemView = representativeItem.view_plane || 'ax'; // Default to 'ax' or ensure it can be empty
@@ -267,7 +307,7 @@ function displayCurrentItem() {
     }
   }
 
-  if (chunkID > 0) { // CHUNK DISPLAY
+  if (chunkID > 0 || virtualChapterChunk) { // CHUNK DISPLAY (including virtual chapter chunks)
     // Hide the unchunked item row. This hides view, abbr, and strategy IF they are inside.
     if (unchunkedItemRow) unchunkedItemRow.style.display = 'none';
 
@@ -279,8 +319,17 @@ function displayCurrentItem() {
     
     tumblerChunk.style.display = 'block';
     let chunkHTML = '';
-    const itemsInChunk = patternItems.filter(item => item.chunkID === chunkID);
-    itemsInChunk.forEach(item => {
+    
+    let itemsToDisplay = [];
+    if (virtualChapterChunk) {
+      // Display all items in this chapter
+      itemsToDisplay = patternItems.filter(item => item.chapter === virtualChapterChunk && (item.chunkID || 0) === 0);
+    } else {
+      // Regular chunk display
+      itemsToDisplay = patternItems.filter(item => item.chunkID === chunkID);
+    }
+    
+    itemsToDisplay.forEach(item => {
       // Make sure to use item.view_plane for chunk item view
       const chunkItemViewText = item.view_plane ? `${item.view_plane} ` : '';
       chunkHTML += `
