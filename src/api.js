@@ -10,7 +10,8 @@ class SearchPatternAPI {
     this.current_pattern = "CThead";
     this.settings = { "transparency": 1.0, "tumbler": {} };
     this.patternHistory = {}; // Added for undo functionality
-    this.maxHistoryLength = 20; // Max history states per pattern
+    this.patternRedoHistory = {}; // Added for redo functionality
+    this.maxHistoryLength = 50; // Limit undo/redo history per pattern
     
     // Initialize paths
     this.appPath = app.getAppPath();
@@ -230,6 +231,10 @@ class SearchPatternAPI {
     if (this.patternHistory[pattern_name].length > this.maxHistoryLength) {
       this.patternHistory[pattern_name].shift(); // Remove the oldest state
     }
+    
+    // Clear redo history for this pattern since new changes invalidate redo states
+    this.patternRedoHistory[pattern_name] = [];
+    
     console.log(`_saveStateToHistory: Saved state for '${pattern_name}'. History size: ${this.patternHistory[pattern_name].length}`);
   }
 
@@ -244,6 +249,18 @@ class SearchPatternAPI {
     }
 
     try {
+      // Save current state to redo history before undoing
+      if (!this.patternRedoHistory[pattern_name]) {
+        this.patternRedoHistory[pattern_name] = [];
+      }
+      const currentStateForRedo = JSON.parse(JSON.stringify(this.patterns[pattern_name]));
+      this.patternRedoHistory[pattern_name].push(currentStateForRedo);
+      
+      // Keep redo history length in check
+      if (this.patternRedoHistory[pattern_name].length > this.maxHistoryLength) {
+        this.patternRedoHistory[pattern_name].shift();
+      }
+      
       // The last element is the current state IF _saveStateToHistory is called *before* modification.
       // If it's called *after*, then the history stores previous states.
       // For a typical undo, we want to revert to the state *before* the last change.
@@ -261,7 +278,9 @@ class SearchPatternAPI {
       const previousState = this.patternHistory[pattern_name].pop();
       if (!previousState) {
          console.warn(`[API undo_last_action] Popped undefined state for '${pattern_name}'. This shouldn't happen if history was not empty.`);
-         return { success: false, error: "Internal error: Corrupted history.", can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0, reverted_pattern_data: null };
+         // Remove the state we added to redo history since undo failed
+         this.patternRedoHistory[pattern_name].pop();
+         return { success: false, error: "Internal error: Corrupted history.", can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0, can_redo: false, reverted_pattern_data: null };
       }
 
       // Deep clone to avoid reference issues, though previousState should already be a clone.
@@ -275,18 +294,22 @@ class SearchPatternAPI {
         return { 
           success: true, 
           reverted_pattern_data: this.patterns[pattern_name], 
-          can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0 
+          can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0,
+          can_redo: this.patternRedoHistory[pattern_name] && this.patternRedoHistory[pattern_name].length > 0
         };
       } else {
         console.error(`[API undo_last_action] Failed to save pattern '${pattern_name}' after undo. CRITICAL: State might be inconsistent.`);
         // Attempt to restore the state we tried to pop (put it back on history)
-        this.patternHistory[pattern_name].push(previousState); 
+        this.patternHistory[pattern_name].push(previousState);
+        // Also remove the state we added to redo history
+        this.patternRedoHistory[pattern_name].pop();
         // Optionally, try to reload patterns from disk to ensure consistency, though this might lose the "current" state that failed to save.
         // this.load_patterns(); // This is a drastic measure.
         return { 
           success: false, 
           error: "Failed to save pattern after undo. State might be inconsistent.", 
           can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0,
+          can_redo: false,
           reverted_pattern_data: null
         };
       }
@@ -297,6 +320,80 @@ class SearchPatternAPI {
         success: false, 
         error: `Error during undo: ${e.message}`, 
         can_undo_more: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0,
+        can_redo: false,
+        reverted_pattern_data: null
+      };
+    }
+  }
+  
+  /**
+   * Redo the last undone action for a given pattern.
+   */
+  redo_last_action(pattern_name) {
+    console.log(`[API redo_last_action] Attempting to redo for pattern: ${pattern_name}`);
+    if (!this.patternRedoHistory[pattern_name] || this.patternRedoHistory[pattern_name].length === 0) {
+      console.warn(`[API redo_last_action] No redo history available for pattern '${pattern_name}' to redo.`);
+      return { success: false, error: "No actions to redo.", can_redo_more: false, reverted_pattern_data: null };
+    }
+
+    try {
+      // Save current state to undo history before redoing
+      if (!this.patternHistory[pattern_name]) {
+        this.patternHistory[pattern_name] = [];
+      }
+      const currentStateForUndo = JSON.parse(JSON.stringify(this.patterns[pattern_name]));
+      this.patternHistory[pattern_name].push(currentStateForUndo);
+      
+      // Keep undo history length in check
+      if (this.patternHistory[pattern_name].length > this.maxHistoryLength) {
+        this.patternHistory[pattern_name].shift();
+      }
+      
+      // Pop the last state from redo history and apply it
+      const redoState = this.patternRedoHistory[pattern_name].pop();
+      if (!redoState) {
+         console.warn(`[API redo_last_action] Popped undefined state for '${pattern_name}'. This shouldn't happen if redo history was not empty.`);
+         // Remove the state we added to undo history since redo failed
+         this.patternHistory[pattern_name].pop();
+         return { success: false, error: "Internal error: Corrupted redo history.", can_redo_more: false, can_undo: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0, reverted_pattern_data: null };
+      }
+
+      // Deep clone to avoid reference issues
+      this.patterns[pattern_name] = JSON.parse(JSON.stringify(redoState));
+      
+      console.log(`[API redo_last_action] Applied redo state for '${pattern_name}'. Redo history size now: ${this.patternRedoHistory[pattern_name]?.length || 0}`);
+
+      const saved = this.save_patterns();
+      if (saved) {
+        console.log(`[API redo_last_action] Successfully applied redo and saved pattern '${pattern_name}'.`);
+        return { 
+          success: true, 
+          reverted_pattern_data: this.patterns[pattern_name], 
+          can_redo_more: this.patternRedoHistory[pattern_name] && this.patternRedoHistory[pattern_name].length > 0,
+          can_undo: this.patternHistory[pattern_name] && this.patternHistory[pattern_name].length > 0
+        };
+      } else {
+        console.error(`[API redo_last_action] Failed to save pattern '${pattern_name}' after redo. CRITICAL: State might be inconsistent.`);
+        // Attempt to restore the state we tried to pop (put it back on redo history)
+        this.patternRedoHistory[pattern_name].push(redoState);
+        // Also remove the state we added to undo history
+        this.patternHistory[pattern_name].pop();
+        return { 
+          success: false, 
+          error: "Failed to save pattern after redo. State might be inconsistent.", 
+          can_redo_more: this.patternRedoHistory[pattern_name] && this.patternRedoHistory[pattern_name].length > 0,
+          can_undo: false,
+          reverted_pattern_data: null
+        };
+      }
+    } catch (e) {
+      console.error(`[API redo_last_action] Error during redo for ${pattern_name}: ${e.message}`);
+      console.error(e.stack);
+      return { 
+        success: false, 
+        error: `Error during redo: ${e.message}`, 
+        can_redo_more: this.patternRedoHistory[pattern_name] && this.patternRedoHistory[pattern_name].length > 0,
+        can_undo: false,
         reverted_pattern_data: null
       };
     }
@@ -351,6 +448,7 @@ class SearchPatternAPI {
     try {
         this.patterns[pattern_name] = []; // Create new pattern with an empty list of items
         this.patternHistory[pattern_name] = []; // Initialize history for the new pattern
+        this.patternRedoHistory[pattern_name] = []; // Initialize redo history for the new pattern
         const saved = this.save_patterns(); // Save the changes
         if (saved) {
             console.log(`[API create_pattern] Successfully created pattern: ${pattern_name}`);

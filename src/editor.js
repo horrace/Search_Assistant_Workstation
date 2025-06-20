@@ -72,6 +72,7 @@ const patternSelector = document.getElementById('pattern-selector');
 const newPatternBtn = document.getElementById('new-pattern-btn');
 const backBtn = document.getElementById('back-btn');
 const undoBtn = document.getElementById('undo-btn'); // Get reference to existing Undo button
+const redoBtn = document.getElementById('redo-btn'); // Get reference to Redo button
 const patternItems = document.getElementById('pattern-items');
 const partsBankItems = document.getElementById('parts-bank-items');
 const contextMenu = document.getElementById('context-menu');
@@ -1892,6 +1893,7 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
 
                 if (successfulModification) {
                     if (undoBtn) undoBtn.disabled = false; // Enable Undo for successful modifications
+                    if (redoBtn) redoBtn.disabled = true; // Disable Redo when new action is performed
                 }
                 
                 // Reload pattern data if it was a known modifying operation
@@ -2140,6 +2142,7 @@ async function saveCurrentPattern() {
         
         // Update mirrors that reference this pattern
         updateMirrorsForPattern(currentPattern);
+        if (redoBtn) redoBtn.disabled = true; // Disable Redo when new action is performed
       } else if (data.error) { // Check for explicit error first
         console.error('Error saving pattern:', data.error);
         errorMessage = `Failed to save pattern: ${data.error}`;
@@ -2786,6 +2789,7 @@ function init() {
   patternSelector.addEventListener('change', () => {
     loadPattern(patternSelector.value);
     if (undoBtn) undoBtn.disabled = true; // Disable undo when user manually selects a new pattern
+    if (redoBtn) redoBtn.disabled = true; // Disable redo when user manually selects a new pattern
   });
   
   newPatternBtn.addEventListener('click', showNewPatternDialog);
@@ -2880,19 +2884,29 @@ function init() {
    });
 
   // Event listener for the Undo button
-  if (undoBtn) {
-    undoBtn.addEventListener('click', handleUndo);
-  }
+if (undoBtn) {
+  undoBtn.addEventListener('click', handleUndo);
+}
 
-  // Keyboard shortcut for Undo (Ctrl+Z or Cmd+Z)
-  document.addEventListener('keydown', (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-      event.preventDefault(); // Prevent default browser undo (e.g., in text fields)
-      if (!undoBtn.disabled) {
-        handleUndo();
-      }
+// Event listener for the Redo button
+if (redoBtn) {
+  redoBtn.addEventListener('click', handleRedo);
+}
+
+// Keyboard shortcuts for Undo/Redo
+document.addEventListener('keydown', (event) => {
+  if ((event.ctrlKey || event.metaKey) && event.key === 'z' && !event.shiftKey) {
+    event.preventDefault(); // Prevent default browser undo (e.g., in text fields)
+    if (!undoBtn.disabled) {
+      handleUndo();
     }
-  });
+  } else if ((event.ctrlKey || event.metaKey) && (event.key === 'y' || (event.key === 'z' && event.shiftKey))) {
+    event.preventDefault(); // Prevent default browser redo
+    if (!redoBtn.disabled) {
+      handleRedo();
+    }
+  }
+});
 
   // Initialize mirror content editing prevention
   preventMirrorEditing();
@@ -3069,15 +3083,80 @@ async function handleUndo() {
         // This fallback should ideally not be hit if API always returns data on success.
         console.warn("[UNDO] Undo successful but no reverted pattern data received. Performing full reload as fallback.");
         await loadPattern(currentPattern); // Full reload for the current pattern
-      }
+            }
       if(undoBtn) undoBtn.disabled = !result.can_undo_more;
+      if(redoBtn) redoBtn.disabled = !result.can_redo; // Update redo button state
     } else {
-      console.error("[UNDO] Failed to undo last action:", result.error || "Unknown error from API."); 
-      if(undoBtn) undoBtn.disabled = true; 
+      console.error("[UNDO] Failed to undo last action:", result.error || "Unknown error from API.");
+      if(undoBtn) undoBtn.disabled = true;
     }
   } catch (error) {
     console.error("[UNDO] Error calling undo-last-action via invoke:", error);
-    if(undoBtn) undoBtn.disabled = true; 
+    if(undoBtn) undoBtn.disabled = true;
+  }
+}
+
+// --- Redo Functionality ---
+async function handleRedo() {
+  if (!currentPattern) {
+    console.warn("Redo action attempted without a valid pattern selected.");
+    console.error("No pattern selected to redo action for.");
+    if(redoBtn) redoBtn.disabled = true;
+    return;
+  }
+  
+  console.log(`[REDO] Attempting to redo last action for pattern: ${currentPattern}`);
+  try {
+    const result = await window.electronAPI.invoke('redo-last-action', currentPattern);
+    console.log("[REDO] API response received:", JSON.stringify(result, null, 2));
+    
+    if (result.success) {
+      console.log("[REDO] Action redone successfully according to API.");
+      if (result.reverted_pattern_data) {
+        console.log("[REDO] Reverted pattern data received. Item count:", result.reverted_pattern_data.length);
+        
+        currentPatternData = result.reverted_pattern_data;
+        console.log("[REDO] currentPatternData updated. Item count:", currentPatternData.length);
+        
+        currentPatternItems = currentPatternData;
+        console.log("[REDO] currentPatternItems is now updated from currentPatternData. Item count:", currentPatternItems.length);
+        
+        // Destroy existing sortables before re-rendering
+        if (typeof Sortable !== 'undefined') { // Check if Sortable is loaded
+            if (window.mainSortableInstance) {
+                try {
+                    window.mainSortableInstance.destroy();
+                    console.log("[REDO] Main Sortable instance destroyed for redo.");
+                } catch (e) { console.error("[REDO] Error destroying main sortable:", e); }
+                window.mainSortableInstance = null;
+            }
+            document.querySelectorAll('.chapter-items.sortable-group').forEach(group => {
+                if (group.sortableInstance) {
+                    try {
+                        group.sortableInstance.destroy();
+                        console.log("[REDO] Chapter Sortable instance destroyed for redo.");
+                    } catch (e) { console.error("[REDO] Error destroying chapter sortable:", e); }
+                    group.sortableInstance = null;
+                }
+            });
+        }
+        
+        renderPatternItems();
+        console.log("[REDO] renderPatternItems called.");
+        
+      } else {
+        console.warn("[REDO] Redo successful but no reverted pattern data received. Performing full reload as fallback.");
+        await loadPattern(currentPattern);
+      }
+      if(redoBtn) redoBtn.disabled = !result.can_redo_more;
+      if(undoBtn) undoBtn.disabled = !result.can_undo; // Update undo button state
+    } else {
+      console.error("[REDO] Failed to redo last action:", result.error || "Unknown error from API.");
+      if(redoBtn) redoBtn.disabled = true;
+    }
+  } catch (error) {
+    console.error("[REDO] Error calling redo-last-action via invoke:", error);
+    if(redoBtn) redoBtn.disabled = true;
   }
 }
 
@@ -3089,6 +3168,7 @@ async function loadPatternData(patternName, dataToRender = null) { // Added data
   if (!patternName || patternName === '-') {
     // ... (clear editor state)
     if (undoBtn) undoBtn.disabled = true; // Disable undo when no pattern
+    if (redoBtn) redoBtn.disabled = true; // Disable redo when no pattern
     return;
   }
   // `currentPattern` should be updated here if `patternName` is valid and different.
@@ -3116,11 +3196,15 @@ async function loadPatternData(patternName, dataToRender = null) { // Added data
         // The backend history is separate. Here, we mean no actions in *this editor session* have been taken yet on this freshly loaded pattern.
         undoBtn.disabled = true;
     }
+    if (!dataToRender && redoBtn) {
+        redoBtn.disabled = true; // Also disable redo on fresh load
+    }
 
   } catch (error) { // Ensure CATCH block is present
     console.error(`Error in loadPatternData for ${patternName}:`, error);
     // ... (existing error handling, e.g., show error message in UI)
     if (undoBtn) undoBtn.disabled = true; // Disable undo on load error
+    if (redoBtn) redoBtn.disabled = true; // Disable redo on load error
   }
 }
 
@@ -3275,7 +3359,7 @@ function displayMirrorContentOptions(mirrorData) {
     
     if ((mirrorData.chapters && mirrorData.chapters.length > 0) || (mirrorData.chunks && mirrorData.chunks.length > 0)) {
         mirrorContentSelection.style.display = 'block';
-    } else {
+	} else {
         const noContentMsg = document.createElement('div');
         noContentMsg.textContent = 'No chapters or chunks available to mirror.';
         noContentMsg.style.color = '#BBB';
@@ -3474,5 +3558,3 @@ function formatStrategyText(text) {
     // Use a regex to wrap parenthesized content in a span
     return text.replace(/(\(.*?\))/g, '<span class="parenthesized">$1</span>');
 }
-
-// TEST COMMENT

@@ -866,6 +866,10 @@ ipcMain.handle('undo-last-action', async (event, pattern_name) => {
   return api.undo_last_action(pattern_name);
 });
 
+ipcMain.handle('redo-last-action', async (event, pattern_name) => {
+  return api.redo_last_action(pattern_name);
+});
+
 // App lifecycle events
 app.whenReady().then(() => {
   createMainWindow();
