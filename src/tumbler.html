@@ -19,6 +19,7 @@
     .tumbler-container {
       width: 100%;
       height: 100%;
+      position: relative; /* Added to allow absolute positioning of next-area */
     }
     
     /* Drag indicator */
@@ -74,10 +75,9 @@
         <!-- Chunk items will be rendered here -->
       </div>
     </div>
-  </div>
-  
-  <div class="controls">
-    <button id="next-item-button">&rarr;</button>
+    
+    <!-- Right half clickable area for advancing to next item -->
+    <div id="next-area" class="next-area"></div>
   </div>
   
   <script src="tumbler.js"></script>

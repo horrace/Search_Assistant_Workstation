@@ -1215,19 +1215,33 @@ footer {
   /* Add specific overrides if needed */
 }
 
-#next-item-button {
-  background-color: transparent;
-  color: #696969;
-  border: none;
-  padding: 10px 15px;
-  font-size: 30px;
-  border-radius: 5px;
+/* Next area for advancing to next item */
+.next-area {
+  position: absolute;
+  top: 40px; /* Start below the header to avoid interfering with drag */
+  right: 0;
+  width: 50%;
+  height: calc(100% - 40px); /* Adjust height to account for the header */
   cursor: pointer;
-  -webkit-app-region: no-drag; /* Make button clickable */
+  z-index: 1005; /* Higher than tumbler-content's z-index of 1001 */
+  -webkit-app-region: no-drag; /* Make area clickable */
+  transition: background-color 0.3s ease;
 }
 
-#next-item-button:hover {
-  background-color: #555;
+.next-area:hover {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.next-area:hover::after {
+  content: "→";
+  position: absolute;
+  top: 50%;
+  right: 15%;
+  transform: translateY(-50%);
+  font-size: 60px; /* Increased from 40px to 60px */
+  color: rgba(255, 255, 255, 0.5); /* Slightly more visible */
+  text-shadow: 0 0 5px rgba(0, 0, 0, 0.3); /* Add shadow for better visibility */
+  opacity: 0.8;
 }
 
 .item-window {
@@ -1314,4 +1328,10 @@ footer {
 .parts-bank-items {
     height: 100%;
     overflow-y: auto;
+}
+
+/* Style for next-area when background is hidden */
+.tumbler-container.no-background .next-area:hover::after {
+  color: rgba(100, 100, 100, 0.7); /* Darker color for transparent background */
+  text-shadow: 0 0 5px rgba(255, 255, 255, 0.2); /* Light shadow for better visibility */
 }

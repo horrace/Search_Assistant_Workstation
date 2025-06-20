@@ -10,6 +10,7 @@ const increaseFontBtn = document.getElementById('increase-font');
 const tumblerTimer = document.getElementById('tumbler-timer');
 const tumblerContainer = document.querySelector('.tumbler-container');
 const tumblerHeader = document.querySelector('.tumbler-header');
+const nextArea = document.getElementById('next-area');
 
 // State
 let currentPattern = '';
@@ -82,9 +83,9 @@ function init() {
   // Start the timer
   startTimer();
 
-  const nextItemButton = document.getElementById('next-item-button');
-  if (nextItemButton) {
-    nextItemButton.addEventListener('click', () => {
+  // Add click event listener to the next area
+  if (nextArea) {
+    nextArea.addEventListener('click', () => {
       nextItem();
     });
   }
