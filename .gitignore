@@ -16,6 +16,9 @@ data/*.docx
 data/*.json
 data/*.rtf
 
+scripts/*.json
+scripts/*.xml
+
 # Runtime data
 pids
 *.pid

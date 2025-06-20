@@ -11,12 +11,18 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Window management
   openEditor: () => ipcRenderer.send('open-editor'),
   openTumbler: (patternName) => ipcRenderer.send('open-tumbler', patternName),
+  openSettings: () => ipcRenderer.send('open-settings'),
   closeEditor: () => ipcRenderer.send('close-editor'),
   closeTumbler: () => ipcRenderer.send('close-tumbler'),
+  closeSettings: () => ipcRenderer.send('close-settings'),
   getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
   
   // Settings
   setTransparency: (value) => ipcRenderer.send('set-transparency', value),
+  
+  // Shortcuts management
+  registerShortcuts: () => ipcRenderer.send('register-shortcuts'),
+  unregisterShortcuts: () => ipcRenderer.send('unregister-shortcuts'),
   
   // API communication with JavaScript backend
   callAPI: (method, params) => {
@@ -63,6 +69,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
     };
     ipcRenderer.on('pattern-selected', handler);
     return () => ipcRenderer.removeListener('pattern-selected', handler);
+  },
+  
+  onAdvanceTumbler: (callback) => {
+    const handler = (event) => {
+      callback();
+    };
+    ipcRenderer.on('advance-tumbler', handler);
+    return () => ipcRenderer.removeListener('advance-tumbler', handler);
   },
   
   // Debug logging

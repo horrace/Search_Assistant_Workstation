@@ -1,0 +1,347 @@
+// settings.js - Settings window functionality
+document.addEventListener('DOMContentLoaded', function() {
+  // DOM elements
+  const shortcutsList = document.getElementById('shortcuts-list');
+  const resetShortcutsBtn = document.getElementById('reset-shortcuts-btn');
+  const saveShortcutsBtn = document.getElementById('save-shortcuts-btn');
+  const transparencySlider = document.getElementById('transparency-slider');
+  const transparencyValue = document.getElementById('transparency-value');
+  const hideBackgroundCheckbox = document.getElementById('hide-background');
+  const closeBtn = document.getElementById('close-btn');
+  const closeSettingsBtn = document.getElementById('close-settings-btn');
+  
+  // State
+  let shortcuts = [];
+  let currentTransparency = 1.0;
+  let hideBackground = false;
+  
+  // Initialize
+  init();
+  
+  function init() {
+    console.log('Settings window initialized');
+    
+    // Set up event listeners
+    setupEventListeners();
+    
+    // Load settings
+    loadShortcuts();
+    loadGeneralSettings();
+    
+    // Update transparency display
+    updateTransparencyDisplay();
+  }
+  
+  function setupEventListeners() {
+    // Window controls
+    if (closeBtn) {
+      closeBtn.addEventListener('click', closeWindow);
+    }
+    
+    if (closeSettingsBtn) {
+      closeSettingsBtn.addEventListener('click', closeWindow);
+    }
+    
+    // Shortcuts
+    if (resetShortcutsBtn) {
+      resetShortcutsBtn.addEventListener('click', resetShortcutsToDefault);
+    }
+    
+    if (saveShortcutsBtn) {
+      saveShortcutsBtn.addEventListener('click', saveShortcuts);
+    }
+    
+    // General settings
+    if (transparencySlider) {
+      transparencySlider.addEventListener('input', () => {
+        currentTransparency = parseFloat(transparencySlider.value);
+        updateTransparencyDisplay();
+        window.electronAPI.setTransparency(currentTransparency);
+      });
+      
+      transparencySlider.addEventListener('change', () => {
+        saveGeneralSettings();
+      });
+    }
+    
+    if (hideBackgroundCheckbox) {
+      hideBackgroundCheckbox.addEventListener('change', () => {
+        hideBackground = hideBackgroundCheckbox.checked;
+        saveGeneralSettings();
+      });
+    }
+  }
+  
+  function closeWindow() {
+    console.log('Closing settings window');
+    window.close();
+  }
+  
+  // Shortcuts management
+  function loadShortcuts() {
+    console.log('Loading shortcuts from backend');
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'get_shortcuts') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error loading shortcuts:', data.error);
+          showMessage(`Error loading shortcuts: ${data.error}`, 'error');
+          return;
+        }
+        
+        if (data.result && Array.isArray(data.result)) {
+          console.log('Shortcuts loaded successfully:', data.result);
+          shortcuts = data.result;
+          renderShortcutsList();
+        } else {
+          console.error('Invalid shortcuts data format:', data.result);
+          showMessage('Error loading shortcuts: Invalid data format', 'error');
+        }
+      }
+    });
+    
+    window.electronAPI.callAPI('get_shortcuts', {});
+  }
+  
+  function renderShortcutsList() {
+    if (!shortcutsList) return;
+    
+    shortcutsList.innerHTML = '';
+    
+    shortcuts.forEach((shortcut, index) => {
+      const shortcutItem = document.createElement('div');
+      shortcutItem.className = 'shortcut-item';
+      
+      shortcutItem.innerHTML = `
+        <div class="shortcut-info">
+          <div class="shortcut-name">${shortcut.name}</div>
+          <div class="shortcut-description">${shortcut.description}</div>
+        </div>
+        <input type="text" class="shortcut-key" value="${shortcut.accelerator}" 
+               data-shortcut-id="${shortcut.id}" placeholder="e.g., Alt+Q">
+        <div class="shortcut-enabled">
+          <label>
+            <input type="checkbox" ${shortcut.enabled ? 'checked' : ''} 
+                   data-shortcut-id="${shortcut.id}"> Enabled
+          </label>
+        </div>
+      `;
+      
+      shortcutsList.appendChild(shortcutItem);
+    });
+    
+    // Add event listeners for the inputs
+    shortcutsList.querySelectorAll('.shortcut-key').forEach(input => {
+      input.addEventListener('change', updateShortcutKey);
+      input.addEventListener('keydown', captureShortcutKey);
+    });
+    
+    shortcutsList.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', updateShortcutEnabled);
+    });
+  }
+  
+  function captureShortcutKey(event) {
+    event.preventDefault();
+    
+    const modifiers = [];
+    if (event.ctrlKey) modifiers.push('Ctrl');
+    if (event.altKey) modifiers.push('Alt');
+    if (event.shiftKey) modifiers.push('Shift');
+    if (event.metaKey) modifiers.push('CmdOrCtrl');
+    
+    let key = event.key;
+    
+    // Handle special keys
+    if (key === ' ') key = 'Space';
+    else if (key === 'Escape') key = 'Escape';
+    else if (key === 'Enter') key = 'Return';
+    else if (key === 'Tab') key = 'Tab';
+    else if (key.startsWith('Arrow')) key = key.replace('Arrow', '');
+    else if (key.startsWith('F') && /F\d+/.test(key)) key = key; // Function keys
+    else if (key.length === 1) key = key.toUpperCase();
+    
+    // Don't capture modifier keys alone
+    if (['Control', 'Alt', 'Shift', 'Meta'].includes(key)) return;
+    
+    const shortcut = [...modifiers, key].join('+');
+    event.target.value = shortcut;
+    
+    // Trigger change event
+    event.target.dispatchEvent(new Event('change'));
+  }
+  
+  function updateShortcutKey(event) {
+    const shortcutId = event.target.dataset.shortcutId;
+    const newAccelerator = event.target.value;
+    
+    console.log(`Updating shortcut ${shortcutId} accelerator to: ${newAccelerator}`);
+    
+    const shortcut = shortcuts.find(s => s.id === shortcutId);
+    if (shortcut) {
+      shortcut.accelerator = newAccelerator;
+    }
+  }
+  
+  function updateShortcutEnabled(event) {
+    const shortcutId = event.target.dataset.shortcutId;
+    const enabled = event.target.checked;
+    
+    console.log(`Updating shortcut ${shortcutId} enabled to: ${enabled}`);
+    
+    const shortcut = shortcuts.find(s => s.id === shortcutId);
+    if (shortcut) {
+      shortcut.enabled = enabled;
+    }
+  }
+  
+  function saveShortcuts() {
+    console.log('Saving shortcuts:', shortcuts);
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'save_shortcuts') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error saving shortcuts:', data.error);
+          showMessage(`Error saving shortcuts: ${data.error}`, 'error');
+          return;
+        }
+        
+        if (data.result && data.result.success) {
+          console.log('Shortcuts saved successfully');
+          // Re-register shortcuts in the main process
+          window.electronAPI.registerShortcuts();
+          showMessage('Shortcuts saved and applied successfully!', 'success');
+        } else {
+          console.error('Failed to save shortcuts:', data.result);
+          showMessage('Failed to save shortcuts', 'error');
+        }
+      }
+    });
+    
+    window.electronAPI.callAPI('save_shortcuts', shortcuts);
+  }
+  
+  function resetShortcutsToDefault() {
+    if (!confirm('Are you sure you want to reset all shortcuts to their default values?')) {
+      return;
+    }
+    
+    console.log('Resetting shortcuts to default');
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'reset_shortcuts_to_default') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error resetting shortcuts:', data.error);
+          showMessage(`Error resetting shortcuts: ${data.error}`, 'error');
+          return;
+        }
+        
+        if (data.result && data.result.success) {
+          console.log('Shortcuts reset successfully');
+          loadShortcuts(); // Reload shortcuts from backend
+          window.electronAPI.registerShortcuts();
+          showMessage('Shortcuts reset to defaults!', 'success');
+        } else {
+          console.error('Failed to reset shortcuts:', data.result);
+          showMessage('Failed to reset shortcuts', 'error');
+        }
+      }
+    });
+    
+    window.electronAPI.callAPI('reset_shortcuts_to_default', {});
+  }
+  
+  // General settings management
+  function loadGeneralSettings() {
+    console.log('Loading general settings');
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'get_tumbler_settings') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error loading general settings:', data.error);
+          return;
+        }
+        
+        if (data.result && typeof data.result === 'object') {
+          if (data.result.error) {
+            console.warn('Backend message:', data.result.error);
+            return;
+          }
+          
+          hideBackground = data.result.hideBackground || false;
+          if (hideBackgroundCheckbox) {
+            hideBackgroundCheckbox.checked = hideBackground;
+          }
+        }
+      }
+    });
+    
+    window.electronAPI.callAPI('get_tumbler_settings', {});
+  }
+  
+  function saveGeneralSettings() {
+    const settings = {
+      hideBackground: hideBackground
+    };
+    
+    console.log('Saving general settings:', settings);
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'save_tumbler_settings') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error saving general settings:', data.error);
+          showMessage(`Error saving settings: ${data.error}`, 'error');
+          return;
+        }
+        
+        console.log('General settings saved successfully');
+      }
+    });
+    
+    window.electronAPI.callAPI('save_tumbler_settings', settings);
+  }
+  
+  function updateTransparencyDisplay() {
+    if (transparencyValue) {
+      transparencyValue.textContent = `${Math.round(currentTransparency * 100)}%`;
+    }
+  }
+  
+  function showMessage(message, type = 'success') {
+    // Remove any existing messages
+    const existingMessages = document.querySelectorAll('.message');
+    existingMessages.forEach(msg => msg.remove());
+    
+    // Create new message
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `message ${type}`;
+    messageDiv.textContent = message;
+    
+    document.body.appendChild(messageDiv);
+    
+    // Trigger animation
+    setTimeout(() => {
+      messageDiv.classList.add('show');
+    }, 10);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      messageDiv.classList.remove('show');
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.parentNode.removeChild(messageDiv);
+        }
+      }, 300);
+    }, 3000);
+  }
+}); 

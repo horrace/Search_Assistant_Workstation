@@ -166,6 +166,9 @@ document.addEventListener('DOMContentLoaded', function() {
         saveSettings();
       });
     }
+    
+    // Settings window management
+    setupSettingsEventListeners();
   }
   
   // Load settings
@@ -361,6 +364,23 @@ document.addEventListener('DOMContentLoaded', function() {
     } else {
       console.error('Error message element not found, message was:', message);
     }
+  }
+
+  // Settings window management functions
+  function setupSettingsEventListeners() {
+    const settingsButton = document.getElementById('settings-button-main');
+    
+    if (settingsButton) {
+      settingsButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        openSettingsWindow();
+      });
+    }
+  }
+  
+  function openSettingsWindow() {
+    console.log('Opening settings window');
+    window.electronAPI.openSettings();
   }
 
   // Custom window controls

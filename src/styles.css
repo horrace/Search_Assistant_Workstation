@@ -99,8 +99,8 @@ footer {
 
 .settings-menu {
   position: absolute;
-  top: 100%;
-  left: 0;
+  top: -420%;
+  left: -180px;
   background-color: #3a3a3a;
   border-radius: 4px;
   padding: 10px;
@@ -915,9 +915,8 @@ footer {
 
 .window-close-btn {
   position: absolute;
-  top: 3px;
-  right: 0;
-  height: 100%; /* Match header height */
+  top: 5px;
+  right: 10px;
   background: transparent;
   border: none;
   color: #ccc;

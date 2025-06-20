@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, screen } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { api } = require('./api'); // Import the JavaScript API
@@ -32,6 +32,7 @@ const store = new Store();
 let mainWindow;
 let editorWindow;
 let tumblerWindow;
+let settingsWindow;
 
 // Helper function to ensure window position is within visible bounds
 function ensureWindowInBounds(x, y, width, height) {
@@ -355,6 +356,249 @@ function createTumblerWindow(patternName) {
   }
 }
 
+function createSettingsWindow() {
+  const savedPosition = api.get_settings_window_position();
+  let initialX, initialY;
+  const windowWidth = 700;
+  const windowHeight = 600;
+  
+  if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
+    // Validate the saved position
+    const validatedPos = ensureWindowInBounds(savedPosition.x, savedPosition.y, windowWidth, windowHeight);
+    initialX = validatedPos.x;
+    initialY = validatedPos.y;
+    console.log(`Found saved Settings window position: x=${initialX}, y=${initialY}`);
+  } else {
+    // Center the settings window relative to the main window
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      const [mainX, mainY] = mainWindow.getPosition();
+      const [mainWidth, mainHeight] = mainWindow.getSize();
+      
+      // Calculate center position
+      initialX = mainX + Math.floor((mainWidth - windowWidth) / 2);
+      initialY = mainY + Math.floor((mainHeight - windowHeight) / 2);
+      
+      // Ensure the window is within screen bounds
+      const validatedPos = ensureWindowInBounds(initialX, initialY, windowWidth, windowHeight);
+      initialX = validatedPos.x;
+      initialY = validatedPos.y;
+      
+      console.log(`No saved Settings window position found, centering relative to main window: x=${initialX}, y=${initialY}`);
+    } else {
+      // Fallback to screen center if main window not available
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
+      
+      initialX = Math.floor((screenWidth - windowWidth) / 2);
+      initialY = Math.floor((screenHeight - windowHeight) / 2);
+      
+      console.log(`No main window available, centering on screen: x=${initialX}, y=${initialY}`);
+    }
+  }
+
+  settingsWindow = new BrowserWindow({
+    x: initialX,
+    y: initialY,
+    width: windowWidth,
+    height: windowHeight,
+    modal: false,
+    frame: false,
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js')
+    },
+    backgroundColor: '#303030',
+    show: false,
+    resizable: true,
+    minWidth: 600,
+    minHeight: 500,
+    alwaysOnTop: false,
+    skipTaskbar: false
+  });
+
+  settingsWindow.loadFile(path.join(__dirname, 'settings.html'));
+  
+  // Settings window should always be fully opaque
+  settingsWindow.setOpacity(1.0);
+  
+  // Save position on move (debounced)
+  let settingsMoveTimeout;
+  settingsWindow.on('move', () => {
+    clearTimeout(settingsMoveTimeout);
+    settingsMoveTimeout = setTimeout(() => {
+      if (settingsWindow && !settingsWindow.isDestroyed()) {
+        const [x, y] = settingsWindow.getPosition();
+        console.log(`Settings window moved to: x=${x}, y=${y}. Saving position.`);
+        api.save_settings_window_position({ x, y });
+      }
+    }, 500);
+  });
+
+  // Save position before close
+  settingsWindow.on('close', () => {
+    clearTimeout(settingsMoveTimeout); // Clear any pending save on move
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+      const [x, y] = settingsWindow.getPosition();
+      console.log(`Settings window about to close at: x=${x}, y=${y}. Saving final position.`);
+      api.save_settings_window_position({ x, y });
+    }
+  });
+
+  settingsWindow.on('closed', () => {
+    settingsWindow = null;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.show();
+      mainWindow.focus();
+    }
+  });
+  
+  settingsWindow.once('ready-to-show', () => {
+    // Show settings window first
+    settingsWindow.show();
+    settingsWindow.focus();
+    
+    // Then hide main window
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.hide();
+    }
+    
+    // Save initial position once shown
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        const [x, y] = settingsWindow.getPosition();
+        console.log(`Settings window shown at: x=${x}, y=${y}. Saving initial position.`);
+        api.save_settings_window_position({ x, y });
+    }
+  });
+}
+
+// Global shortcuts management
+let registeredShortcuts = [];
+
+function registerGlobalShortcuts() {
+  try {
+    // Clear any existing shortcuts
+    unregisterAllShortcuts();
+    
+    // Get shortcuts from settings
+    const shortcuts = api.get_shortcuts() || [];
+    console.log('Registering global shortcuts:', shortcuts);
+    
+    shortcuts.forEach(shortcut => {
+      if (shortcut.enabled && shortcut.accelerator) {
+        try {
+          const success = globalShortcut.register(shortcut.accelerator, () => {
+            console.log(`Global shortcut triggered: ${shortcut.name} (${shortcut.accelerator})`);
+            executeShortcutAction(shortcut);
+          });
+          
+          if (success) {
+            registeredShortcuts.push(shortcut.accelerator);
+            console.log(`Successfully registered shortcut: ${shortcut.accelerator} for ${shortcut.name}`);
+          } else {
+            console.warn(`Failed to register shortcut: ${shortcut.accelerator} for ${shortcut.name}`);
+          }
+        } catch (error) {
+          console.error(`Error registering shortcut ${shortcut.accelerator}:`, error);
+        }
+      }
+    });
+  } catch (error) {
+    console.error('Error in registerGlobalShortcuts:', error);
+  }
+}
+
+function unregisterAllShortcuts() {
+  registeredShortcuts.forEach(accelerator => {
+    globalShortcut.unregister(accelerator);
+  });
+  registeredShortcuts = [];
+  console.log('Unregistered all global shortcuts');
+}
+
+function executeShortcutAction(shortcut) {
+  try {
+    console.log(`Executing shortcut action: ${shortcut.action}`);
+    
+    switch (shortcut.action) {
+      case 'show-main':
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          if (mainWindow.isMinimized()) mainWindow.restore();
+          mainWindow.show();
+          mainWindow.focus();
+        }
+        break;
+        
+      case 'hide-main':
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.hide();
+        }
+        break;
+        
+      case 'toggle-main':
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          if (mainWindow.isVisible()) {
+            mainWindow.hide();
+          } else {
+            if (mainWindow.isMinimized()) mainWindow.restore();
+            mainWindow.show();
+            mainWindow.focus();
+          }
+        }
+        break;
+        
+      case 'open-editor':
+        if (!editorWindow) createEditorWindow();
+        break;
+        
+      case 'open-tumbler':
+        if (shortcut.patternName && !tumblerWindow) {
+          createTumblerWindow(shortcut.patternName);
+        }
+        break;
+        
+      case 'advance-tumbler':
+        console.log('Advance tumbler action triggered');
+        console.log('tumblerWindow exists:', !!tumblerWindow);
+        if (tumblerWindow) {
+          console.log('tumblerWindow.isDestroyed():', tumblerWindow.isDestroyed());
+        }
+        if (tumblerWindow && !tumblerWindow.isDestroyed()) {
+          console.log('Sending advance-tumbler event to tumbler window');
+          // Send the nextItem command to the tumbler window
+          tumblerWindow.webContents.send('advance-tumbler');
+        } else {
+          console.log('Tumbler window not available for advance action');
+        }
+        break;
+        
+      case 'close-all':
+        if (tumblerWindow) tumblerWindow.close();
+        if (editorWindow) editorWindow.close();
+        break;
+        
+      case 'quit-app':
+        app.quit();
+        break;
+        
+      default:
+        console.warn(`Unknown shortcut action: ${shortcut.action}`);
+    }
+  } catch (error) {
+    console.error(`Error executing shortcut action ${shortcut.action}:`, error);
+  }
+}
+
+// IPC handlers for shortcuts management
+ipcMain.on('register-shortcuts', () => {
+  registerGlobalShortcuts();
+});
+
+ipcMain.on('unregister-shortcuts', () => {
+  unregisterAllShortcuts();
+});
+
 // IPC handlers for window management
 ipcMain.on('open-editor', () => {
   if (!editorWindow) createEditorWindow();
@@ -364,12 +608,29 @@ ipcMain.on('open-tumbler', (event, patternName) => {
   if (!tumblerWindow) createTumblerWindow(patternName);
 });
 
+ipcMain.on('open-settings', () => {
+  if (!settingsWindow || settingsWindow.isDestroyed()) {
+    createSettingsWindow();
+  } else {
+    // If settings window exists, just focus it
+    settingsWindow.show();
+    settingsWindow.focus();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.hide();
+    }
+  }
+});
+
 ipcMain.on('close-editor', () => {
   if (editorWindow) editorWindow.close();
 });
 
 ipcMain.on('close-tumbler', () => {
   if (tumblerWindow) tumblerWindow.close();
+});
+
+ipcMain.on('close-settings', () => {
+  if (settingsWindow) settingsWindow.close();
 });
 
 // Listen for errors from the renderer process
@@ -526,6 +787,22 @@ ipcMain.on('api-request', (event, data) => {
             result = api[method]();
             break;
             
+          case 'get_shortcuts':
+            result = api[method]();
+            break;
+            
+          case 'save_shortcuts':
+            result = api[method](params);
+            break;
+            
+          case 'update_shortcut':
+            result = api[method](params.shortcut_id, params.shortcut_data);
+            break;
+            
+          case 'reset_shortcuts_to_default':
+            result = api[method]();
+            break;
+            
           default:
             // For simple methods with no parameters or a single parameter object
             result = params && Object.keys(params).length > 0 ? api[method](params) : api[method]();
@@ -577,6 +854,11 @@ ipcMain.handle('undo-last-action', async (event, pattern_name) => {
 app.whenReady().then(() => {
   createMainWindow();
   
+  // Register global shortcuts after main window is created
+  setTimeout(() => {
+    registerGlobalShortcuts();
+  }, 1000); // Small delay to ensure everything is initialized
+  
   // Listen for display changes and revalidate window positions
   screen.on('display-added', handleDisplayChange);
   screen.on('display-removed', handleDisplayChange);
@@ -626,7 +908,24 @@ function handleDisplayChange() {
       console.log(`Repositioned tumbler window to: x=${validatedPos.x}, y=${validatedPos.y}`);
     }
   }
+  
+  // Check and reposition settings window if needed
+  if (settingsWindow && !settingsWindow.isDestroyed()) {
+    const [x, y] = settingsWindow.getPosition();
+    const [width, height] = settingsWindow.getSize();
+    const validatedPos = ensureWindowInBounds(x, y, width, height);
+    
+    if (validatedPos.x !== x || validatedPos.y !== y) {
+      settingsWindow.setPosition(validatedPos.x, validatedPos.y);
+      console.log(`Repositioned settings window to: x=${validatedPos.x}, y=${validatedPos.y}`);
+    }
+  }
 }
+
+app.on('will-quit', () => {
+  // Unregister all global shortcuts before quitting
+  unregisterAllShortcuts();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

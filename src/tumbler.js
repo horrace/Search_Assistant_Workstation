@@ -39,6 +39,12 @@ function init() {
     loadPattern(patternName);
   });
   
+  // Listen for advance-tumbler command from global shortcut
+  window.electronAPI.onAdvanceTumbler(() => {
+    console.log('Tumbler received advance-tumbler event');
+    nextItem();
+  });
+  
   // Set up event listeners
   closeButton.addEventListener('click', () => {
     window.electronAPI.closeTumbler();

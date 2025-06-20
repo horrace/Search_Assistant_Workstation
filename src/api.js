@@ -793,6 +793,28 @@ class SearchPatternAPI {
   }
 
   /**
+   * Get the current settings window position settings
+   */
+  get_settings_window_position() {
+    return this.settings.settingsWindowPosition || null;
+  }
+
+  /**
+   * Save settings window position settings
+   */
+  save_settings_window_position(position_data) {
+    try {
+      if (!this.settings) this.settings = {};
+      this.settings.settingsWindowPosition = position_data;
+      this.save_settings();
+      return { success: true, position: position_data };
+    } catch (error) {
+      console.error(`Error saving settings window position: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Add a new item to a pattern at a specific index.
    */
   add_item(pattern_name, item_data, index) {
@@ -1167,6 +1189,118 @@ class SearchPatternAPI {
       console.error(`Error in duplicate_item: ${error.message}\n${error.stack}`);
       // Attempt to reload patterns on unexpected error
       this.load_patterns();
+      return { success: false, error: error.message };
+    }
+  }
+
+  // --- Shortcuts Methods ---
+  get_shortcuts() {
+    console.log('[API get_shortcuts] Retrieving shortcuts.');
+    if (!this.settings || !this.settings.shortcuts) {
+      console.log('[API get_shortcuts] No shortcuts found in settings, returning default shortcuts.');
+      return this.get_default_shortcuts();
+    }
+    return this.settings.shortcuts;
+  }
+
+  get_default_shortcuts() {
+    return [
+      {
+        id: 'toggle-main',
+        name: 'Toggle Main Window',
+        accelerator: 'Alt+Q',
+        action: 'toggle-main',
+        enabled: false,
+        description: 'Show/hide the main application window'
+      },
+      {
+        id: 'show-main',
+        name: 'Show Main Window',
+        accelerator: 'Alt+S',
+        action: 'show-main',
+        enabled: false,
+        description: 'Show and focus the main application window'
+      },
+      {
+        id: 'open-editor',
+        name: 'Open Editor',
+        accelerator: 'Alt+E',
+        action: 'open-editor',
+        enabled: false,
+        description: 'Open the pattern editor window'
+      },
+      {
+        id: 'advance-tumbler',
+        name: 'Advance Tumbler',
+        accelerator: 'Alt+D',
+        action: 'advance-tumbler',
+        enabled: true,
+        description: 'Advance to the next item in the tumbler when tumbler is open'
+      },
+      {
+        id: 'close-all',
+        name: 'Close All Windows',
+        accelerator: 'Alt+X',
+        action: 'close-all',
+        enabled: false,
+        description: 'Close all secondary windows (editor and tumbler)'
+      }
+    ];
+  }
+
+  save_shortcuts(shortcuts_data) {
+    console.log('[API save_shortcuts] Saving shortcuts data.');
+    try {
+      if (!this.settings) {
+        this.settings = {};
+      }
+      this.settings.shortcuts = JSON.parse(JSON.stringify(shortcuts_data)); // Deep clone
+      const saved = this.save_settings();
+      return { success: saved, error: saved ? null : "Failed to save settings with shortcuts." };
+    } catch (error) {
+      console.error(`[API save_shortcuts] Error saving shortcuts: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  update_shortcut(shortcut_id, shortcut_data) {
+    console.log(`[API update_shortcut] Updating shortcut ${shortcut_id}:`, shortcut_data);
+    try {
+      if (!this.settings) {
+        this.settings = {};
+      }
+      if (!this.settings.shortcuts || !Array.isArray(this.settings.shortcuts)) {
+        this.settings.shortcuts = this.get_default_shortcuts();
+      }
+
+      const shortcutIndex = this.settings.shortcuts.findIndex(s => s.id === shortcut_id);
+      if (shortcutIndex === -1) {
+        console.error(`[API update_shortcut] Shortcut with id ${shortcut_id} not found.`);
+        return { success: false, error: `Shortcut with id ${shortcut_id} not found.` };
+      }
+
+      // Update the shortcut
+      this.settings.shortcuts[shortcutIndex] = { ...this.settings.shortcuts[shortcutIndex], ...shortcut_data };
+      
+      const saved = this.save_settings();
+      return { success: saved, error: saved ? null : "Failed to save settings after shortcut update." };
+    } catch (error) {
+      console.error(`[API update_shortcut] Error updating shortcut: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  reset_shortcuts_to_default() {
+    console.log('[API reset_shortcuts_to_default] Resetting shortcuts to default.');
+    try {
+      if (!this.settings) {
+        this.settings = {};
+      }
+      this.settings.shortcuts = this.get_default_shortcuts();
+      const saved = this.save_settings();
+      return { success: saved, error: saved ? null : "Failed to save settings after reset." };
+    } catch (error) {
+      console.error(`[API reset_shortcuts_to_default] Error resetting shortcuts: ${error.message}`);
       return { success: false, error: error.message };
     }
   }

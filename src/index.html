@@ -18,6 +18,7 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
+            position: relative;
         }
         
         h1 {
@@ -175,6 +176,22 @@
             margin-top: 10px;
             display: none;
         }
+        
+        /* Settings button */
+        .shortcuts-btn {
+            width: 100%;
+            background-color: #404040;
+            color: #f0f0f0;
+            border: 1px solid #606060;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .shortcuts-btn:hover {
+            background-color: #505050;
+        }
     </style>
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -200,6 +217,10 @@
                             <label for="hide-background">
                                 <input type="checkbox" id="hide-background"> Pattern Reviewer: Text Only
                             </label>
+                        </div>
+                        
+                        <div class="settings-item shortcuts-control">
+                            <button id="settings-button-main" class="shortcuts-btn">Edit Keyboard Shortcuts</button>
                         </div>
                     </div>
                 </div>

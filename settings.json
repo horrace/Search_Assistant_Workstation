@@ -4,15 +4,61 @@
     "hideBackground": true
   },
   "mainWindowPosition": {
-    "x": 1432,
-    "y": 346
+    "x": 1042,
+    "y": 300
   },
   "editorWindowPosition": {
-    "x": 834,
-    "y": 162
+    "x": 708,
+    "y": 60
   },
   "tumblerWindowPosition": {
-    "x": 614,
-    "y": 184
-  }
+    "x": 1222,
+    "y": 318
+  },
+  "settingsWindowPosition": {
+    "x": 574,
+    "y": 148
+  },
+  "shortcuts": [
+    {
+      "id": "toggle-main",
+      "name": "Toggle Main Window",
+      "accelerator": "Alt+Q",
+      "action": "toggle-main",
+      "enabled": false,
+      "description": "Show/hide the main application window"
+    },
+    {
+      "id": "show-main",
+      "name": "Show Main Window",
+      "accelerator": "Alt+S",
+      "action": "show-main",
+      "enabled": false,
+      "description": "Show and focus the main application window"
+    },
+    {
+      "id": "open-editor",
+      "name": "Open Editor",
+      "accelerator": "Alt+E",
+      "action": "open-editor",
+      "enabled": false,
+      "description": "Open the pattern editor window"
+    },
+    {
+      "id": "advance-tumbler",
+      "name": "Advance Tumbler",
+      "accelerator": "Alt+D",
+      "action": "advance-tumbler",
+      "enabled": true,
+      "description": "Advance to the next item in the tumbler when tumbler is open"
+    },
+    {
+      "id": "close-all",
+      "name": "Close All Windows",
+      "accelerator": "Alt+X",
+      "action": "close-all",
+      "enabled": false,
+      "description": "Close all secondary windows (editor and tumbler)"
+    }
+  ]
 }
