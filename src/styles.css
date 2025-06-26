@@ -1215,6 +1215,109 @@ footer {
   /* Add specific overrides if needed */
 }
 
+/* Mirror Content Dialog Styles */
+.mirror-dialog {
+  min-width: 450px;
+  max-width: 600px;
+}
+
+.mirror-step {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.mirror-step label {
+  font-weight: bold;
+  color: #DDD;
+}
+
+.mirror-content-options {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #666;
+  border-radius: 4px;
+  padding: 8px;
+  background-color: #555;
+}
+
+.mirror-option {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.mirror-option:hover {
+  background-color: #666;
+}
+
+.mirror-option input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: #007ACC;
+}
+
+.mirror-option-label {
+  flex: 1;
+  font-size: 14px;
+}
+
+.mirror-option-description {
+  color: #BBB;
+  font-size: 12px;
+  margin-left: 16px;
+}
+
+.mirror-option-header {
+  font-weight: bold;
+  color: #FFF;
+  margin: 12px 0 8px 0;
+  font-size: 14px;
+  border-bottom: 1px solid #666;
+  padding-bottom: 4px;
+}
+
+/* Mirror items styling in editor */
+.draggable-item.mirror-item {
+  opacity: 0.8;
+  border-left: 4px solid #007ACC;
+}
+
+.draggable-item.mirror-item .item-abbr::before {
+  content: "🔗 ";
+  color: #007ACC;
+  margin-right: 4px;
+}
+
+/* Make mirror content non-editable but keep drag/drop functionality */
+.draggable-item.mirror-item [contenteditable="true"] {
+  pointer-events: none !important;
+  cursor: default !important;
+  opacity: 0.7;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.draggable-item.mirror-item select {
+  pointer-events: none !important;
+  opacity: 0.7;
+  background-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Keep drag handle visible and functional for repositioning */
+.draggable-item.mirror-item .drag-handle {
+  opacity: 0.8;
+  cursor: grab;
+}
+
+/* Chapter titles with mirrored content */
+.chapter-label.chapter-has-mirrors {
+  color: #007ACC !important;
+  font-weight: bold !important;
+}
+
 /* Next area for advancing to next item */
 .next-area {
   position: absolute;

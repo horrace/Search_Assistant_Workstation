@@ -1373,6 +1373,258 @@ class SearchPatternAPI {
     }
   }
 
+  /**
+   * Get available chapters and chunks from a pattern for mirroring
+   */
+  get_pattern_mirror_options(pattern_name) {
+    console.log(`[API get_pattern_mirror_options] Getting mirror options for pattern: ${pattern_name}`);
+    try {
+      if (!pattern_name || typeof pattern_name !== 'string') {
+        return { success: false, error: "Invalid pattern name" };
+      }
+
+      if (!this.patterns[pattern_name]) {
+        return { success: false, error: "Pattern not found" };
+      }
+
+      const pattern = this.patterns[pattern_name];
+      const chapters = new Set();
+      const chunks = new Map();
+
+      // Collect chapters and chunks
+      pattern.forEach((item, index) => {
+        if (item.chapter && item.chapter !== '_') {
+          chapters.add(item.chapter);
+        }
+        if (item.chunkID && item.chunkID !== 0) {
+          if (!chunks.has(item.chunkID)) {
+            chunks.set(item.chunkID, {
+              chunkID: item.chunkID,
+              chapter: item.chapter,
+              items: []
+            });
+          }
+          chunks.get(item.chunkID).items.push({
+            index: index,
+            abbr: item.abbr,
+            full_name: item.full_name
+          });
+        }
+      });
+
+      return {
+        success: true,
+        chapters: Array.from(chapters),
+        chunks: Array.from(chunks.values()),
+        pattern_name: pattern_name
+      };
+    } catch (error) {
+      console.error(`[API get_pattern_mirror_options] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Add mirrors to a pattern
+   */
+  add_mirrors_to_pattern(target_pattern, mirror_configs) {
+    console.log(`[API add_mirrors_to_pattern] Adding mirrors to pattern: ${target_pattern}`);
+    try {
+      if (!target_pattern || typeof target_pattern !== 'string') {
+        return { success: false, error: "Invalid target pattern name" };
+      }
+
+      if (!Array.isArray(mirror_configs) || mirror_configs.length === 0) {
+        return { success: false, error: "Invalid mirror configurations" };
+      }
+
+      if (!this.patterns[target_pattern]) {
+        return { success: false, error: "Target pattern not found" };
+      }
+
+      // Save state for undo
+      this._saveStateToHistory(target_pattern);
+
+      const targetPattern = this.patterns[target_pattern];
+      let mirrorsAdded = 0;
+
+      for (const config of mirror_configs) {
+        const { source_pattern, type, identifier } = config;
+
+        if (!this.patterns[source_pattern]) {
+          console.warn(`[API add_mirrors_to_pattern] Source pattern not found: ${source_pattern}`);
+          continue;
+        }
+
+        const sourcePattern = this.patterns[source_pattern];
+        let itemsToMirror = [];
+
+        if (type === 'chapter') {
+          itemsToMirror = sourcePattern.filter(item => item.chapter === identifier);
+        } else if (type === 'chunk') {
+          itemsToMirror = sourcePattern.filter(item => item.chunkID === identifier);
+        }
+
+        // Add mirror items to target pattern, preserving their relative order
+        // Sort items by their original index to maintain sequence
+        const sortedItemsToMirror = itemsToMirror
+          .map(item => ({ item, originalIndex: sourcePattern.indexOf(item) }))
+          .sort((a, b) => a.originalIndex - b.originalIndex);
+          
+        for (const { item: sourceItem, originalIndex } of sortedItemsToMirror) {
+          const mirrorItem = {
+            ...JSON.parse(JSON.stringify(sourceItem)),
+            isMirror: true,
+            mirrorSource: {
+              pattern: source_pattern,
+              type: type,
+              identifier: identifier,
+              originalIndex: originalIndex
+            }
+          };
+          targetPattern.push(mirrorItem);
+          mirrorsAdded++;
+        }
+      }
+
+      if (mirrorsAdded > 0) {
+        const saved = this.save_patterns();
+        if (saved) {
+          return { 
+            success: true, 
+            mirrorsAdded: mirrorsAdded,
+            pattern_data: this.patterns[target_pattern]
+          };
+        } else {
+          return { success: false, error: "Failed to save patterns after adding mirrors" };
+        }
+      } else {
+        return { success: false, error: "No mirrors were added" };
+      }
+    } catch (error) {
+      console.error(`[API add_mirrors_to_pattern] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Update mirrors when source pattern changes
+   */
+  update_mirrors_for_pattern(source_pattern) {
+    console.log(`[API update_mirrors_for_pattern] Updating mirrors for source pattern: ${source_pattern}`);
+    try {
+      if (!source_pattern || typeof source_pattern !== 'string') {
+        return { success: false, error: "Invalid source pattern name" };
+      }
+
+      if (!this.patterns[source_pattern]) {
+        return { success: false, error: "Source pattern not found" };
+      }
+
+      const sourcePattern = this.patterns[source_pattern];
+      let updatedPatterns = [];
+
+      // Find all patterns that have mirrors from this source
+      for (const [patternName, pattern] of Object.entries(this.patterns)) {
+        if (patternName === source_pattern) continue;
+
+        let patternUpdated = false;
+        for (let i = 0; i < pattern.length; i++) {
+          const item = pattern[i];
+          if (item.isMirror && item.mirrorSource && item.mirrorSource.pattern === source_pattern) {
+            // Update mirror item with current source data
+            const { type, identifier } = item.mirrorSource;
+            let sourceItem = null;
+
+            if (type === 'chapter') {
+              sourceItem = sourcePattern.find(src => src.chapter === identifier);
+            } else if (type === 'chunk') {
+              sourceItem = sourcePattern.find(src => src.chunkID === identifier);
+            }
+
+            if (sourceItem) {
+              // Update mirror item while preserving mirror metadata
+              const mirrorSource = item.mirrorSource;
+              Object.assign(item, JSON.parse(JSON.stringify(sourceItem)));
+              item.isMirror = true;
+              item.mirrorSource = mirrorSource;
+              patternUpdated = true;
+            }
+          }
+        }
+
+        if (patternUpdated) {
+          updatedPatterns.push(patternName);
+        }
+      }
+
+      if (updatedPatterns.length > 0) {
+        const saved = this.save_patterns();
+        return { 
+          success: saved, 
+          updatedPatterns: updatedPatterns,
+          error: saved ? null : "Failed to save patterns after updating mirrors"
+        };
+      } else {
+        return { success: true, updatedPatterns: [] };
+      }
+    } catch (error) {
+      console.error(`[API update_mirrors_for_pattern] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Remove mirrors from a pattern
+   */
+  remove_mirrors_from_pattern(pattern_name, mirror_indices) {
+    console.log(`[API remove_mirrors_from_pattern] Removing mirrors from pattern: ${pattern_name}`);
+    try {
+      if (!pattern_name || typeof pattern_name !== 'string') {
+        return { success: false, error: "Invalid pattern name" };
+      }
+
+      if (!Array.isArray(mirror_indices) || mirror_indices.length === 0) {
+        return { success: false, error: "Invalid mirror indices" };
+      }
+
+      if (!this.patterns[pattern_name]) {
+        return { success: false, error: "Pattern not found" };
+      }
+
+      // Save state for undo
+      this._saveStateToHistory(pattern_name);
+
+      const pattern = this.patterns[pattern_name];
+      let removedCount = 0;
+
+      // Sort indices in descending order to avoid index shifting issues
+      const sortedIndices = mirror_indices.sort((a, b) => b - a);
+
+      for (const index of sortedIndices) {
+        if (index >= 0 && index < pattern.length && pattern[index].isMirror) {
+          pattern.splice(index, 1);
+          removedCount++;
+        }
+      }
+
+      if (removedCount > 0) {
+        const saved = this.save_patterns();
+        return { 
+          success: saved, 
+          removedCount: removedCount,
+          pattern_data: this.patterns[pattern_name],
+          error: saved ? null : "Failed to save patterns after removing mirrors"
+        };
+      } else {
+        return { success: false, error: "No mirrors were removed" };
+      }
+    } catch (error) {
+      console.error(`[API remove_mirrors_from_pattern] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
 } // END OF SearchPatternAPI CLASS
 
 

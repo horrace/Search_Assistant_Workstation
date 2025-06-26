@@ -95,6 +95,14 @@ const chunkAssignSelect = document.getElementById('chunk-assign-select');
 const chunkAssignDialogOkBtn = document.getElementById('chunk-assign-dialog-ok-btn');
 const chunkAssignDialogCancelBtn = document.getElementById('chunk-assign-dialog-cancel-btn');
 
+// Mirror Content Dialog
+const mirrorContentDialog = document.getElementById('mirror-content-dialog');
+const mirrorSourcePatternSelect = document.getElementById('mirror-source-pattern');
+const mirrorContentSelection = document.getElementById('mirror-content-selection');
+const mirrorContentOptions = document.getElementById('mirror-content-options');
+const mirrorDialogOkBtn = document.getElementById('mirror-dialog-ok-btn');
+const mirrorDialogCancelBtn = document.getElementById('mirror-dialog-cancel-btn');
+
 const togglePartsBankBtn = document.getElementById('toggle-parts-bank-btn');
 const partsBankContainer = document.getElementById('parts-bank-container');
 
@@ -373,11 +381,17 @@ function renderPatternItems() {
       currentChapter = itemChapter;
       // Open new chapter container if the new chapter has a name
       if (currentChapter) {
+        // Check if this chapter contains any mirror items
+        const chapterHasMirrors = currentPatternItems.some(item => 
+          (item.chapter || '') === currentChapter && item.isMirror
+        );
+        const chapterMirrorClass = chapterHasMirrors ? 'chapter-has-mirrors' : '';
+        
         html += `
           <div class="chapter-container draggable-item" data-chapter-name="${currentChapter}" data-rendered-index="${renderedItemIndex}" data-is-chapter="true">
             <div class="chapter-header">
               <div class="drag-handle" data-handle="true"></div>
-              <div class="chapter-label" contenteditable="true" data-field="chapter-name" data-original-chapter-name="${currentChapter}">${currentChapter}</div>
+              <div class="chapter-label ${chapterMirrorClass}" contenteditable="true" data-field="chapter-name" data-original-chapter-name="${currentChapter}">${currentChapter}</div>
             </div>
             <div class="chapter-items sortable-group"> <!-- Added class for Sortable target -->
         `;
@@ -432,7 +446,7 @@ function renderPatternItems() {
             const chunkItemView = chunkItem.view_plane || '';
             const chunkItemWindow = chunkItem.window || '';
             html += `
-              <div class="chunk-item-part draggable-item" data-chunk-index="${chunkItemActualIndex}" data-item-index="${chunkItemActualIndex}">
+              <div class="chunk-item-part draggable-item ${chunkItem.isMirror ? 'mirror-item' : ''}" data-chunk-index="${chunkItemActualIndex}" data-item-index="${chunkItemActualIndex}">
                 <div class="drag-handle" data-handle="true"></div>
                 <div class="item-view">
                   <select class="item-view-select" data-index="${chunkItemActualIndex}">
@@ -480,9 +494,11 @@ function renderPatternItems() {
     } else {
       // Regular single item
       const itemWindow = item.window || '';
+      const isMirrorItem = item.isMirror || false;
+      const mirrorClass = isMirrorItem ? 'mirror-item' : '';
       html += `
         <div
-          class="draggable-item ${isSelected ? 'selected' : ''} ${isChunkStart ? 'chunk-start' : ''}"
+          class="draggable-item ${isSelected ? 'selected' : ''} ${isChunkStart ? 'chunk-start' : ''} ${mirrorClass}"
           data-item-index="${itemIndexCounter}"
           data-rendered-index="${renderedItemIndex}"
           data-is-chunk="false"
@@ -768,6 +784,17 @@ function handleContextMenu(e) {
     // Add for regular items if not already present from another block
     menuItems.push({ text: '---', action: 'separator', enabled: false });
     menuItems.push({ text: 'Create New Chapter Here', action: 'create_chapter_here', enabled: true });
+  }
+
+  // Add mirror content option (always available)
+  if (menuItems.length > 0) {
+    menuItems.push({ text: '---', action: 'separator', enabled: false });
+  }
+  menuItems.push({ text: 'Mirror Content...', action: 'mirror_content', enabled: true });
+  
+  // Add remove mirror option if the target item is a mirror
+  if (isRegularItemContext && itemForActions && itemForActions.isMirror) {
+    menuItems.push({ text: 'Remove Mirror', action: 'remove_mirror', enabled: true, itemIndex: contextMenuTargetSpecificIndex });
   }
 
 
@@ -1058,6 +1085,19 @@ function handleContextMenuAction(e) {
         handleApiResponse('duplicate_item', 'duplicating item');
       } else {
         console.warn("Duplicate part action called with invalid index:", indexToDuplicate);
+      }
+      break;
+
+    case 'mirror_content':
+      openMirrorContentDialog();
+      break;
+
+    case 'remove_mirror':
+      const mirrorItemIndex = itemIndexFromMenu !== undefined ? itemIndexFromMenu : specificItemIdx;
+      if (mirrorItemIndex !== undefined && mirrorItemIndex >= 0) {
+        if (confirm('Remove this mirror item? This will not affect the original content.')) {
+          removeMirrorItem(mirrorItemIndex);
+        }
       }
       break;
 
@@ -1475,8 +1515,6 @@ function deleteSingleItem(itemIndex) {
     handleApiResponse('delete_item', `deleting single item`);
 }
 
-
-// (deleteItemOrChunk function already exists and should work, might need slight adjustment if API changes)
 // This function is now primarily for deleting chunks via context menu on chunk container.
 // Single item deletion is handled by deleteSingleItem.
 function deleteItemOrChunk(itemIndex) {
@@ -1878,14 +1916,6 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
     // Store the unsubscribe function returned by onAPIResponse
     unsubscribeHandler = window.electronAPI.onAPIResponse(handleResponse);
 
-    // Optional: Timeout for responses 
-    // setTimeout(() => {
-    //   if (unsubscribeHandler) {
-    //       unsubscribeHandler();
-    //       unsubscribeHandler = null;
-    //       console.warn(`Timeout waiting for API response for ${apiMethod}`);
-    //   }
-    // }, 10000); 
 }
 
 // --- New Pattern Dialog Functions ---
@@ -1920,14 +1950,6 @@ async function createNewPattern() {
     alert('Pattern name cannot be empty.');
   }
 }
-
-// Event Listeners
-// ... existing code ...
-// Initialize
-init();
-
-// Make sure drag handles are ignored by SortableJS if they are inside an item
-// This is often handled by the `filter` option in SortableJS or by stopping event propagation.
 
 // Ensure all contenteditable fields allow text selection and normal input behavior
 document.addEventListener('mousedown', function(event) {
@@ -2115,6 +2137,9 @@ async function saveCurrentPattern() {
       if (data.result === true) { 
         console.log('Save successful (result was true)');
         if (undoBtn) undoBtn.disabled = false; // Enable Undo on successful save
+        
+        // Update mirrors that reference this pattern
+        updateMirrorsForPattern(currentPattern);
       } else if (data.error) { // Check for explicit error first
         console.error('Error saving pattern:', data.error);
         errorMessage = `Failed to save pattern: ${data.error}`;
@@ -2869,6 +2894,9 @@ function init() {
     }
   });
 
+  // Initialize mirror content editing prevention
+  preventMirrorEditing();
+
   // Load initial pattern
   loadPatternData(currentPattern);
 }
@@ -3096,101 +3124,350 @@ async function loadPatternData(patternName, dataToRender = null) { // Added data
   }
 }
 
-// Example modification for an action handler (apply this pattern to ALL relevant action handlers)
-// This is a generic example; your actual function names and parameters will vary.
-async function genericActionHandler(params) {
-  try {
-    // ... (existing logic to prepare for API call)
-    const result = await window.electronAPI.callAPI('some_api_method', params.apiPayload);
-    // OR: const result = await window.electronAPI.invoke('some_api_method', params.invokePayload);
+// Mirror Content Dialog Functions
+function openMirrorContentDialog() {
+    console.log('Opening mirror content dialog');
+    
+    // Reset dialog state
+    mirrorSourcePatternSelect.value = '';
+    mirrorContentSelection.style.display = 'none';
+    mirrorContentOptions.innerHTML = '';
+    mirrorDialogOkBtn.disabled = true;
+    
+    // Load available patterns
+    loadMirrorSourcePatterns();
+    
+    // Show dialog
+    mirrorContentDialog.style.display = 'flex';
+}
 
-    if (result && (result.success || result === true)) { // Check for success based on API response structure
-      console.log(params.successMessage || "Action successful.", "success");
-      if (undoBtn) undoBtn.disabled = false; // ENABLE UNDO on successful action
-      await loadPattern(currentPattern); // Use currentPattern
+function loadMirrorSourcePatterns() {
+    console.log('Loading source patterns for mirror dialog');
+    
+    // Clear existing options
+    while (mirrorSourcePatternSelect.children.length > 1) {
+        mirrorSourcePatternSelect.removeChild(mirrorSourcePatternSelect.lastChild);
+    }
+    
+    // Get available patterns
+    window.electronAPI.callAPI('get_available_patterns', {});
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+        if (data && data.responseFor === 'get_available_patterns') {
+            unsubscribe();
+            
+            if (data.error) {
+                console.error('Error loading patterns for mirror dialog:', data.error);
+                return;
+            }
+            
+            if (data.result && Array.isArray(data.result)) {
+                data.result.forEach(patternName => {
+                    // Don't include the current pattern
+                    if (patternName !== currentPattern) {
+                        const option = document.createElement('option');
+                        option.value = patternName;
+                        option.textContent = patternName;
+                        mirrorSourcePatternSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+    });
+}
+
+function onMirrorSourcePatternChange() {
+    const selectedPattern = mirrorSourcePatternSelect.value;
+    
+    if (!selectedPattern) {
+        mirrorContentSelection.style.display = 'none';
+        mirrorDialogOkBtn.disabled = true;
+        return;
+    }
+    
+    console.log('Loading mirror options for pattern:', selectedPattern);
+    
+    // Get mirror options for the selected pattern
+    window.electronAPI.callAPI('get_pattern_mirror_options', { pattern_name: selectedPattern });
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+        if (data && data.responseFor === 'get_pattern_mirror_options') {
+            unsubscribe();
+            
+            if (data.error) {
+                console.error('Error loading mirror options:', data.error);
+                return;
+            }
+            
+            if (data.result && data.result.success) {
+                displayMirrorContentOptions(data.result);
+            }
+        }
+    });
+}
+
+function displayMirrorContentOptions(mirrorData) {
+    console.log('Displaying mirror content options:', mirrorData);
+    
+    mirrorContentOptions.innerHTML = '';
+    
+    // Add chapters
+    if (mirrorData.chapters && mirrorData.chapters.length > 0) {
+        const chapterHeader = document.createElement('div');
+        chapterHeader.className = 'mirror-option-header';
+        chapterHeader.textContent = 'Chapters:';
+        mirrorContentOptions.appendChild(chapterHeader);
+        
+        mirrorData.chapters.forEach(chapter => {
+            const option = document.createElement('div');
+            option.className = 'mirror-option';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = chapter;
+            checkbox.setAttribute('data-type', 'chapter');
+            checkbox.addEventListener('change', updateMirrorDialogOkButton);
+            
+            const label = document.createElement('span');
+            label.className = 'mirror-option-label';
+            label.textContent = `Chapter: ${chapter}`;
+            
+            option.appendChild(checkbox);
+            option.appendChild(label);
+            mirrorContentOptions.appendChild(option);
+        });
+    }
+    
+    // Add chunks
+    if (mirrorData.chunks && mirrorData.chunks.length > 0) {
+        const chunkHeader = document.createElement('div');
+        chunkHeader.className = 'mirror-option-header';
+        chunkHeader.textContent = 'Chunks:';
+        mirrorContentOptions.appendChild(chunkHeader);
+        
+        mirrorData.chunks.forEach(chunk => {
+            const option = document.createElement('div');
+            option.className = 'mirror-option';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = chunk.chunkID;
+            checkbox.setAttribute('data-type', 'chunk');
+            checkbox.addEventListener('change', updateMirrorDialogOkButton);
+            
+            const label = document.createElement('span');
+            label.className = 'mirror-option-label';
+            label.textContent = `Chunk ${chunk.chunkID}`;
+            if (chunk.chapter) {
+                label.textContent += ` (Chapter: ${chunk.chapter})`;
+            }
+            
+            const description = document.createElement('div');
+            description.className = 'mirror-option-description';
+            description.textContent = `${chunk.items.length} items: ${chunk.items.map(item => item.abbr).join(', ')}`;
+            
+            option.appendChild(checkbox);
+            option.appendChild(label);
+            option.appendChild(description);
+            mirrorContentOptions.appendChild(option);
+        });
+    }
+    
+    if ((mirrorData.chapters && mirrorData.chapters.length > 0) || (mirrorData.chunks && mirrorData.chunks.length > 0)) {
+        mirrorContentSelection.style.display = 'block';
     } else {
-      const errorMsg = (result && result.error) ? result.error : (params.errorMessage || "Action failed.");
-      console.error(errorMsg, "error");
-      // Optionally, disable undo if the action failed in a way that might corrupt history, though usually not necessary.
+        const noContentMsg = document.createElement('div');
+        noContentMsg.textContent = 'No chapters or chunks available to mirror.';
+        noContentMsg.style.color = '#BBB';
+        mirrorContentOptions.appendChild(noContentMsg);
+        mirrorContentSelection.style.display = 'block';
     }
-  } catch (error) {
-    console.error(`Error in ${params.actionName || 'genericActionHandler'}:`, error);
-    console.error(`Error performing action: ${error.message}`, "error");
-  }
 }
 
-// --- INITIALIZATION (within DOMContentLoaded or your existing init function) ---
-// Make sure this is inside your main DOMContentLoaded or init function that runs after DOM is ready.
+function updateMirrorDialogOkButton() {
+    const checkedBoxes = mirrorContentOptions.querySelectorAll('input[type="checkbox"]:checked');
+    mirrorDialogOkBtn.disabled = checkedBoxes.length === 0;
+}
 
-// Example placement for init logic within DOMContentLoaded:
-document.addEventListener('DOMContentLoaded', async () => {
-  // ... (existing init code: query selectors for undoBtn, patternSelector, etc.)
-  // const undoBtn = document.getElementById('undo-btn'); // Ensure undoBtn is defined
+function closeMirrorContentDialog() {
+    mirrorContentDialog.style.display = 'none';
+}
 
-  if (undoBtn) {
-    undoBtn.addEventListener('click', handleUndo);
-  }
-
-  document.addEventListener('keydown', (event) => {
-    if ((event.ctrlKey || event.metaKey) && event.key === 'z') {
-      event.preventDefault();
-      if (undoBtn && !undoBtn.disabled) {
-        handleUndo();
-      }
+function addSelectedMirrors() {
+    const selectedPattern = mirrorSourcePatternSelect.value;
+    const checkedBoxes = mirrorContentOptions.querySelectorAll('input[type="checkbox"]:checked');
+    
+    if (!selectedPattern || checkedBoxes.length === 0) {
+        return;
     }
-  });
-  
-  // ... (rest of your existing init logic, e.g., loading initial patterns)
-  // await loadInitialPatternsAndSelect(); or similar
-  
-  // Ensure undo button is initially disabled if no pattern loaded or history is unknown
-  if (undoBtn) {
-    undoBtn.disabled = true;
-  }
-});
-
-// IMPORTANT: The above is a template. You need to integrate these changes 
-// into your actual `editor.js` structure.
-// Key points:
-// 1. Define `handleUndo`.
-// 2. Add event listeners for the undo button and Ctrl+Z within your DOM ready handler.
-// 3. Modify `loadPatternData` to correctly handle `try...catch` and disable undo button on fresh loads/errors.
-// 4. Crucially, in EVERY function that successfully modifies the pattern via an API call 
-//    (e.g., adding, deleting, moving items/chunks/chapters, updating properties, saving), 
-//    add the line `if (undoBtn) undoBtn.disabled = false;` AFTER the successful API call 
-//    and BEFORE reloading the pattern data.
-
-// Replace the following with the actual modifications to your specific action handlers:
-// For example, in your `handleDeleteItem`:
-/*
-async function handleDeleteItem(patternName, index, count = 1) {
-  if (confirm(...)) {
-    try {
-      const result = await window.electronAPI.deleteItem(patternName, index, count);
-      if (result.success) {
-        showTemporaryMessage("Item(s) deleted successfully.", "success");
-        if (undoBtn) undoBtn.disabled = false; // <<< ADD THIS
-        await loadPatternData(patternName);
-      } else { ... }
-    } catch (error) { ... }
-  }
+    
+    const mirrorConfigs = Array.from(checkedBoxes).map(checkbox => ({
+        source_pattern: selectedPattern,
+        type: checkbox.getAttribute('data-type'),
+        identifier: checkbox.getAttribute('data-type') === 'chunk' ? parseInt(checkbox.value) : checkbox.value
+    }));
+    
+    console.log('Adding mirrors with configs:', mirrorConfigs);
+    
+    // Add mirrors to current pattern
+    window.electronAPI.callAPI('add_mirrors_to_pattern', {
+        target_pattern: currentPattern,
+        mirror_configs: mirrorConfigs
+    });
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+        if (data && data.responseFor === 'add_mirrors_to_pattern') {
+            unsubscribe();
+            
+            console.log('Add mirrors response received:', data);
+            
+            if (data.error) {
+                console.error('Error adding mirrors:', data.error);
+                alert(`Error adding mirrors: ${data.error}`);
+                closeMirrorContentDialog(); // Close dialog even on error
+                return;
+            }
+            
+            if (data.result && data.result.success) {
+                console.log('Mirrors added successfully:', data.result);
+                console.log(`Added ${data.result.mirrorsAdded} mirror items.`);
+                
+                // Enable undo button
+                if (undoBtn) undoBtn.disabled = false;
+                
+                // Close dialog first to avoid any interference
+                closeMirrorContentDialog();
+                
+                // Then reload pattern data to show the mirrors
+                setTimeout(() => {
+                    loadPattern(currentPattern);
+                }, 100);
+            } else {
+                console.error('Failed to add mirrors:', data.result);
+                alert('Failed to add mirrors.');
+                closeMirrorContentDialog(); // Close dialog even on error
+            }
+        }
+    });
 }
-*/
 
-// In your `handleAddItem`:
-/*
-async function handleAddItem(patternName, itemData, index = -1) {
-  try {
-    const result = await window.electronAPI.addItem(patternName, itemData, index);
-    if (result.success) {
-      showTemporaryMessage("Item added successfully.", "success");
-      if (undoBtn) undoBtn.disabled = false; // <<< ADD THIS
-      await loadPatternData(patternName);
-    } else { ... }
-  } catch (error) { ... }
+// Set up mirror dialog event listeners
+if (mirrorSourcePatternSelect) {
+    mirrorSourcePatternSelect.addEventListener('change', onMirrorSourcePatternChange);
 }
-*/
-// ... and so on for ALL functions that change pattern data and call the backend.
+
+if (mirrorDialogOkBtn) {
+    mirrorDialogOkBtn.addEventListener('click', addSelectedMirrors);
+}
+
+if (mirrorDialogCancelBtn) {
+    mirrorDialogCancelBtn.addEventListener('click', closeMirrorContentDialog);
+}
+
+// Prevent editing of mirror content
+function preventMirrorEditing() {
+    // Add event listeners to prevent editing of mirror content
+    document.addEventListener('focus', function(e) {
+        if (e.target.hasAttribute('contenteditable') && e.target.closest('.mirror-item')) {
+            e.target.blur();
+            e.preventDefault();
+        }
+    }, true);
+
+    document.addEventListener('keydown', function(e) {
+        if (e.target.hasAttribute('contenteditable') && e.target.closest('.mirror-item')) {
+            e.preventDefault();
+        }
+    }, true);
+
+    document.addEventListener('input', function(e) {
+        if (e.target.hasAttribute('contenteditable') && e.target.closest('.mirror-item')) {
+            e.preventDefault();
+            // Restore original content if somehow changed
+            const mirrorItem = e.target.closest('.mirror-item');
+            if (mirrorItem) {
+                const itemIndex = parseInt(mirrorItem.getAttribute('data-item-index'));
+                if (!isNaN(itemIndex) && currentPatternItems[itemIndex]) {
+                    const originalValue = currentPatternItems[itemIndex][e.target.getAttribute('data-field')] || '';
+                    if (e.target.textContent !== originalValue) {
+                        e.target.textContent = originalValue;
+                    }
+                }
+            }
+        }
+    }, true);
+}
+
+// Remove a mirror item from the current pattern
+function removeMirrorItem(itemIndex) {
+    console.log('Removing mirror item at index:', itemIndex);
+    
+    if (!currentPatternItems[itemIndex] || !currentPatternItems[itemIndex].isMirror) {
+        console.error('Item at index is not a mirror item or does not exist');
+        return;
+    }
+    
+    // Call API to remove the mirror
+    window.electronAPI.callAPI('remove_mirrors_from_pattern', {
+        pattern_name: currentPattern,
+        mirror_indices: [itemIndex]
+    });
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+        if (data && data.responseFor === 'remove_mirrors_from_pattern') {
+            unsubscribe();
+            
+            if (data.error) {
+                console.error('Error removing mirror:', data.error);
+                alert(`Error removing mirror: ${data.error}`);
+                return;
+            }
+            
+            if (data.result && data.result.success) {
+                console.log(`Mirror removed successfully. Removed ${data.result.removedCount} items.`);
+                
+                // Enable undo button
+                if (undoBtn) undoBtn.disabled = false;
+                
+                // Reload pattern data to show the changes
+                loadPattern(currentPattern);
+            } else {
+                console.error('Failed to remove mirror:', data.result);
+                alert('Failed to remove mirror.');
+            }
+        }
+    });
+}
+
+// Update mirrors when source pattern changes
+function updateMirrorsForPattern(sourcePattern) {
+    console.log('Updating mirrors for source pattern:', sourcePattern);
+    
+    // Call API to update all mirrors from this source pattern
+    window.electronAPI.callAPI('update_mirrors_for_pattern', {
+        source_pattern: sourcePattern
+    });
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+        if (data && data.responseFor === 'update_mirrors_for_pattern') {
+            unsubscribe();
+            
+            if (data.error) {
+                console.error('Error updating mirrors:', data.error);
+                return;
+            }
+            
+            if (data.result && data.result.success) {
+                const updatedPatterns = data.result.updatedPatterns || [];
+                console.log(`Mirrors updated successfully. Updated patterns: ${updatedPatterns.join(', ')}`);
+                
+                if (updatedPatterns.length > 0) {
+                    console.log(`Updated ${updatedPatterns.length} patterns with mirrors from ${sourcePattern}`);
+                }
+            }
+        }
+    });
+}
 
 function formatStrategyText(text) {
     if (!text) return '';

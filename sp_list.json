@@ -2665,6 +2665,272 @@
       "window": ""
     },
     {
+      "abbr": "Liver",
+      "strategy": "(thirds)",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxLiver",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 11
+      }
+    },
+    {
+      "abbr": "Gallbladder",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxGB",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 12
+      }
+    },
+    {
+      "abbr": "Panc",
+      "strategy": "tail -> uncinate #1 (slow down, look carefully, anything susp rec MRCP)",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxPanc",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 13
+      }
+    },
+    {
+      "abbr": "Spleen",
+      "strategy": "(quick)",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxSpleen",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 14
+      }
+    },
+    {
+      "abbr": "Adrenal glands",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxAdrenal glands",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 15
+      }
+    },
+    {
+      "abbr": "KUB",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxKidneysmore",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 16
+      }
+    },
+    {
+      "abbr": "Pelvic Organs",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxPelvic Organs",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 17
+      }
+    },
+    {
+      "abbr": "Distal Esoph, Stomach, duodenum, SB",
+      "full_name": "",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "groupID": 0,
+      "chunkID": 4,
+      "view_plane": "ax",
+      "chapter": "🔗 Ax abd",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 18
+      }
+    },
+    {
+      "abbr": "Colon",
+      "strategy": "(Rect -> cecum + appe)",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxRect -> cecum + appe",
+      "groupID": 0,
+      "chunkID": 4,
+      "chapter": "🔗 Ax abd",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT AP",
+        "type": "chapter",
+        "identifier": "Ax abd",
+        "originalIndex": 19
+      }
+    },
+    {
+      "abbr": "PE",
+      "strategy": "upper lobes",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CorPEupper lobes",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Cor Dbl checks",
+      "view_plane": "cor",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Cor Dbl checks",
+        "originalIndex": 10
+      }
+    },
+    {
+      "abbr": "Heart",
+      "strategy": "LV/RV (pseudoaneurysm)",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CorHeartLV/RV (pseudo-)aneurysm",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Cor Dbl checks",
+      "view_plane": "cor",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Cor Dbl checks",
+        "originalIndex": 11
+      }
+    },
+    {
+      "abbr": "Aorta",
+      "strategy": "root, ascend, great vessels, subclavians, arch into abd (be overly sensitive for injury - like panc)",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CorAortaroot, ascend, great vessels, subclavians, arch into abd",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Cor Dbl checks",
+      "view_plane": "cor",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Cor Dbl checks",
+        "originalIndex": 12
+      }
+    },
+    {
+      "abbr": "Upper abd",
+      "strategy": "liver, GB, CBD, panc    adrenals, kidneys, bowel",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CorUpper abd",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Cor Dbl checks",
+      "view_plane": "cor",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Cor Dbl checks",
+        "originalIndex": 13
+      }
+    },
+    {
+      "abbr": "Pneumoperitoneum/medial PTX",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CorPneumoperitoneum/medial PTX",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Cor Dbl checks",
+      "view_plane": "cor",
+      "window": "lung",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Cor Dbl checks",
+        "originalIndex": 14
+      }
+    },
+    {
       "abbr": "Sacr",
       "strategy": "ant cortex line, presacr edema, hard to see trans fxs if at or below S2 on ax",
       "window_level": "",

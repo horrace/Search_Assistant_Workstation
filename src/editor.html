@@ -96,6 +96,32 @@
     </div>
   </div>
   
+  <!-- === ADDED: Mirror Content Dialog === -->
+  <div id="mirror-content-dialog" class="dialog-overlay" style="display: none;">
+    <div class="dialog-content mirror-dialog">
+      <h3>Mirror Content from Another Pattern</h3>
+      
+      <div class="mirror-step">
+        <label for="mirror-source-pattern">Source Pattern:</label>
+        <select id="mirror-source-pattern" class="pattern-selector">
+          <option value="">Select a pattern...</option>
+        </select>
+      </div>
+      
+      <div class="mirror-step" style="display: none;" id="mirror-content-selection">
+        <label>Select content to mirror:</label>
+        <div id="mirror-content-options" class="mirror-content-options">
+          <!-- Content options will be populated here -->
+        </div>
+      </div>
+      
+      <div class="dialog-buttons">
+        <button id="mirror-dialog-cancel-btn" class="btn">Cancel</button>
+        <button id="mirror-dialog-ok-btn" class="btn" disabled>Add Mirror</button>
+      </div>
+    </div>
+  </div>
+  
   <script src="vendor/Sortable.min.js"></script>
   <script src="editor.js"></script>
 </body>
