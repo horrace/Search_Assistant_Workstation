@@ -1318,7 +1318,7 @@
   "CT Chest": [
     {
       "abbr": "Heart",
-      "strategy": "chambers, LA appendage, coronaries, dissection",
+      "strategy": "chambers, LAA, coronaries",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxHeart",
@@ -1330,7 +1330,7 @@
     },
     {
       "abbr": "Pulm arteries",
-      "strategy": "any contrast-enhanced CT",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxPulm arteries",
@@ -1390,7 +1390,7 @@
     },
     {
       "abbr": "LN",
-      "strategy": "paratrach/subcarin, ax, subpec in F, supraclav, hilar; onc pt: detailed prevasc, hilar",
+      "strategy": "paratrach/subcarin;   ax, subpec in F, supraclav (onc pt: detailed prevasc, hilar)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLNparatrach/subcarin, ax, subpec in F, supraclav, hilar;",
@@ -1402,7 +1402,7 @@
     },
     {
       "abbr": "Thyroid",
-      "strategy": "no more than 5 sec",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxThyroidno more than 5 sec",
@@ -1414,7 +1414,7 @@
     },
     {
       "abbr": "Esophagus",
-      "strategy": "not so much sliding hernia, mass",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxEsophagus",
@@ -1462,7 +1462,7 @@
     },
     {
       "abbr": "Aorta",
-      "strategy": "root, ascend, great vessels, subclavians, arch into abd (be overly sensitive for injury - like panc)",
+      "strategy": "root, ascend, great vessels, subclavians, arch into abd",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CorAortaroot, ascend, great vessels, subclavians, arch into abd",
@@ -1498,7 +1498,7 @@
     },
     {
       "abbr": "ST / chest wall",
-      "strategy": "(broad sweep x1 ant, x1 post) (not a lot of impressive things, usually obvious if bad)",
+      "strategy": "(broad sweep x1 ant, x1 post)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxST / chest wallnot a lot of impressive things, usually obvious if bad",
@@ -1509,8 +1509,8 @@
       "window": ""
     },
     {
-      "abbr": "Humerus, scapula*, Clavicle to Sternomanub jxn, Sternum",
-      "strategy": "(sometimes easier to see on ax then sag)",
+      "abbr": "Humerus, scap, Clav, Sternum",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxHumerus, scapula*, Clavicle to Sternomanub jxn, Sternum",
@@ -1522,7 +1522,7 @@
     },
     {
       "abbr": "Ribs",
-      "strategy": "(modified Sun, 3 sections) (if trauma => costovert jxn fxs; double check where pain is)",
+      "strategy": "(modified Sun, 3 sections)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxRibs",
@@ -1656,7 +1656,7 @@
     },
     {
       "abbr": "Panc/CBD",
-      "strategy": "tail -> uncinate #1, slow down, look carefully, anything susp rec MRCP",
+      "strategy": "tail -> uncinate",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Panc/CBD",
@@ -1716,7 +1716,7 @@
     },
     {
       "abbr": "Aorta, Celiac, SMA",
-      "strategy": "follow SMA as far as you can, not missing distal occl",
+      "strategy": "follow SMA as far as you can",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Aorta, Celiac, SMA",
@@ -1740,7 +1740,7 @@
     },
     {
       "abbr": "Lung bases",
-      "strategy": "(Thin + MIP)  PNA, nodules",
+      "strategy": "(Thin + MIP)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLung basesMIP often sees airspace dz better",
@@ -1752,7 +1752,7 @@
     },
     {
       "abbr": "Heart, PE",
-      "strategy": "filling defects in chambers, coronaries",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxHeart",
@@ -1776,7 +1776,7 @@
     },
     {
       "abbr": "Liver",
-      "strategy": "(thirds)",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLiver",
@@ -1800,7 +1800,7 @@
     },
     {
       "abbr": "Panc",
-      "strategy": "tail -> uncinate #1 (slow down, look carefully, anything susp rec MRCP)",
+      "strategy": "tail -> uncinate",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxPanc",
@@ -1812,7 +1812,7 @@
     },
     {
       "abbr": "Spleen",
-      "strategy": "(quick)",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxSpleen",
@@ -1919,8 +1919,8 @@
       "window": ""
     },
     {
-      "abbr": "Ant abd wall/omentum -> Perineum/perirectal -> Post Abd wall",
-      "strategy": "(keep eye on canal)",
+      "abbr": "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall",
+      "strategy": "(eye on canal)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ant abd wall/omentum, Perineum/perirectal, Post Abd wall",
@@ -2066,7 +2066,7 @@
   "CT CAP": [
     {
       "abbr": "Heart",
-      "strategy": "chambers, LA appendage, coronaries, dissection",
+      "strategy": "chambers, LAA, coronaries",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxHeart",
@@ -2420,7 +2420,7 @@
       "full_name": "AxLiver",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2432,7 +2432,7 @@
       "full_name": "AxGB",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2444,7 +2444,7 @@
       "full_name": "AxPanc",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2456,7 +2456,7 @@
       "full_name": "AxSpleen",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2468,7 +2468,7 @@
       "full_name": "AxAdrenal glands",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2480,7 +2480,7 @@
       "full_name": "AxKidneysmore",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2492,7 +2492,7 @@
       "full_name": "AxPelvic Organs",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },
@@ -2505,7 +2505,7 @@
       "groupID": 0,
       "chunkID": 4,
       "view_plane": "ax",
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "window": ""
     },
     {
@@ -2516,7 +2516,7 @@
       "full_name": "AxRect -> cecum + appe",
       "groupID": 0,
       "chunkID": 4,
-      "chapter": "🔗 Ax abd",
+      "chapter": "Ax abd",
       "view_plane": "ax",
       "window": ""
     },

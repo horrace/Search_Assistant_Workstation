@@ -387,12 +387,13 @@ function renderPatternItems() {
           (item.chapter || '') === currentChapter && item.isMirror
         );
         const chapterMirrorClass = chapterHasMirrors ? 'chapter-has-mirrors' : '';
+        const chapterDisplayName = chapterHasMirrors ? `🔗 ${currentChapter}` : currentChapter;
         
         html += `
           <div class="chapter-container draggable-item" data-chapter-name="${currentChapter}" data-rendered-index="${renderedItemIndex}" data-is-chapter="true">
             <div class="chapter-header">
               <div class="drag-handle" data-handle="true"></div>
-              <div class="chapter-label ${chapterMirrorClass}" contenteditable="true" data-field="chapter-name" data-original-chapter-name="${currentChapter}">${currentChapter}</div>
+              <div class="chapter-label ${chapterMirrorClass}" contenteditable="true" data-field="chapter-name" data-original-chapter-name="${currentChapter}">${chapterDisplayName}</div>
             </div>
             <div class="chapter-items sortable-group"> <!-- Added class for Sortable target -->
         `;
@@ -730,6 +731,8 @@ function handleContextMenu(e) {
       menuItems.push({ text: `Delete Chapter \"${contextMenuTargetChapterName}\" (and contents)`, action: 'delete_chapter', enabled: true });
       menuItems.push({ text: '---', action: 'separator', enabled: false });
       menuItems.push({ text: 'Add New Item to Chapter', action: 'add_item_to_chapter', enabled: true });
+      const chapterHasMirrors = currentPatternItems.some(item => (item.chapter || '') === contextMenuTargetChapterName && item.isMirror);
+      menuItems.push({ text: 'Convert Mirrored Items to Regular', action: 'convert_mirrors_in_chapter', enabled: chapterHasMirrors });
   } else if (isChunkContainerContext) {
       // Menu for the chunk container itself
       menuItems.push({ text: 'New Chunk Item', action: 'new_chunk_item', enabled: true, chunkId: contextMenuTargetChunkId });
@@ -1067,6 +1070,14 @@ function handleContextMenuAction(e) {
                 console.warn("Add item to chapter: Context was not a chapter or chapter name missing.");
              }
              break;
+
+    case 'convert_mirrors_in_chapter':
+        if (isChapTarget && chapName) {
+            convertMirrorsInChapter(chapName);
+        } else {
+            console.error("Convert mirrors: Target was not a chapter or chapter name is missing.");
+        }
+        break;
 
     // --- Separator ---
     case 'separator':
@@ -2440,11 +2451,7 @@ function handleChunkItemReorder(evt) {
 
 // --- Updated SortableJS onEnd handler ---
 function handleSortEnd(evt) {
-    const movedElement = evt.item; // The element that was moved
-    const fromContainer = evt.from; // Container element moved FROM
-    const toContainer = evt.to; // Container element moved TO
-    const oldIndex = evt.oldIndex; // Index within FROM container
-    const newIndex = evt.newIndex; // Index within TO container
+    let { from: fromContainer, to: toContainer, oldIndex, newIndex, item: movedElement } = evt;
 
     // If the item was dropped back in the same place visually, do nothing.
     if (fromContainer === toContainer && oldIndex === newIndex) {
@@ -2513,10 +2520,32 @@ function handleSortEnd(evt) {
     // --- Determine Target Chapter ---
     let targetChapterName = '';
     if (isChapterContainer) {
-        // Chapters can only be dropped in the root container (patternItems)
-        if (toContainer !== patternItems) {
-            console.error("Chapters can only be dropped in the main list, not inside other chapters.");
-            loadPattern(currentPattern); return;
+        // Custom handling for dropping a chapter onto another chapter
+        if (toContainer !== patternItems && toContainer.classList.contains('chapter-items')) {
+            const targetChapterElement = toContainer.closest('.chapter-container');
+
+            if (targetChapterElement) {
+                // This is a chapter being dropped inside another chapter.
+                // The desired behavior is to move the dragged chapter *before* the target chapter.
+                console.log(` -> Chapter drop on another chapter detected. Target: ${targetChapterElement.dataset.chapterName}`);
+                
+                // Manually move the dragged DOM element to its new intended position in the main list
+                patternItems.insertBefore(movedElement, targetChapterElement);
+
+                // Update 'toContainer' and 'newIndex' to reflect this change,
+                // so the rest of the function behaves as if it was a valid root-level drop.
+                toContainer = patternItems;
+                const topLevelItems = Array.from(patternItems.children)
+                                          .filter(child => child.nodeType === Node.ELEMENT_NODE && child.classList.contains('draggable-item'));
+                newIndex = topLevelItems.indexOf(movedElement);
+                
+                console.log(` -> DOM corrected. New container is root. New visual index is ${newIndex}.`);
+
+            } else {
+                console.error("Chapter dropped into an unknown container, reverting.", toContainer);
+                loadPattern(currentPattern); 
+                return;
+            }
         }
         targetChapterName = movedElement.dataset.chapterName; // A chapter defines its own target name
     } else if (toContainer.classList.contains('chapter-items')) {
@@ -3563,4 +3592,26 @@ function formatStrategyText(text) {
     if (!text) return '';
     // Use a regex to wrap parenthesized content in a span
     return text.replace(/(\(.*?\))/g, '<span class="parenthesized">$1</span>');
+}
+
+function convertMirrorsInChapter(chapterName) {
+  if (confirm(`Are you sure you want to convert all mirrored items in the chapter "${chapterName}" to regular items? This will make them editable.`)) {
+    let itemsChanged = false;
+    currentPatternItems = currentPatternItems.map(item => {
+      if ((item.chapter || '') === chapterName && item.isMirror) {
+        itemsChanged = true;
+        const { isMirror, mirrorSource, ...regularItem } = item;
+        return regularItem;
+      }
+      return item;
+    });
+
+    if (itemsChanged) {
+      console.log(`Converted mirrored items in chapter "${chapterName}" to regular items.`);
+      renderPatternItems();
+      saveCurrentPattern();
+    } else {
+      console.log(`No mirrored items found in chapter "${chapterName}" to convert.`);
+    }
+  }
 }
