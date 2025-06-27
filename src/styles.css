@@ -1289,14 +1289,16 @@ footer {
 .draggable-item.mirror-item .item-abbr::before {
   content: "🔗 ";
   color: #007ACC;
-  margin-right: 4px;
+  font-size: 11px;
+  margin-right: 0px;
+  margin-left: -18px;
 }
 
 /* Make mirror content non-editable but keep drag/drop functionality */
 .draggable-item.mirror-item [contenteditable="true"] {
   pointer-events: none !important;
   cursor: default !important;
-  opacity: 0.7;
+  opacity: 0.9;
   background-color: rgba(0, 0, 0, 0.1) !important;
 }
 
@@ -1310,6 +1312,14 @@ footer {
 .draggable-item.mirror-item .drag-handle {
   opacity: 0.8;
   cursor: grab;
+}
+
+/* Chapter label container for proper alignment */
+.chapter-label-container {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
 }
 
 /* Chapter titles with mirrored content */

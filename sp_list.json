@@ -10,7 +10,8 @@
       "chunkID": 0,
       "view_plane": "ax",
       "chapter": "Intro",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980250003_o6xg04s6v"
     },
     {
       "abbr": "Lines/Drains, surg",
@@ -22,7 +23,8 @@
       "chunkID": 0,
       "chapter": "Intro",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980250003_o6xg04s6v"
     },
     {
       "abbr": "excl hemorrhage",
@@ -34,7 +36,8 @@
       "chunkID": 0,
       "chapter": "_",
       "view_plane": "ax",
-      "window": "brain"
+      "window": "brain",
+      "chapterID": "chapter_1750980250004_bi3r0x9cw"
     },
     {
       "abbr": "ventricles/MidShift",
@@ -46,7 +49,8 @@
       "chunkID": 0,
       "chapter": "_",
       "view_plane": "ax",
-      "window": "brain"
+      "window": "brain",
+      "chapterID": "chapter_1750980250004_bi3r0x9cw"
     },
     {
       "abbr": "GWdiff",
@@ -58,7 +62,8 @@
       "chunkID": 0,
       "chapter": "_",
       "view_plane": "ax",
-      "window": "Stroke"
+      "window": "Stroke",
+      "chapterID": "chapter_1750980250004_bi3r0x9cw"
     },
     {
       "abbr": "Stroke Dbl Check",
@@ -70,7 +75,8 @@
       "chunkID": 0,
       "chapter": ".",
       "view_plane": "cor",
-      "window": "Stroke"
+      "window": "Stroke",
+      "chapterID": "chapter_1750980250004_4x2s0h13n"
     },
     {
       "abbr": "F+T poles, Falx/SSS, Tents/TransvSinuses, excl SDH",
@@ -82,7 +88,8 @@
       "chunkID": 0,
       "chapter": ".",
       "view_plane": "cor",
-      "window": "brain"
+      "window": "brain",
+      "chapterID": "chapter_1750980250004_4x2s0h13n"
     },
     {
       "abbr": "Back to front",
@@ -94,7 +101,8 @@
       "chunkID": 0,
       "chapter": ".",
       "view_plane": "cor",
-      "window": "brain"
+      "window": "brain",
+      "chapterID": "chapter_1750980250004_4x2s0h13n"
     },
     {
       "abbr": "Scalp/skull, Periorb.ST, Orbits, PNS, mandib condyles",
@@ -106,7 +114,8 @@
       "chunkID": 0,
       "chapter": "Bones/ST",
       "view_plane": "cor",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750980250004_fkbf1ytbj"
     },
     {
       "abbr": "Scalp/skull, Periorb.ST, Orbits, PNS, NOE-ZMC",
@@ -118,7 +127,8 @@
       "chunkID": 0,
       "chapter": "Bones/ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750980250004_fkbf1ytbj"
     },
     {
       "abbr": "TMJ/mastoids -> Ossicles/IAC-VCF,  PetrApex -> CC/CS -> sphenoid body",
@@ -130,7 +140,8 @@
       "chunkID": 0,
       "chapter": "Bones/ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750980250004_fkbf1ytbj"
     },
     {
       "abbr": "Occipital",
@@ -142,7 +153,8 @@
       "chunkID": 0,
       "chapter": "Bones/ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750980250004_fkbf1ytbj"
     },
     {
       "abbr": "Deep face, NP/Rosenmüller, OP/Tonsils, parotids",
@@ -154,7 +166,8 @@
       "chunkID": 0,
       "chapter": "Bones/ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750980250004_fkbf1ytbj"
     },
     {
       "abbr": "Scout",
@@ -276,7 +289,8 @@
       "chunkID": 0,
       "chapter": "MIPscreen",
       "view_plane": "sag",
-      "window": "MIP"
+      "window": "MIP",
+      "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
       "abbr": "MCA",
@@ -288,7 +302,8 @@
       "chunkID": 0,
       "chapter": "MIPscreen",
       "view_plane": "ax",
-      "window": "MIP"
+      "window": "MIP",
+      "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
       "abbr": "Verts, Basilar",
@@ -300,7 +315,8 @@
       "chunkID": 0,
       "chapter": "MIPscreen",
       "view_plane": "cor",
-      "window": "MIP"
+      "window": "MIP",
+      "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
       "abbr": "MCA",
@@ -312,7 +328,8 @@
       "chunkID": 0,
       "chapter": "MIPscreen",
       "view_plane": "cor",
-      "window": "MIP"
+      "window": "MIP",
+      "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
       "abbr": "Aorta, Carotids,  verts",
@@ -324,7 +341,8 @@
       "chunkID": 0,
       "chapter": "MIPscreen",
       "view_plane": "ax",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
       "abbr": "Carotids",
@@ -336,7 +354,8 @@
       "chunkID": 0,
       "chapter": "MPRact ser",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3"
     },
     {
       "abbr": "entire Aorta , subclav;  CCA/ICAs;  verts",
@@ -348,7 +367,8 @@
       "chunkID": 0,
       "chapter": "MPRact ser",
       "view_plane": "cor",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3"
     },
     {
       "abbr": "VertebroBas",
@@ -360,7 +380,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "cor",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "A1, ACOM, A2-3",
@@ -372,7 +393,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "cor",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "MCA-furcation",
@@ -384,7 +406,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "cor",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "MCA-furcation",
@@ -396,7 +419,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "MCA-furcation",
@@ -408,7 +432,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "AneurysmOpthalm, A+PCOM/Bifurc/bas tip",
@@ -420,7 +445,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "Thin"
+      "window": "Thin",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "AneurysmA+PCOM/Bifurc/bas tip",
@@ -432,7 +458,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "3D"
+      "window": "3D",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "Global",
@@ -444,7 +471,8 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "3D"
+      "window": "3D",
+      "chapterID": "chapter_1750997448877_uhisvnz0x"
     },
     {
       "abbr": "3.0     brain enhanc",
@@ -456,7 +484,8 @@
       "chunkID": 0,
       "chapter": "CTV",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_pexyp3n3g"
     },
     {
       "abbr": "Thin   sag SSS, VoG/straight, trans/sigm, JugB/IJVsinto mediast/SVC",
@@ -468,7 +497,8 @@
       "chunkID": 0,
       "chapter": "CTV",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_pexyp3n3g"
     },
     {
       "abbr": "Parotid,SMG, SLG",
@@ -478,9 +508,10 @@
       "full_name": "CTV   AxParotid,SMG, SLG",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "Thyroid, Esophagus",
@@ -490,9 +521,10 @@
       "full_name": "CTV   AxThyroid, Esophagus",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "ADT",
@@ -502,9 +534,10 @@
       "full_name": "CTV   AxADT",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "Fat pads",
@@ -514,9 +547,10 @@
       "full_name": "CTV   AxFat pads",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "Nodes",
@@ -526,9 +560,10 @@
       "full_name": "CTV   AxNodes",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "PE",
@@ -538,9 +573,10 @@
       "full_name": "CTA  AxPE",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTA"
+      "window": "CTA",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "Bronch/Hilar Nodes, Lungs",
@@ -550,9 +586,10 @@
       "full_name": "CTA  AxBronch/Hilar Nodes, Lungs",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "ST",
       "view_plane": "ax",
-      "window": "CTA"
+      "window": "CTA",
+      "chapterID": "chapter_1750997448877_2qditj4r5"
     },
     {
       "abbr": "Nodes",
@@ -562,9 +599,10 @@
       "full_name": "CTV CorNodes",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Cor ST",
       "view_plane": "cor",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
       "abbr": "Lung Apex/Hila mass",
@@ -574,9 +612,10 @@
       "full_name": "CTV CorLung Apex/Hila mass",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Cor ST",
       "view_plane": "cor",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
       "abbr": "Dens, vertebral bodies",
@@ -586,9 +625,10 @@
       "full_name": "CTV CorDens, vertebral bodies",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Cor ST",
       "view_plane": "cor",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
       "abbr": "",
@@ -598,9 +638,10 @@
       "full_name": "CTV Cor",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Cor ST",
       "view_plane": "cor",
-      "window": "CTV"
+      "window": "CTV",
+      "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
       "abbr": "Ant superfic ST",
@@ -610,9 +651,10 @@
       "full_name": "AxAnt superfic ST",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "ax",
-      "window": "ST"
+      "window": "ST",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Canal run + post ST",
@@ -622,9 +664,10 @@
       "full_name": "AxCanal run + post ST",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Spine",
@@ -634,9 +677,10 @@
       "full_name": "Ax  BoneSpine",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Mandible, maxilla",
@@ -646,9 +690,10 @@
       "full_name": "Ax  BoneMandible, maxilla",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "R Scap/Clav, Sternum, L Scap/Clav",
@@ -658,9 +703,10 @@
       "full_name": "Ax  BoneR Scap/Clav, Sternum, L Scap/Clav",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Ribs",
@@ -670,9 +716,10 @@
       "full_name": "Ax  BoneRibs",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "ax",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Mandible, maxilla",
@@ -682,9 +729,10 @@
       "full_name": "Cor BoneMandible, maxilla",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "cor",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "R Scap/Clav, Sternum, L Scap/Clav",
@@ -694,9 +742,10 @@
       "full_name": "Cor BoneR Scap/Clav, Sternum, L Scap/Clav",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "cor",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Dens, VBs",
@@ -706,9 +755,10 @@
       "full_name": "Cor BoneDens, VBs",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "cor",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Spine",
@@ -718,9 +768,10 @@
       "full_name": "Sag BoneSpine",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "Bones ST",
       "view_plane": "sag",
-      "window": "bone"
+      "window": "bone",
+      "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
       "abbr": "Chart Hx, final checks",
@@ -744,7 +795,8 @@
       "chunkID": 0,
       "chapter": "",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997634008_uqhaa1n4y"
     },
     {
       "abbr": "End – move on quickly",
@@ -1326,7 +1378,8 @@
       "chunkID": 0,
       "chapter": "Vessels",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_2sajtki18"
     },
     {
       "abbr": "Pulm arteries",
@@ -1338,11 +1391,12 @@
       "chunkID": 0,
       "chapter": "Vessels",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_2sajtki18"
     },
     {
       "abbr": "Aorta, arch vessels->subclav, celiac, SMA, renals",
-      "strategy": "(root all the way down)",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxAorta, arch vessels->subclav, celiac, SMA, renalssubtle intramural hematoma",
@@ -1350,7 +1404,8 @@
       "chunkID": 0,
       "chapter": "Vessels",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_2sajtki18"
     },
     {
       "abbr": "Trachea, central bronchi / hilar nodes",
@@ -1362,7 +1417,8 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_sv7pfd0mm"
     },
     {
       "abbr": "Lung MIP",
@@ -1374,7 +1430,8 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": "lung"
+      "window": "lung",
+      "chapterID": "chapter_1750993111805_sv7pfd0mm"
     },
     {
       "abbr": "Lung thins",
@@ -1386,7 +1443,8 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": "lung"
+      "window": "lung",
+      "chapterID": "chapter_1750993111805_sv7pfd0mm"
     },
     {
       "abbr": "LN",
@@ -1398,7 +1456,8 @@
       "chunkID": 0,
       "chapter": "3mm",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_iy64m6zxh"
     },
     {
       "abbr": "Thyroid",
@@ -1410,7 +1469,8 @@
       "chunkID": 0,
       "chapter": "3mm",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_iy64m6zxh"
     },
     {
       "abbr": "Esophagus",
@@ -1422,7 +1482,8 @@
       "chunkID": 0,
       "chapter": "3mm",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_iy64m6zxh"
     },
     {
       "abbr": "Liver, Upper abdomen",
@@ -1434,7 +1495,8 @@
       "chunkID": 0,
       "chapter": "3mm",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_iy64m6zxh"
     },
     {
       "abbr": "PE",
@@ -1446,7 +1508,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_mh3n92odv"
     },
     {
       "abbr": "Heart",
@@ -1458,7 +1521,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_mh3n92odv"
     },
     {
       "abbr": "Aorta",
@@ -1470,7 +1534,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_mh3n92odv"
     },
     {
       "abbr": "Upper abd",
@@ -1482,7 +1547,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_mh3n92odv"
     },
     {
       "abbr": "Pneumoperitoneum/medial PTX",
@@ -1494,7 +1560,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": "lung"
+      "window": "lung",
+      "chapterID": "chapter_1750993111805_mh3n92odv"
     },
     {
       "abbr": "ST / chest wall",
@@ -1506,7 +1573,8 @@
       "chunkID": 0,
       "chapter": "xBone/ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_oupukfdlb"
     },
     {
       "abbr": "Humerus, scap, Clav, Sternum",
@@ -1518,7 +1586,8 @@
       "chunkID": 0,
       "chapter": "xBone/ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_oupukfdlb"
     },
     {
       "abbr": "Ribs",
@@ -1530,7 +1599,8 @@
       "chunkID": 0,
       "chapter": "xBone/ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_oupukfdlb"
     },
     {
       "abbr": "Scapula fxs",
@@ -1542,7 +1612,8 @@
       "chunkID": 0,
       "chapter": "Bone/ST",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_bxykzcved"
     },
     {
       "abbr": "Vertebral bodies",
@@ -1554,7 +1625,8 @@
       "chunkID": 0,
       "chapter": "Bone/ST",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_bxykzcved"
     },
     {
       "abbr": "Costovert jxns, chostochondral fxs",
@@ -1566,7 +1638,8 @@
       "chunkID": 0,
       "chapter": "Bone/ST",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_bxykzcved"
     },
     {
       "abbr": "Sternum",
@@ -1578,7 +1651,8 @@
       "chunkID": 0,
       "chapter": "Bone/ST",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_bxykzcved"
     },
     {
       "abbr": "VB",
@@ -1590,7 +1664,8 @@
       "chunkID": 0,
       "chapter": "Bone/ST",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_bxykzcved"
     },
     {
       "abbr": "Spinal canal",
@@ -1602,7 +1677,8 @@
       "chunkID": 0,
       "chapter": "Bone/ST",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750993111805_bxykzcved"
     },
     {
       "abbr": "Chart Hx, final checks",
@@ -1652,7 +1728,8 @@
       "chunkID": 1,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Panc/CBD",
@@ -1664,7 +1741,8 @@
       "chunkID": 1,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Kidneys",
@@ -1676,7 +1754,8 @@
       "chunkID": 1,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Rect -> Cecum, appe",
@@ -1688,7 +1767,8 @@
       "chunkID": 2,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "SB + Mes",
@@ -1700,7 +1780,8 @@
       "chunkID": 2,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Stomach, esoph",
@@ -1712,7 +1793,8 @@
       "chunkID": 2,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Aorta, Celiac, SMA",
@@ -1724,7 +1806,8 @@
       "chunkID": 2,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Iliac → IVC",
@@ -1736,7 +1819,8 @@
       "chunkID": 2,
       "chapter": "Cor quick",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
       "abbr": "Lung bases",
@@ -1748,7 +1832,8 @@
       "chunkID": 0,
       "chapter": "Lower chest",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_4tuf52b86"
     },
     {
       "abbr": "Heart, PE",
@@ -1760,7 +1845,8 @@
       "chunkID": 0,
       "chapter": "Lower chest",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_4tuf52b86"
     },
     {
       "abbr": "Free air / Free fluid",
@@ -1772,7 +1858,8 @@
       "chunkID": 0,
       "chapter": "Lower chest",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_4tuf52b86"
     },
     {
       "abbr": "Liver",
@@ -1784,7 +1871,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Gallbladder",
@@ -1796,7 +1884,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Panc",
@@ -1808,7 +1897,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Spleen",
@@ -1820,7 +1910,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Adrenals",
@@ -1832,7 +1923,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "KUB",
@@ -1844,7 +1936,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Pelvic Organs",
@@ -1856,7 +1949,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Esoph, Stomach, duod, SB",
@@ -1868,7 +1962,8 @@
       "chunkID": 3,
       "view_plane": "ax",
       "chapter": "Ax abd",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Rect->cecum, appe",
@@ -1880,7 +1975,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_etm560kyz"
     },
     {
       "abbr": "Aorta, Celiac, SMA, Renals, IMA",
@@ -1892,7 +1988,8 @@
       "chunkID": 7,
       "chapter": "Vessels, Nodes",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_9h64pdg4i"
     },
     {
       "abbr": "Ven Vasc",
@@ -1904,7 +2001,8 @@
       "chunkID": 7,
       "chapter": "Vessels, Nodes",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_9h64pdg4i"
     },
     {
       "abbr": "LN",
@@ -1916,7 +2014,8 @@
       "chunkID": 7,
       "chapter": "Vessels, Nodes",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_9h64pdg4i"
     },
     {
       "abbr": "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall",
@@ -1928,7 +2027,8 @@
       "chunkID": 8,
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_wkmqfgiwk"
     },
     {
       "abbr": "Ribs",
@@ -1940,7 +2040,8 @@
       "chunkID": 8,
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_wkmqfgiwk"
     },
     {
       "abbr": "VB",
@@ -1952,7 +2053,8 @@
       "chunkID": 8,
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_wkmqfgiwk"
     },
     {
       "abbr": "Pubic Rami, Hip, grTroch avuls, iliac bone, sacrum, TransProc",
@@ -1964,7 +2066,8 @@
       "chunkID": 8,
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_wkmqfgiwk"
     },
     {
       "abbr": "Hips",
@@ -1976,7 +2079,8 @@
       "chunkID": 9,
       "chapter": "Bone/ST",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_san49i9n4"
     },
     {
       "abbr": "Spine",
@@ -1988,7 +2092,8 @@
       "chunkID": 9,
       "chapter": "Bone/ST",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_san49i9n4"
     },
     {
       "abbr": "Canal",
@@ -2000,7 +2105,8 @@
       "chunkID": 9,
       "chapter": "Bone/ST",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_san49i9n4"
     },
     {
       "abbr": "VB",
@@ -2012,7 +2118,8 @@
       "chunkID": 9,
       "chapter": "Bone/ST",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750997108450_san49i9n4"
     },
     {
       "abbr": "Sacr",
@@ -2024,7 +2131,8 @@
       "chunkID": 9,
       "view_plane": "sag",
       "window": "",
-      "chapter": "Bone/ST"
+      "chapter": "Bone/ST",
+      "chapterID": "chapter_1750997108450_san49i9n4"
     },
     {
       "abbr": "Chart Hx, final checks",
@@ -2074,7 +2182,8 @@
       "chunkID": 0,
       "chapter": "Vessels",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_33eoio0k3"
     },
     {
       "abbr": "Pulm arteries",
@@ -2086,7 +2195,8 @@
       "chunkID": 0,
       "chapter": "Vessels",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_33eoio0k3"
     },
     {
       "abbr": "Aorta, arch vessels->subclav, celiac, SMA, renals",
@@ -2098,7 +2208,8 @@
       "chunkID": 0,
       "chapter": "Vessels",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_33eoio0k3"
     },
     {
       "abbr": "Trachea, central bronchi / hilar nodes",
@@ -2110,7 +2221,8 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_8ea6phkhl"
     },
     {
       "abbr": "Lung MIP",
@@ -2122,7 +2234,8 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_8ea6phkhl"
     },
     {
       "abbr": "Lung thins",
@@ -2134,7 +2247,8 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_8ea6phkhl"
     },
     {
       "abbr": "LN",
@@ -2146,7 +2260,8 @@
       "chunkID": 8,
       "chapter": "Media stinum",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_799hipruq"
     },
     {
       "abbr": "Thyroid",
@@ -2158,7 +2273,8 @@
       "chunkID": 8,
       "chapter": "Media stinum",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_799hipruq"
     },
     {
       "abbr": "Esophagus",
@@ -2170,7 +2286,8 @@
       "chunkID": 8,
       "chapter": "Media stinum",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_799hipruq"
     },
     {
       "abbr": "Heart",
@@ -2182,7 +2299,8 @@
       "chunkID": 9,
       "chapter": "Double Checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_xqwrulr1e"
     },
     {
       "abbr": "Aorta",
@@ -2194,7 +2312,8 @@
       "chunkID": 9,
       "chapter": "Double Checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_xqwrulr1e"
     },
     {
       "abbr": "Pneumoperitoneum/medial PTX",
@@ -2206,7 +2325,8 @@
       "chunkID": 9,
       "chapter": "Double Checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_xqwrulr1e"
     },
     {
       "abbr": "ST / chest wall",
@@ -2218,7 +2338,8 @@
       "chunkID": 0,
       "chapter": "xBone/ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_k1i7idb77"
     },
     {
       "abbr": "Humerus, scapula*, Clavicle to Sternomanub jxn, Sternum",
@@ -2230,7 +2351,8 @@
       "chunkID": 0,
       "chapter": "xBone/ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_k1i7idb77"
     },
     {
       "abbr": "Ribs",
@@ -2242,7 +2364,8 @@
       "chunkID": 0,
       "chapter": "xBone/ST",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_k1i7idb77"
     },
     {
       "abbr": "Pneumoperitoneum / free fluid",
@@ -2266,7 +2389,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Gallbladder",
@@ -2278,7 +2402,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Panc",
@@ -2290,7 +2415,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Spleen",
@@ -2302,7 +2428,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Adrenals",
@@ -2314,7 +2441,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "KUB",
@@ -2326,7 +2454,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Pelvic Organs",
@@ -2338,7 +2467,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Esoph, Stomach, duod, SB",
@@ -2350,7 +2480,8 @@
       "chunkID": 3,
       "view_plane": "ax",
       "chapter": "Ax abd",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Rect->cecum, appe",
@@ -2362,7 +2493,8 @@
       "chunkID": 3,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Hips",
@@ -2374,7 +2506,8 @@
       "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_aq0io076v"
     },
     {
       "abbr": "Spine",
@@ -2386,7 +2519,8 @@
       "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_aq0io076v"
     },
     {
       "abbr": "Canal",
@@ -2398,7 +2532,8 @@
       "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_aq0io076v"
     },
     {
       "abbr": "VB",
@@ -2410,7 +2545,8 @@
       "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_aq0io076v"
     },
     {
       "abbr": "Liver",
@@ -2422,7 +2558,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Gallbladder",
@@ -2434,7 +2571,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Panc",
@@ -2446,7 +2584,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Spleen",
@@ -2458,7 +2597,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Adrenal glands",
@@ -2470,7 +2610,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "KUB",
@@ -2482,7 +2623,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Pelvic Organs",
@@ -2494,7 +2636,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Distal Esoph, Stomach, duodenum, SB",
@@ -2506,7 +2649,8 @@
       "chunkID": 4,
       "view_plane": "ax",
       "chapter": "Ax abd",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "Colon",
@@ -2518,7 +2662,8 @@
       "chunkID": 4,
       "chapter": "Ax abd",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_u0et0b1lo"
     },
     {
       "abbr": "PE",
@@ -2530,7 +2675,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_y4friyv5c"
     },
     {
       "abbr": "Heart",
@@ -2542,7 +2688,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_y4friyv5c"
     },
     {
       "abbr": "Aorta",
@@ -2554,7 +2701,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_y4friyv5c"
     },
     {
       "abbr": "Upper abd",
@@ -2566,7 +2714,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_y4friyv5c"
     },
     {
       "abbr": "Pneumoperitoneum/medial PTX",
@@ -2578,7 +2727,8 @@
       "chunkID": 0,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
-      "window": "lung"
+      "window": "lung",
+      "chapterID": "chapter_1750980254082_y4friyv5c"
     },
     {
       "abbr": "Sacr",
@@ -2590,7 +2740,8 @@
       "chunkID": 5,
       "chapter": "Bone/ST_",
       "view_plane": "sag",
-      "window": ""
+      "window": "",
+      "chapterID": "chapter_1750980254082_aq0io076v"
     },
     {
       "abbr": "Chart Hx, final checks",
@@ -2627,6 +2778,66 @@
       "chapter": "",
       "view_plane": "ax",
       "window": ""
+    },
+    {
+      "abbr": "Heart",
+      "strategy": "chambers, LAA, coronaries",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxHeart",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Vessels",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Vessels",
+        "originalIndex": 0
+      },
+      "chapterID": "chapter_1750993111805_2sajtki18"
+    },
+    {
+      "abbr": "Heart",
+      "strategy": "chambers, LAA, coronaries",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxHeart",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Vessels",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Vessels",
+        "originalIndex": 1
+      },
+      "chapterID": "chapter_1750993111805_2sajtki18"
+    },
+    {
+      "abbr": "Heart",
+      "strategy": "chambers, LAA, coronaries",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxHeart",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "Vessels",
+      "view_plane": "ax",
+      "window": "",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Vessels",
+        "originalIndex": 2
+      },
+      "chapterID": "chapter_1750993111805_2sajtki18"
     }
   ]
 }

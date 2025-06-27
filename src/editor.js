@@ -131,6 +131,7 @@ let chunkFirstItemIndex = -1; // Keep track of first item in chunk creation
 let contextMenuTargetRenderedIndex = -1;
 let contextMenuTargetIsChapter = false;
 let contextMenuTargetChapterName = '';
+let contextMenuTargetChapterID = '';
 let contextMenuTargetSpecificIndex = -1;
 let chapterDialogContext = null;
 let contextMenuTargetIsChunkContainer = false; 
@@ -331,6 +332,9 @@ function loadPattern(patternName) {
             ...item
         }));
         
+        // Ensure chapter IDs exist for all items (migrate existing data)
+        ensureChapterIDs();
+        
         renderPatternItems();
         unsubscribe();
       } else {
@@ -366,34 +370,41 @@ function renderPatternItems() {
 
   let html = '';
   let currentChapter = ''; // Initialize to empty string instead of null
+  let currentChapterID = ''; // Track current chapter ID
   let itemIndexCounter = 0; // Index in the currentPatternItems array
   let renderedItemIndex = 0; // Visual index counter for rendered elements
 
   while (itemIndexCounter < currentPatternItems.length) {
     const item = currentPatternItems[itemIndexCounter];
-    const itemChapter = item.chapter || ''; // Treat undefined/null chapter as empty string
+    const itemChapter = item.chapter || ''; // Display name
+    const itemChapterID = item.chapterID || ''; // Unique identifier
 
     // --- Chapter Boundary Check ---
-    if (itemChapter !== (currentChapter === null ? '' : currentChapter)) {
+    // Use chapterID for boundary detection to ensure unique chapters
+    if (itemChapterID !== currentChapterID) {
       // Close previous chapter container if one was open (and it was a named chapter)
       if (currentChapter !== null && currentChapter !== '') {
         html += `</div></div>`; // Close chapter-items and chapter-container
       }
       currentChapter = itemChapter;
+      currentChapterID = itemChapterID;
       // Open new chapter container if the new chapter has a name
       if (currentChapter) {
         // Check if this chapter contains any mirror items
         const chapterHasMirrors = currentPatternItems.some(item => 
-          (item.chapter || '') === currentChapter && item.isMirror
+          (item.chapterID || '') === currentChapterID && item.isMirror
         );
         const chapterMirrorClass = chapterHasMirrors ? 'chapter-has-mirrors' : '';
-        const chapterDisplayName = chapterHasMirrors ? `🔗 ${currentChapter}` : currentChapter;
+        const mirrorIcon = chapterHasMirrors ? '🔗 ' : '';
+        const chapterContentEditable = chapterHasMirrors ? 'false' : 'true';
         
         html += `
-          <div class="chapter-container draggable-item" data-chapter-name="${currentChapter}" data-rendered-index="${renderedItemIndex}" data-is-chapter="true">
+          <div class="chapter-container draggable-item" data-chapter-id="${currentChapterID}" data-chapter-name="${currentChapter}" data-rendered-index="${renderedItemIndex}" data-is-chapter="true">
             <div class="chapter-header">
               <div class="drag-handle" data-handle="true"></div>
-              <div class="chapter-label ${chapterMirrorClass}" contenteditable="true" data-field="chapter-name" data-original-chapter-name="${currentChapter}">${chapterDisplayName}</div>
+              <div class="chapter-label-container">
+                <div class="chapter-label ${chapterMirrorClass}" contenteditable="${chapterContentEditable}" data-field="chapter-name" data-chapter-id="${currentChapterID}" data-original-chapter-name="${currentChapter}">${mirrorIcon}${currentChapter}</div>
+              </div>
             </div>
             <div class="chapter-items sortable-group"> <!-- Added class for Sortable target -->
         `;
@@ -674,6 +685,7 @@ function handleContextMenu(e) {
   contextMenuTargetRenderedIndex = parseInt(currentTargetElement.dataset.renderedIndex); // Visual index of the listened-to element
   contextMenuTargetIsChapter = false;
   contextMenuTargetChapterName = '';
+  contextMenuTargetChapterID = '';
   contextMenuTargetSpecificIndex = -1; // Crucial for specific item actions
   contextMenuTargetIsChunkContainer = false;
   contextMenuTargetChunkId = null;
@@ -687,25 +699,32 @@ function handleContextMenu(e) {
     if (parentChunkContainer) {
         contextMenuTargetChunkId = parseInt(parentChunkContainer.dataset.chunkId);
         contextMenuTargetChapterName = parentChunkContainer.dataset.parentChapter || '';
+        // Get chapter ID from the actual item data
+        const item = currentPatternItems[contextMenuTargetSpecificIndex];
+        contextMenuTargetChapterID = item ? (item.chapterID || '') : '';
         // targetDataIndex for a regular item within a chunk is its own index
         contextMenuTargetIndex = contextMenuTargetSpecificIndex;
     }
-    console.log(`Context menu on ITEM WITHIN CHUNK: SpecificIndex=${contextMenuTargetSpecificIndex}, ChunkID=${contextMenuTargetChunkId}, Chapter='${contextMenuTargetChapterName}'`);
+    console.log(`Context menu on ITEM WITHIN CHUNK: SpecificIndex=${contextMenuTargetSpecificIndex}, ChunkID=${contextMenuTargetChunkId}, Chapter='${contextMenuTargetChapterName}', ChapterID='${contextMenuTargetChapterID}'`);
   } else {
     // 2. If not an item within a chunk, evaluate currentTargetElement (the .draggable-item)
     if (currentTargetElement.dataset.isChapter === 'true') {
         isChapterContext = true;
         contextMenuTargetIsChapter = true;
         contextMenuTargetChapterName = currentTargetElement.dataset.chapterName;
-        contextMenuTargetIndex = currentPatternItems.findIndex(item => (item.chapter || '') === contextMenuTargetChapterName);
-        console.log(`Context menu on CHAPTER: Name='${contextMenuTargetChapterName}', FirstItemIndex=${contextMenuTargetIndex}`);
+        contextMenuTargetChapterID = currentTargetElement.dataset.chapterId || '';
+        contextMenuTargetIndex = currentPatternItems.findIndex(item => (item.chapterID || '') === contextMenuTargetChapterID || (item.chapter || '') === contextMenuTargetChapterName);
+        console.log(`Context menu on CHAPTER: Name='${contextMenuTargetChapterName}', ID='${contextMenuTargetChapterID}', FirstItemIndex=${contextMenuTargetIndex}`);
     } else if (currentTargetElement.classList.contains('chunk-container')) {
         isChunkContainerContext = true;
         contextMenuTargetIsChunkContainer = true;
         contextMenuTargetIndex = parseInt(currentTargetElement.getAttribute('data-item-index')); // Index of first item in chunk
         contextMenuTargetChunkId = parseInt(currentTargetElement.dataset.chunkId);
         contextMenuTargetChapterName = currentTargetElement.dataset.parentChapter || '';
-        console.log(`Context menu on CHUNK CONTAINER: ChunkID=${contextMenuTargetChunkId}, DataIndex=${contextMenuTargetIndex}, Chapter='${contextMenuTargetChapterName}'`);
+        // Get chapter ID from the actual item data
+        const chunkItem = currentPatternItems[contextMenuTargetIndex];
+        contextMenuTargetChapterID = chunkItem ? (chunkItem.chapterID || '') : '';
+        console.log(`Context menu on CHUNK CONTAINER: ChunkID=${contextMenuTargetChunkId}, DataIndex=${contextMenuTargetIndex}, Chapter='${contextMenuTargetChapterName}', ChapterID='${contextMenuTargetChapterID}'`);
     } else { // Standalone regular item (not a chapter, not a chunk container)
         isRegularItemContext = true;
         contextMenuTargetIndex = parseInt(currentTargetElement.getAttribute('data-item-index'));
@@ -713,10 +732,13 @@ function handleContextMenu(e) {
         contextMenuTargetChapterName = currentTargetElement.dataset.parentChapter || '';
         // Check if this standalone item happens to be part of a chunk (data inconsistency or different rendering path)
         const item = currentPatternItems[contextMenuTargetSpecificIndex];
-        if (item && item.chunkID > 0) {
-            contextMenuTargetChunkId = item.chunkID;
+        if (item) {
+            contextMenuTargetChapterID = item.chapterID || '';
+            if (item.chunkID > 0) {
+                contextMenuTargetChunkId = item.chunkID;
+            }
         }
-        console.log(`Context menu on STANDALONE ITEM: SpecificIndex=${contextMenuTargetSpecificIndex}, Chapter='${contextMenuTargetChapterName}', ChunkID=${contextMenuTargetChunkId}`);
+        console.log(`Context menu on STANDALONE ITEM: SpecificIndex=${contextMenuTargetSpecificIndex}, Chapter='${contextMenuTargetChapterName}', ChapterID='${contextMenuTargetChapterID}', ChunkID=${contextMenuTargetChunkId}`);
     }
   }
 
@@ -1060,12 +1082,12 @@ function handleContextMenuAction(e) {
            break;
        case 'add_item_to_chapter':
              if (isChapTarget && chapName) {
-                  const lastItemIdx = findLastIndexOfChapter(chapName);
+                  const lastItemIdx = findLastIndexOfChapter(chapName, contextMenuTargetChapterID);
                   // If chapter is empty (targetDataIdx is -1), this needs careful handling.
                   // contextMenuTargetIndex (targetDataIdx) is the first item of chapter or -1 if empty.
                   // Add after last item, or if chapter empty, effectively at start of where chapter would be.
                   const insertIdx = lastItemIdx !== -1 ? lastItemIdx + 1 : (targetDataIdx !== -1 ? targetDataIdx : currentPatternItems.length);
-                 addNewItem(insertIdx, chapName);
+                 addNewItemToChapter(insertIdx, chapName, contextMenuTargetChapterID);
              } else {
                 console.warn("Add item to chapter: Context was not a chapter or chapter name missing.");
              }
@@ -1172,10 +1194,20 @@ function calculateInsertionIndex(targetDataIdx, isChapter, isCreatingChapter, is
 }
 
 // Find last index of an item belonging to a specific chapter
-function findLastIndexOfChapter(chapterName) {
-    for (let i = currentPatternItems.length - 1; i >= 0; i--) {
-        if ((currentPatternItems[i].chapter || '') === chapterName) {
-            return i;
+function findLastIndexOfChapter(chapterName, chapterID = null) {
+    // If chapter ID is provided, use it for more accurate matching
+    if (chapterID) {
+        for (let i = currentPatternItems.length - 1; i >= 0; i--) {
+            if ((currentPatternItems[i].chapterID || '') === chapterID) {
+                return i;
+            }
+        }
+    } else {
+        // Fallback to chapter name for backward compatibility
+        for (let i = currentPatternItems.length - 1; i >= 0; i--) {
+            if ((currentPatternItems[i].chapter || '') === chapterName) {
+                return i;
+            }
         }
     }
     return -1; // Not found
@@ -1500,6 +1532,41 @@ function addNewItem(insertAtIndex, chapter = '') {
         index: insertAtIndex
     });
     handleApiResponse('add_item', `adding new item to chapter '${chapter}'`);
+}
+
+function addNewItemToChapter(insertAtIndex, chapterName, chapterID) {
+    console.log(`Action: Add New Item to Chapter: Name='${chapterName}', ID='${chapterID}', at index ${insertAtIndex}`);
+    
+    // Ensure chapter ID exists, generate one if missing
+    let targetChapterID = chapterID;
+    if (!targetChapterID && chapterName) {
+        targetChapterID = generateChapterID();
+        console.log(`Generated new chapter ID: ${targetChapterID} for chapter: ${chapterName}`);
+    }
+    
+    const newItem = {
+        abbr: `New Item ${Date.now() % 1000}`,
+        full_name: "", 
+        strategy: "", 
+        window_level: "", 
+        best_seen_on: "",
+        groupID: 0,
+        chunkID: 0, // New items are not in chunks initially
+        view_plane: "ax",
+        window: "",
+        chapter: chapterName,
+        chapterID: targetChapterID
+    };
+
+    // Ensure index is within bounds
+    insertAtIndex = Math.max(0, Math.min(insertAtIndex, currentPatternItems.length));
+
+    window.electronAPI.callAPI('add_item', {
+        pattern_name: currentPattern,
+        item_data: newItem,
+        index: insertAtIndex
+    });
+    handleApiResponse('add_item', `adding new item to chapter '${chapterName}' (ID: ${targetChapterID})`);
 }
 
 // Delete a single item. Chunks have their own delete mechanism.
@@ -2962,29 +3029,26 @@ function handleHeaderEdit(e) {
 
   if (fieldName === 'chapter-name') {
     const originalChapterName = fieldElement.getAttribute('data-original-chapter-name');
+    const chapterID = fieldElement.getAttribute('data-chapter-id');
     
     if (newValue !== originalChapterName) {
-      if (newValue !== "") { // Check if new name is not empty
-          const otherChapterNames = [...new Set(currentPatternItems.map(item => item.chapter || '').filter(ch => ch && ch !== originalChapterName))];
-          if (otherChapterNames.includes(newValue)) {
-              alert(`Error: Chapter name "${newValue}" already exists. Please choose a unique name.`);
-              fieldElement.textContent = originalChapterName; // Revert
-              return; 
-          }
-      } // No alert for empty string, it implies moving to root
-
-      console.log(`Updating client data: Renaming chapter from "${originalChapterName}" to "${newValue}"`);
+      // Update only items belonging to this specific chapter ID
+      console.log(`Updating client data: Renaming chapter "${originalChapterName}" to "${newValue}" for chapter ID: ${chapterID}`);
+      
       currentPatternItems = currentPatternItems.map(item => {
-        if ((item.chapter || '') === originalChapterName) {
+        if ((item.chapterID || '') === chapterID) {
           return { ...item, chapter: newValue };
         }
         return item;
       });
+      
+      // Update the data attribute to reflect the new name
+      fieldElement.setAttribute('data-original-chapter-name', newValue);
+      
       saveCurrentPattern(); // Save the entire modified pattern
       renderPatternItems(); // Re-render from updated client data
     } else {
       // If no actual change, but the field was blurred, ensure original value is displayed
-      // This can happen if user clicks in, makes no change, and clicks out.
       fieldElement.textContent = originalChapterName; 
     }
   } 
@@ -3556,6 +3620,77 @@ function removeMirrorItem(itemIndex) {
             }
         }
     });
+}
+
+// Chapter ID management functions
+function generateChapterID() {
+    return 'chapter_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function ensureChapterIDs() {
+    if (!currentPatternItems) return;
+    
+    let modified = false;
+    const chapterIDMap = new Map(); // Map chapter names to IDs
+    
+    currentPatternItems.forEach(item => {
+        if (item.chapter && !item.chapterID) {
+            // If this chapter name hasn't been seen before, create a new ID
+            if (!chapterIDMap.has(item.chapter)) {
+                chapterIDMap.set(item.chapter, generateChapterID());
+            }
+            item.chapterID = chapterIDMap.get(item.chapter);
+            modified = true;
+        }
+    });
+    
+    if (modified) {
+        console.log('Added chapter IDs to items without them');
+        // Save the pattern to persist the chapter IDs
+        saveCurrentPattern();
+    }
+}
+
+function createNewChapter(chapterName, targetIndex = -1) {
+    const newChapterID = generateChapterID();
+    
+    // Create a new item with the chapter
+    const newItem = {
+        abbr: '',
+        full_name: '',
+        strategy: '',
+        window_level: '',
+        best_seen_on: '',
+        groupID: 0,
+        chunkID: 0,
+        view_plane: 'ax',
+        chapter: chapterName,
+        chapterID: newChapterID,
+        window: ''
+    };
+    
+    if (targetIndex >= 0 && targetIndex < currentPatternItems.length) {
+        currentPatternItems.splice(targetIndex, 0, newItem);
+    } else {
+        currentPatternItems.push(newItem);
+    }
+    
+    saveCurrentPattern();
+}
+
+function updateChapterName(chapterID, newChapterName) {
+    let modified = false;
+    
+    currentPatternItems.forEach(item => {
+        if (item.chapterID === chapterID) {
+            item.chapter = newChapterName;
+            modified = true;
+        }
+    });
+    
+    if (modified) {
+        saveCurrentPattern();
+    }
 }
 
 // Update mirrors when source pattern changes
