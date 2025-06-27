@@ -1486,13 +1486,23 @@ class SearchPatternAPI {
       }
 
       const pattern = this.patterns[pattern_name];
-      const chapters = new Set();
+      const chapters = new Map();
       const chunks = new Map();
 
       // Collect chapters and chunks
       pattern.forEach((item, index) => {
         if (item.chapter && item.chapter !== '_') {
-          chapters.add(item.chapter);
+          if (!chapters.has(item.chapter)) {
+            chapters.set(item.chapter, {
+              chapter: item.chapter,
+              items: []
+            });
+          }
+          chapters.get(item.chapter).items.push({
+            index: index,
+            abbr: item.abbr,
+            full_name: item.full_name
+          });
         }
         if (item.chunkID && item.chunkID !== 0) {
           if (!chunks.has(item.chunkID)) {
@@ -1512,7 +1522,7 @@ class SearchPatternAPI {
 
       return {
         success: true,
-        chapters: Array.from(chapters),
+        chapters: Array.from(chapters.values()),
         chunks: Array.from(chunks.values()),
         pattern_name: pattern_name
       };

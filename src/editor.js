@@ -477,7 +477,7 @@ function renderPatternItems() {
                     <option value="bone" ${chunkItemWindow === 'bone' ? 'selected' : ''}>bone</option>
                     <option value="brain" ${chunkItemWindow === 'brain' ? 'selected' : ''}>brain</option>
                     <option value="lung" ${chunkItemWindow === 'lung' ? 'selected' : ''}>lung</option>
-                    <option value="Stroke" ${chunkItemWindow === 'Stroke' ? 'selected' : ''}>Stroke</option>
+                    <option value="stroke" ${chunkItemWindow === 'stroke' ? 'selected' : ''}>stroke</option>
                     <option value="CTA" ${chunkItemWindow === 'CTA' ? 'selected' : ''}>CTA</option>
                     <option value="CTV" ${chunkItemWindow === 'CTV' ? 'selected' : ''}>CTV</option>
                     <option value="MIP" ${chunkItemWindow === 'MIP' ? 'selected' : ''}>MIP</option>
@@ -536,7 +536,7 @@ function renderPatternItems() {
                     <option value="bone" ${itemWindow === 'bone' ? 'selected' : ''}>bone</option>
                     <option value="brain" ${itemWindow === 'brain' ? 'selected' : ''}>brain</option>
                     <option value="lung" ${itemWindow === 'lung' ? 'selected' : ''}>lung</option>
-                    <option value="Stroke" ${itemWindow === 'Stroke' ? 'selected' : ''}>Stroke</option>
+                    <option value="stroke" ${itemWindow === 'stroke' ? 'selected' : ''}>stroke</option>
                     <option value="CTA" ${itemWindow === 'CTA' ? 'selected' : ''}>CTA</option>
                     <option value="CTV" ${itemWindow === 'CTV' ? 'selected' : ''}>CTV</option>
                     <option value="MIP" ${itemWindow === 'MIP' ? 'selected' : ''}>MIP</option>
@@ -3421,16 +3421,21 @@ function displayMirrorContentOptions(mirrorData) {
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.value = chapter;
+            checkbox.value = chapter.chapter;
             checkbox.setAttribute('data-type', 'chapter');
             checkbox.addEventListener('change', updateMirrorDialogOkButton);
             
             const label = document.createElement('span');
             label.className = 'mirror-option-label';
-            label.textContent = `Chapter: ${chapter}`;
+            label.textContent = `${chapter.chapter}`;
+            
+            const description = document.createElement('div');
+            description.className = 'mirror-option-description';
+            description.textContent = `${chapter.items.length} items: ${chapter.items.map(item => item.abbr).join(', ')}`;
             
             option.appendChild(checkbox);
             option.appendChild(label);
+            option.appendChild(description);
             mirrorContentOptions.appendChild(option);
         });
     }

@@ -259,6 +259,50 @@ function formatStrategyText(text) {
     return text.replace(/\((.*?)\)/g, '<span class="parenthesized">($1)</span>');
 }
 
+// Helper function to check if view_plane should be hidden for a chapter
+function shouldHideViewPlaneForChapter(chapter, items) {
+  if (!chapter || !items || items.length === 0) {
+    return false;
+  }
+  
+  // Get all unique view_planes in the chapter
+  const viewPlanes = new Set();
+  items.forEach(item => {
+    if (item.view_plane) {
+      viewPlanes.add(item.view_plane.toLowerCase());
+    }
+  });
+  
+  // Only proceed if all items have the same view_plane
+  if (viewPlanes.size !== 1) {
+    return false;
+  }
+  
+  const commonViewPlane = Array.from(viewPlanes)[0];
+  const chapterLower = chapter.toLowerCase();
+  
+  // Check if the view_plane is mentioned in the chapter title
+  return chapterLower.includes(commonViewPlane);
+}
+
+// Helper function to get all items in a chapter
+function getItemsInChapter(chapter) {
+  if (!chapter || !patternItems) {
+    return [];
+  }
+  
+  return patternItems.filter(item => item.chapter === chapter);
+}
+
+// Helper function to get all items in a chunk
+function getItemsInChunk(chunkID) {
+  if (!chunkID || !patternItems) {
+    return [];
+  }
+  
+  return patternItems.filter(item => item.chunkID === chunkID);
+}
+
 // Display the current item
 function displayCurrentItem() {
   if (!displayableUnits || displayableUnits.length === 0) {
@@ -329,9 +373,19 @@ function displayCurrentItem() {
       itemsToDisplay = patternItems.filter(item => item.chunkID === chunkID);
     }
     
+    // Check if view_plane should be hidden for this chunk/chapter
+    let hideViewPlane = false;
+    if (virtualChapterChunk) {
+      // For virtual chapter chunks, check chapter-level consistency
+      hideViewPlane = shouldHideViewPlaneForChapter(virtualChapterChunk, itemsToDisplay);
+    } else {
+      // For regular chunks, check if all items in chunk have same view_plane and it's in chapter title
+      hideViewPlane = shouldHideViewPlaneForChapter(itemChapter, itemsToDisplay);
+    }
+    
     itemsToDisplay.forEach(item => {
-      // Make sure to use item.view_plane for chunk item view
-      const chunkItemViewText = item.view_plane ? `${item.view_plane} ` : '';
+      // Make sure to use item.view_plane for chunk item view, but hide if determined
+      const chunkItemViewText = (item.view_plane && !hideViewPlane) ? `${item.view_plane} ` : '';
       chunkHTML += `
         <div class="chunk-item">
           <span class="chunk-item-view">${chunkItemViewText}</span>
@@ -362,13 +416,17 @@ function displayCurrentItem() {
         abbrStrategyWrapper.appendChild(tumblerStrategy);
     }
 
+    // Check if view_plane should be hidden for this chapter
+    const chapterItems = getItemsInChapter(itemChapter);
+    const hideViewPlane = shouldHideViewPlaneForChapter(itemChapter, chapterItems);
+
     // Set content for unchunked items
     tumblerViewDynamic.textContent = itemView ? itemView : ''; // Display view or empty
     tumblerAbbr.textContent = itemAbbr;
     tumblerStrategy.innerHTML = formatStrategyText(itemStrategy);
 
     // Set visibility of individual elements within the row
-    tumblerViewDynamic.style.display = itemView ? 'block' : 'none'; // Show if itemView exists
+    tumblerViewDynamic.style.display = (itemView && !hideViewPlane) ? 'block' : 'none'; // Show if itemView exists and not hidden
     tumblerAbbr.style.display = itemAbbr ? 'block' : 'none'; // Show if itemAbbr exists
     tumblerStrategy.style.display = itemStrategy ? 'block' : 'none'; // Show if itemStrategy exists
 

@@ -1422,7 +1422,7 @@
     },
     {
       "abbr": "Lung MIP",
-      "strategy": "(R, L :: upper, mid, lower lung) (Ax, Cor)",
+      "strategy": "(R, L :: lower, middle, upper lobes) (+Cor)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLung MIPR, L :: upper, mid, lower lung) (Ax, Cor)",
@@ -1435,7 +1435,7 @@
     },
     {
       "abbr": "Lung thins",
-      "strategy": "(x1 look R, x1 L) (2 windows) (Ax, Sag)",
+      "strategy": "(x1 look R, L) (2 windows) (+Sag)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLung thins",
@@ -1453,7 +1453,7 @@
       "best_seen_on": "",
       "full_name": "AxLNparatrach/subcarin, ax, subpec in F, supraclav, hilar;",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 1,
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
@@ -1466,7 +1466,7 @@
       "best_seen_on": "",
       "full_name": "AxThyroidno more than 5 sec",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 1,
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
@@ -1479,7 +1479,7 @@
       "best_seen_on": "",
       "full_name": "AxEsophagus",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 1,
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
@@ -1505,7 +1505,7 @@
       "best_seen_on": "",
       "full_name": "CorPEupper lobes",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 2,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
@@ -1518,7 +1518,7 @@
       "best_seen_on": "",
       "full_name": "CorHeartLV/RV (pseudo-)aneurysm",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 2,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
@@ -1531,7 +1531,7 @@
       "best_seen_on": "",
       "full_name": "CorAortaroot, ascend, great vessels, subclavians, arch into abd",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 2,
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
@@ -2243,11 +2243,18 @@
       "chapter": "Lungs",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750980254082_8ea6phkhl"
+      "chapterID": "chapter_1750980254082_8ea6phkhl",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Lungs",
+        "originalIndex": 3
+      }
     },
     {
       "abbr": "Lung MIP",
-      "strategy": "(R, L :: upper, mid, lower lung) (Ax, Cor)",
+      "strategy": "(R, L :: lower, middle, upper lobes) (+Cor)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLung MIPR, L :: upper, mid, lower lung) (Ax, Cor)",
@@ -2255,12 +2262,19 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": "",
-      "chapterID": "chapter_1750980254082_8ea6phkhl"
+      "window": "lung",
+      "chapterID": "chapter_1750980254082_8ea6phkhl",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Lungs",
+        "originalIndex": 4
+      }
     },
     {
       "abbr": "Lung thins",
-      "strategy": "(x1 look R, x1 L) (2 windows) (Ax, Sag)",
+      "strategy": "(x1 look R, L) (2 windows) (+Sag)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxLung thins",
@@ -2268,8 +2282,15 @@
       "chunkID": 0,
       "chapter": "Lungs",
       "view_plane": "ax",
-      "window": "",
-      "chapterID": "chapter_1750980254082_8ea6phkhl"
+      "window": "lung",
+      "chapterID": "chapter_1750980254082_8ea6phkhl",
+      "isMirror": true,
+      "mirrorSource": {
+        "pattern": "CT Chest",
+        "type": "chapter",
+        "identifier": "Lungs",
+        "originalIndex": 5
+      }
     },
     {
       "abbr": "LN",
