@@ -1519,7 +1519,7 @@ function addNewItem(insertAtIndex, chapter = '') {
         full_name: "", strategy: "", window_level: "", best_seen_on: "",
         groupID: 0, // groupID might need logic if you group new items
         chunkID: 0, // New items are not in chunks initially
-        view_plane: "ax",
+        view_plane: "",
         window: "",
         chapter: chapter // Assign chapter context
     };
@@ -1553,7 +1553,7 @@ function addNewItemToChapter(insertAtIndex, chapterName, chapterID) {
         best_seen_on: "",
         groupID: 0,
         chunkID: 0, // New items are not in chunks initially
-        view_plane: "ax",
+        view_plane: "",
         window: "",
         chapter: chapterName,
         chapterID: targetChapterID
@@ -1737,7 +1737,7 @@ function addNewItemToChunk(chunkId) {
         full_name: "", strategy: "", window_level: "", best_seen_on: "",
         groupID: firstItemOfChunk ? firstItemOfChunk.groupID : 0, // Inherit groupID from chunk
         chunkID: chunkId, // Assign to the target chunk
-        view_plane: "ax",
+        view_plane: "",
         window: "",
         chapter: chapterOfChunk // Inherit chapter from chunk
     };
@@ -1928,7 +1928,7 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
 
                     for (let i = 0; i < 5; i++) {
                         const newItemData = { 
-                            view_plane: 'ax', 
+                            view_plane: '', 
                             abbr: `Part ${i+1}`, 
                             strategy: '', 
                             chapter: '', 
@@ -2199,7 +2199,7 @@ async function saveCurrentPattern() {
     // Ensure the items sent for saving have the view_plane property
     items: patternDataToSave.map(item => ({
         ...item,
-        view_plane: item.view_plane || 'ax', // Ensure default if somehow missing
+        view_plane: item.view_plane || '', // Allow empty view_plane
         window: item.window || ''
       }))
   };
@@ -2258,7 +2258,7 @@ function addItemFromBank(partData) {
         abbr: partData.abbr || '',
         strategy: partData.strategy || '',
         chunkID: 0, // New items are not in chunks initially
-        view_plane: 'ax', // Default view for new items
+        view_plane: '', // Allow empty view_plane for new items
         window: partData.window || ''
     };
 
@@ -2279,7 +2279,7 @@ async function loadPartsBank() {
         if (data && data.responseFor === 'get_parts_bank') {
             unsubscribe();
             if (data.result && Array.isArray(data.result)) {
-                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || 'ax', window: item.window || '' })); // Add default view
+                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || '', window: item.window || '' })); // Allow empty view_plane
                 renderPartsBank();
             } else if (data.error) {
                 console.error('Error loading parts bank:', data.error);
@@ -3696,7 +3696,7 @@ function createNewChapter(chapterName, targetIndex = -1) {
         best_seen_on: '',
         groupID: 0,
         chunkID: 0,
-        view_plane: 'ax',
+        view_plane: '',
         chapter: chapterName,
         chapterID: newChapterID,
         window: ''

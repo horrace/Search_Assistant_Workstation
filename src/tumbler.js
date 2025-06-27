@@ -265,15 +265,15 @@ function shouldHideViewPlaneForChapter(chapter, items) {
     return false;
   }
   
-  // Get all unique view_planes in the chapter
+  // Get all unique non-empty view_planes in the chapter
   const viewPlanes = new Set();
   items.forEach(item => {
-    if (item.view_plane) {
+    if (item.view_plane && item.view_plane.trim() !== '') {
       viewPlanes.add(item.view_plane.toLowerCase());
     }
   });
   
-  // Only proceed if all items have the same view_plane
+  // Only proceed if there is exactly one unique non-empty view_plane
   if (viewPlanes.size !== 1) {
     return false;
   }
@@ -334,7 +334,7 @@ function displayCurrentItem() {
   const virtualChapterChunk = representativeItem.virtualChapterChunk || null;
   const itemAbbr = representativeItem.abbr || '';
   const itemStrategy = representativeItem.strategy || '';
-  const itemView = representativeItem.view_plane || 'ax'; // Default to 'ax' or ensure it can be empty
+  const itemView = representativeItem.view_plane || ''; // Allow empty view_plane
   const itemChapter = representativeItem.chapter || '';
 
   // --- Update Chapter Display ---
