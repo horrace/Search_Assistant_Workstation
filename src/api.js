@@ -1631,21 +1631,71 @@ class SearchPatternAPI {
           const item = pattern[i];
           if (item.isMirror && item.mirrorSource && item.mirrorSource.pattern === source_pattern) {
             // Update mirror item with current source data
-            const { type, identifier } = item.mirrorSource;
+            const { type, identifier, originalIndex } = item.mirrorSource;
             let sourceItem = null;
 
-            if (type === 'chapter') {
-              sourceItem = sourcePattern.find(src => src.chapter === identifier);
-            } else if (type === 'chunk') {
-              sourceItem = sourcePattern.find(src => src.chunkID === identifier);
+            // Find the exact source item using originalIndex first (most accurate)
+            if (typeof originalIndex === 'number' && originalIndex >= 0 && originalIndex < sourcePattern.length) {
+              const candidateItem = sourcePattern[originalIndex];
+              // Verify it still matches the expected type and identifier
+              if (type === 'chapter' && candidateItem.chapter === identifier) {
+                sourceItem = candidateItem;
+              } else if (type === 'chunk' && candidateItem.chunkID === identifier) {
+                sourceItem = candidateItem;
+              }
+            }
+
+            // Fallback: search by type and identifier if originalIndex doesn't work
+            if (!sourceItem) {
+              if (type === 'chapter') {
+                // Find all items in the chapter and match by relative position
+                const chapterItems = sourcePattern.filter(src => src.chapter === identifier);
+                const mirrorChapterItems = pattern.filter(itm => 
+                  itm.isMirror && itm.mirrorSource && 
+                  itm.mirrorSource.pattern === source_pattern && 
+                  itm.mirrorSource.type === 'chapter' && 
+                  itm.mirrorSource.identifier === identifier
+                );
+                const mirrorPosition = mirrorChapterItems.indexOf(item);
+                if (mirrorPosition >= 0 && mirrorPosition < chapterItems.length) {
+                  sourceItem = chapterItems[mirrorPosition];
+                }
+              } else if (type === 'chunk') {
+                // Find all items in the chunk and match by relative position
+                const chunkItems = sourcePattern.filter(src => src.chunkID === identifier);
+                const mirrorChunkItems = pattern.filter(itm => 
+                  itm.isMirror && itm.mirrorSource && 
+                  itm.mirrorSource.pattern === source_pattern && 
+                  itm.mirrorSource.type === 'chunk' && 
+                  itm.mirrorSource.identifier === identifier
+                );
+                const mirrorPosition = mirrorChunkItems.indexOf(item);
+                if (mirrorPosition >= 0 && mirrorPosition < chunkItems.length) {
+                  sourceItem = chunkItems[mirrorPosition];
+                }
+              }
             }
 
             if (sourceItem) {
-              // Update mirror item while preserving mirror metadata
+              // Update mirror item while preserving mirror metadata and target context
               const mirrorSource = item.mirrorSource;
+              const targetChapter = item.chapter;
+              const targetChapterID = item.chapterID;
+              
               Object.assign(item, JSON.parse(JSON.stringify(sourceItem)));
+              
+              // Restore mirror metadata
               item.isMirror = true;
               item.mirrorSource = mirrorSource;
+              
+              // Preserve target chapter if it was different from source
+              if (targetChapter !== sourceItem.chapter) {
+                item.chapter = targetChapter;
+              }
+              if (targetChapterID && targetChapterID !== sourceItem.chapterID) {
+                item.chapterID = targetChapterID;
+              }
+              
               patternUpdated = true;
             }
           }
@@ -1719,6 +1769,166 @@ class SearchPatternAPI {
       }
     } catch (error) {
       console.error(`[API remove_mirrors_from_pattern] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Replace existing chapter/chunk content with mirrors
+   */
+  replace_with_mirrors(target_pattern, mirror_configs, replacement_context) {
+    console.log(`[API replace_with_mirrors] Replacing content in pattern: ${target_pattern}`);
+    console.log('Replacement context:', replacement_context);
+    try {
+      if (!target_pattern || typeof target_pattern !== 'string') {
+        return { success: false, error: "Invalid target pattern name" };
+      }
+
+      if (!Array.isArray(mirror_configs) || mirror_configs.length === 0) {
+        return { success: false, error: "Invalid mirror configurations" };
+      }
+
+      if (!replacement_context) {
+        return { success: false, error: "Invalid replacement context" };
+      }
+
+      if (!this.patterns[target_pattern]) {
+        return { success: false, error: "Target pattern not found" };
+      }
+
+      // Save state for undo
+      this._saveStateToHistory(target_pattern);
+
+      const targetPattern = this.patterns[target_pattern];
+      let mirrorsAdded = 0;
+
+      // Step 1: Identify what to replace
+      let itemsToRemove = [];
+      let insertionIndex = 0;
+
+      if (replacement_context.isChapter) {
+        // Replace entire chapter
+        const chapterID = replacement_context.chapterID;
+        const chapterName = replacement_context.chapterName;
+        
+        // Find all items in this chapter
+        for (let i = 0; i < targetPattern.length; i++) {
+          const item = targetPattern[i];
+          const itemChapterID = item.chapterID || '';
+          const itemChapterName = item.chapter || '';
+          
+          if ((chapterID && itemChapterID === chapterID) || 
+              (!chapterID && itemChapterName === chapterName)) {
+            if (itemsToRemove.length === 0) {
+              insertionIndex = i; // Remember where to insert new content
+            }
+            itemsToRemove.push(i);
+          }
+        }
+      } else if (replacement_context.isChunkContainer) {
+        // Replace entire chunk
+        const chunkId = replacement_context.chunkId;
+        
+        // Find all items in this chunk
+        for (let i = 0; i < targetPattern.length; i++) {
+          const item = targetPattern[i];
+          if (item.chunkID === chunkId) {
+            if (itemsToRemove.length === 0) {
+              insertionIndex = i; // Remember where to insert new content
+            }
+            itemsToRemove.push(i);
+          }
+        }
+      } else {
+        // Replace single item
+        const specificIndex = replacement_context.specificIndex;
+        if (specificIndex >= 0 && specificIndex < targetPattern.length) {
+          itemsToRemove.push(specificIndex);
+          insertionIndex = specificIndex;
+        }
+      }
+
+      if (itemsToRemove.length === 0) {
+        return { success: false, error: "No items found to replace" };
+      }
+
+      console.log(`Found ${itemsToRemove.length} items to replace at positions:`, itemsToRemove);
+      console.log(`Will insert new content at index: ${insertionIndex}`);
+
+      // Step 2: Remove existing items (in reverse order to preserve indices)
+      const sortedIndices = itemsToRemove.sort((a, b) => b - a);
+      for (const index of sortedIndices) {
+        targetPattern.splice(index, 1);
+      }
+
+      // Step 3: Collect mirror content
+      let allMirrorItems = [];
+      for (const config of mirror_configs) {
+        const { source_pattern, type, identifier } = config;
+
+        if (!this.patterns[source_pattern]) {
+          console.warn(`[API replace_with_mirrors] Source pattern not found: ${source_pattern}`);
+          continue;
+        }
+
+        const sourcePattern = this.patterns[source_pattern];
+        let itemsToMirror = [];
+
+        if (type === 'chapter') {
+          itemsToMirror = sourcePattern.filter(item => item.chapter === identifier);
+        } else if (type === 'chunk') {
+          itemsToMirror = sourcePattern.filter(item => item.chunkID === identifier);
+        }
+
+        // Sort items by their original index to maintain sequence
+        const sortedItemsToMirror = itemsToMirror
+          .map(item => ({ item, originalIndex: sourcePattern.indexOf(item) }))
+          .sort((a, b) => a.originalIndex - b.originalIndex);
+
+        for (const { item: sourceItem, originalIndex } of sortedItemsToMirror) {
+          const mirrorItem = {
+            ...sourceItem,
+            isMirror: true,
+            mirrorSource: {
+              pattern: source_pattern,
+              type: type,
+              identifier: identifier,
+              originalIndex: originalIndex
+            }
+          };
+
+          // Preserve target chapter/chunk information if replacing within a specific context
+          if (replacement_context.isChapter) {
+            mirrorItem.chapter = replacement_context.chapterName;
+            if (replacement_context.chapterID) {
+              mirrorItem.chapterID = replacement_context.chapterID;
+            }
+          }
+
+          allMirrorItems.push(mirrorItem);
+          mirrorsAdded++;
+        }
+      }
+
+      // Step 4: Insert mirror items at the original location
+      if (allMirrorItems.length > 0) {
+        targetPattern.splice(insertionIndex, 0, ...allMirrorItems);
+      }
+
+      if (mirrorsAdded > 0) {
+        const saved = this.save_patterns();
+        return {
+          success: saved,
+          mirrorsAdded: mirrorsAdded,
+          itemsReplaced: itemsToRemove.length,
+          pattern_data: this.patterns[target_pattern],
+          error: saved ? null : "Failed to save patterns after replacing with mirrors"
+        };
+      } else {
+        return { success: false, error: "No mirrors were added" };
+      }
+    } catch (error) {
+      console.error(`[API replace_with_mirrors] Error: ${error.message}`);
       return { success: false, error: error.message };
     }
   }

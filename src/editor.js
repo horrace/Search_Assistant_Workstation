@@ -138,7 +138,8 @@ let contextMenuTargetIsChunkContainer = false;
 let contextMenuTargetChunkId = null; 
 let chunkAssignmentContext = null; // For storing context for the chunk assignment dialog
 let isDragging = false; // Declare isDragging
-let currentPatternData = []; 
+let currentPatternData = [];
+let mirrorReplacementContext = null; // For storing context for mirror replacement 
 
 // Load available patterns
 async function loadPatterns() {
@@ -3311,6 +3312,19 @@ async function loadPatternData(patternName, dataToRender = null) { // Added data
 function openMirrorContentDialog() {
     console.log('Opening mirror content dialog');
     
+    // Store the current context for replacement
+    mirrorReplacementContext = {
+        isChapter: contextMenuTargetIsChapter,
+        isChunkContainer: contextMenuTargetIsChunkContainer,
+        chapterName: contextMenuTargetChapterName,
+        chapterID: contextMenuTargetChapterID,
+        chunkId: contextMenuTargetChunkId,
+        targetIndex: contextMenuTargetIndex,
+        specificIndex: contextMenuTargetSpecificIndex
+    };
+    
+    console.log('Stored mirror replacement context:', mirrorReplacementContext);
+    
     // Reset dialog state
     mirrorSourcePatternSelect.value = '';
     mirrorContentSelection.style.display = 'none';
@@ -3474,6 +3488,7 @@ function updateMirrorDialogOkButton() {
 
 function closeMirrorContentDialog() {
     mirrorContentDialog.style.display = 'none';
+    mirrorReplacementContext = null; // Clear context when dialog is closed
 }
 
 function addSelectedMirrors() {
@@ -3484,36 +3499,45 @@ function addSelectedMirrors() {
         return;
     }
     
+    if (!mirrorReplacementContext) {
+        console.error('No mirror replacement context available');
+        alert('Error: No replacement context available');
+        closeMirrorContentDialog();
+        return;
+    }
+    
     const mirrorConfigs = Array.from(checkedBoxes).map(checkbox => ({
         source_pattern: selectedPattern,
         type: checkbox.getAttribute('data-type'),
         identifier: checkbox.getAttribute('data-type') === 'chunk' ? parseInt(checkbox.value) : checkbox.value
     }));
     
-    console.log('Adding mirrors with configs:', mirrorConfigs);
+    console.log('Replacing content with mirrors:', mirrorConfigs);
+    console.log('Using replacement context:', mirrorReplacementContext);
     
-    // Add mirrors to current pattern
-    window.electronAPI.callAPI('add_mirrors_to_pattern', {
+    // Replace existing chapter/chunk content with mirrors
+    window.electronAPI.callAPI('replace_with_mirrors', {
         target_pattern: currentPattern,
-        mirror_configs: mirrorConfigs
+        mirror_configs: mirrorConfigs,
+        replacement_context: mirrorReplacementContext
     });
     
     const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-        if (data && data.responseFor === 'add_mirrors_to_pattern') {
+        if (data && data.responseFor === 'replace_with_mirrors') {
             unsubscribe();
             
-            console.log('Add mirrors response received:', data);
+            console.log('Replace with mirrors response received:', data);
             
             if (data.error) {
-                console.error('Error adding mirrors:', data.error);
-                alert(`Error adding mirrors: ${data.error}`);
+                console.error('Error replacing with mirrors:', data.error);
+                alert(`Error replacing with mirrors: ${data.error}`);
                 closeMirrorContentDialog(); // Close dialog even on error
                 return;
             }
             
             if (data.result && data.result.success) {
-                console.log('Mirrors added successfully:', data.result);
-                console.log(`Added ${data.result.mirrorsAdded} mirror items.`);
+                console.log('Mirrors replaced successfully:', data.result);
+                console.log(`Replaced ${data.result.itemsReplaced} items with ${data.result.mirrorsAdded} mirror items.`);
                 
                 // Enable undo button
                 if (undoBtn) undoBtn.disabled = false;
@@ -3521,14 +3545,18 @@ function addSelectedMirrors() {
                 // Close dialog first to avoid any interference
                 closeMirrorContentDialog();
                 
+                // Clear replacement context
+                mirrorReplacementContext = null;
+                
                 // Then reload pattern data to show the mirrors
                 setTimeout(() => {
                     loadPattern(currentPattern);
                 }, 100);
             } else {
-                console.error('Failed to add mirrors:', data.result);
-                alert('Failed to add mirrors.');
+                console.error('Failed to replace with mirrors:', data.result);
+                alert('Failed to replace with mirrors.');
                 closeMirrorContentDialog(); // Close dialog even on error
+                mirrorReplacementContext = null; // Clear context on error too
             }
         }
     });

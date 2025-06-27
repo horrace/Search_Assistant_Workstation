@@ -819,6 +819,10 @@ ipcMain.on('api-request', (event, data) => {
             result = api[method](params.pattern_name, params.mirror_indices);
             break;
             
+          case 'replace_with_mirrors':
+            result = api[method](params.target_pattern, params.mirror_configs, params.replacement_context);
+            break;
+            
           default:
             // For simple methods with no parameters or a single parameter object
             result = params && Object.keys(params).length > 0 ? api[method](params) : api[method]();
