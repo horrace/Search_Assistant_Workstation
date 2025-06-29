@@ -436,6 +436,106 @@ function displayCurrentItem() {
   }
 
   updateFontSizes(); // Call to update font sizes for all relevant elements
+  
+  // Resize window to fit content after all updates
+  resizeTumblerToContent();
+}
+
+// Resize tumbler window to fit content
+function resizeTumblerToContent() {
+  // Debounce rapid resize calls
+  if (resizeTimeout) {
+    clearTimeout(resizeTimeout);
+  }
+  
+  resizeTimeout = setTimeout(() => {
+    // Wait for DOM to update before measuring
+    requestAnimationFrame(() => {
+      // Double-buffer to ensure layout is complete
+      requestAnimationFrame(() => {
+    try {
+      const container = document.querySelector('.tumbler-container');
+      if (!container) return;
+      
+      // Calculate the natural height of all content
+      const header = document.querySelector('.tumbler-header');
+      const content = document.querySelector('.tumbler-content');
+      
+      if (!header || !content) return;
+      
+      // Temporarily set container to auto height for accurate measurement
+      const originalHeight = container.style.height;
+      container.style.height = 'auto';
+      
+      // Force layout recalculation
+      container.offsetHeight;
+      
+      // Measure heights
+      const headerHeight = header.offsetHeight;
+      let contentHeight = content.scrollHeight;
+      
+      // For more accurate content measurement, check individual elements
+      const visibleElements = [];
+      const abbr = document.getElementById('tumbler-abbr');
+      const strategy = document.getElementById('tumbler-strategy');
+      const chunk = document.getElementById('tumbler-chunk');
+      const unchunkedRow = document.getElementById('unchunked-item-row');
+      const chapterLabel = document.getElementById('tumbler-chapter-label');
+      
+      if (chapterLabel && chapterLabel.style.display !== 'none' && chapterLabel.textContent.trim()) {
+        visibleElements.push(chapterLabel.offsetHeight);
+      }
+      
+      if (unchunkedRow && unchunkedRow.style.display !== 'none') {
+        visibleElements.push(unchunkedRow.offsetHeight);
+      } else {
+        if (abbr && abbr.style.display !== 'none' && abbr.textContent.trim()) {
+          visibleElements.push(abbr.offsetHeight);
+        }
+        if (strategy && strategy.style.display !== 'none' && strategy.textContent.trim()) {
+          visibleElements.push(strategy.offsetHeight);
+        }
+      }
+      
+      if (chunk && chunk.style.display !== 'none') {
+        visibleElements.push(chunk.offsetHeight);
+      }
+      
+      // Use measured element heights if more accurate than scrollHeight
+      if (visibleElements.length > 0) {
+        const measuredContentHeight = visibleElements.reduce((sum, height) => sum + height, 0) + (visibleElements.length * 10); // Add spacing between elements
+        contentHeight = Math.max(contentHeight, measuredContentHeight);
+      }
+      
+      const padding = 40; // Add some padding for visual spacing
+      const totalHeight = headerHeight + contentHeight + padding;
+      
+      // Set minimum and maximum bounds
+      const minHeight = 120;
+      const maxHeight = 800;
+      const finalHeight = Math.max(minHeight, Math.min(maxHeight, totalHeight));
+      
+      // Keep current width, only change height
+      const currentWidth = 500; // Current tumbler width
+      
+      console.log(`Resizing tumbler: header=${headerHeight}, content=${contentHeight}, elements=${visibleElements.length}, total=${totalHeight}, final=${finalHeight}`);
+      
+      // Restore original height
+      container.style.height = originalHeight;
+      
+      // Send resize request to main process
+      if (window.electronAPI && window.electronAPI.send) {
+        window.electronAPI.send('resize-tumbler', { 
+          width: currentWidth, 
+          height: finalHeight 
+        });
+      }
+    } catch (error) {
+      console.error('Error resizing tumbler:', error);
+    }
+      });
+    });
+  }, 50); // 50ms debounce delay
 }
 
 // Go to the next item

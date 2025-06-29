@@ -284,14 +284,14 @@ footer {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: 0px 10px;
   background-color: rgba(48, 48, 48, 0.8); /* Semi-transparent background */
   user-select: none;
   transition: background-color 0.3s ease;
   backdrop-filter: blur(5px); /* Add a blur effect to the background */
   z-index: 1000; /* Ensure tumbler is above other content */
   overflow: visible; /* Allow content to be visible outside container */
-  -webkit-app-region: drag; /* Make the whole container draggable */
+  -webkit-app-region: no-drag; /* Make container non-draggable by default */
 }
 
 .tumbler-container.no-background {
@@ -308,6 +308,7 @@ footer {
   border-radius: 4px;
   user-select: none; /* Prevent text selection during dragging */
   z-index: 1001; /* Ensure header is above other content */
+  -webkit-app-region: drag; /* Make only the header draggable */
 }
 
 .tumbler-counter {
@@ -411,6 +412,8 @@ footer {
   border-radius: 4px;
   display: inline-block;
   z-index: 1002; /* Ensure text is above other elements */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow content to extend beyond container */
 }
 
 .tumbler-strategy {
@@ -421,6 +424,8 @@ footer {
   border-radius: 4px;
   display: inline-block;
   z-index: 1002; /* Ensure text is above other elements */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow content to extend beyond container */
 }
 
 .tumbler-chunk {
@@ -436,18 +441,24 @@ footer {
   display: flex; /* Arrange children (view, abbr, strategy) in a row */
   align-items: baseline; /* Align text nicely if font sizes/paddings differ */
   gap: 8px; /* Space between view, abbr, and strategy */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow content to extend beyond container */
 }
 
 .chunk-item-abbr {
   color: #cacaca;
   font-size: 18px;
   /* font-weight: bold; */
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow content to extend beyond container */
 }
 
 .chunk-item-strategy {
   color: #888888;
   font-size: 14px;
   margin-top: 5px;
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: visible; /* Allow content to extend beyond container */
 }
 
 .item-strategy {
@@ -1333,7 +1344,8 @@ footer {
   top: 60px; /* Start below the header to avoid interfering with drag */
   right: 0;
   width: 45%;
-  height: calc(100% - 60px); /* Adjust height to account for the header */
+  height: calc(100% - 80px); /* Dynamic height based on container, leaving some margin */
+  max-height: 200px; /* Limit maximum height to keep it reasonable */
   cursor: pointer;
   z-index: 1005; /* Higher than tumbler-content's z-index of 1001 */
   -webkit-app-region: no-drag; /* Make area clickable */
