@@ -1,3 +1,6 @@
+// Set NODE_ENV for development mode BEFORE importing API
+process.env.NODE_ENV = 'development';
+
 const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
@@ -7,9 +10,6 @@ const { api } = require('./api'); // Import the JavaScript API
 //if (api && typeof api.create_pattern === 'function') {
     //console.log(">>>> MAIN.JS DEBUG: api.create_pattern function body (first 100 chars):", api.create_pattern.toString().substring(0, 100));
 //}
-
-// Set NODE_ENV for development mode
-process.env.NODE_ENV = 'development';
 
 // Hot reload setup in development mode
 try {
@@ -232,9 +232,18 @@ function createEditorWindow() {
 
 function createTumblerWindow(patternName) {
   const savedPosition = api.get_tumbler_window_position();
+  const savedSize = api.get_tumbler_window_size();
   let initialX, initialY;
-  const windowWidth = 500;
-  const windowHeight = 300;
+  let windowWidth = 500; // Default width
+  const windowHeight = 300; // Fixed height
+  
+  // Use saved width if available
+  if (savedSize && typeof savedSize.width === 'number') {
+    windowWidth = Math.max(300, Math.min(1200, savedSize.width)); // Constrain to min/max
+    console.log(`Found saved Tumbler width: ${windowWidth}`);
+  } else {
+    console.log("No saved Tumbler width found, using default.");
+  }
 
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
     // Validate the saved position
@@ -267,7 +276,11 @@ function createTumblerWindow(patternName) {
     },
     backgroundColor: '#00000000', // Fully transparent background
     show: false,
-    resizable: false, // Prevent user resizing which can interfere with dragging
+    resizable: true, // Allow resizing
+    minWidth: 300, // Minimum width
+    maxWidth: 1200, // Maximum width
+    minHeight: windowHeight, // Fix height to original
+    maxHeight: windowHeight, // Fix height to original
     fullscreenable: false // Prevent fullscreen which can affect size
   });
 
@@ -291,18 +304,34 @@ function createTumblerWindow(patternName) {
     }, 500);
   });
   
+  // Save size on resize (debounced)
+  let resizeTimeout;
+  tumblerWindow.on('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      if (tumblerWindow && !tumblerWindow.isDestroyed()) {
+        const [width, height] = tumblerWindow.getSize();
+        //console.log(`Tumbler resized to: width=${width}, height=${height}. Saving size.`);
+        api.save_tumbler_window_size({ width, height });
+      }
+    }, 500);
+  });
+  
   // Use 'close' event to save position *before* the window is destroyed
   tumblerWindow.on('close', () => {
     clearTimeout(moveTimeout); // Clear any pending save on move
+    clearTimeout(resizeTimeout); // Clear any pending save on resize
     
     // Check if tumblerWindow still exists and is not yet destroyed
     // This check is more of a safeguard; 'close' should fire before destruction.
     if (tumblerWindow && !tumblerWindow.isDestroyed()) {
       const [x, y] = tumblerWindow.getPosition();
-      //console.log(`Tumbler about to close at: x=${x}, y=${y}. Saving final position.`);
+      const [width, height] = tumblerWindow.getSize();
+      //console.log(`Tumbler about to close at: x=${x}, y=${y}, size: ${width}x${height}. Saving final position and size.`);
       api.save_tumbler_window_position({ x, y });
+      api.save_tumbler_window_size({ width, height });
     } else {
-      console.log("Tumbler window was already destroyed or null before 'close' event finished processing for saving position.");
+      console.log("Tumbler window was already destroyed or null before 'close' event finished processing for saving position and size.");
     }
     // It's important that tumblerWindow is nulled *after* any operations on it.
     // And mainWindow.show() should be called after we're done with tumblerWindow.
@@ -319,11 +348,13 @@ function createTumblerWindow(patternName) {
   tumblerWindow.once('ready-to-show', () => {
     mainWindow.hide();
     tumblerWindow.show();
-    // Save initial position once shown, in case it's a new window or position was defaulted
+    // Save initial position and size once shown, in case it's a new window or defaults were used
     if (tumblerWindow) {
         const [x, y] = tumblerWindow.getPosition();
-        //console.log(`Tumbler shown at: x=${x}, y=${y}. Saving initial position.`);
+        const [width, height] = tumblerWindow.getSize();
+        //console.log(`Tumbler shown at: x=${x}, y=${y}, size: ${width}x${height}. Saving initial position and size.`);
         api.save_tumbler_window_position({ x, y });
+        api.save_tumbler_window_size({ width, height });
     }
   });
 
@@ -706,6 +737,14 @@ ipcMain.on('api-request', (event, data) => {
             result = api[method](params.pattern_name);
             break;
             
+          case 'get_pattern_with_outro':
+            result = api[method](params.pattern_name);
+            break;
+            
+          case 'reload_patterns':
+            result = api[method]();
+            break;
+            
           case 'update_pattern':
             result = api[method](params.pattern_name, params.pattern_data);
             break;
@@ -780,6 +819,14 @@ ipcMain.on('api-request', (event, data) => {
             break;
             
           case 'save_tumbler_settings':
+            result = api[method](params);
+            break;
+            
+          case 'get_editor_settings':
+            result = api[method]();
+            break;
+            
+          case 'save_editor_settings':
             result = api[method](params);
             break;
             

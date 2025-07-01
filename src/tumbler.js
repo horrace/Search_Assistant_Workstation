@@ -23,6 +23,9 @@ let timerInterval = null;
 let fontScaleFactor = 1.0;
 let hideBackground = false;
 let showChapterAsChunk = false; // New setting for chapter display
+let inlineHeaderLayout = false; // New setting for inline header layout
+let hideViewPlaneInChapter = true; // New setting for hiding view_plane when in chapter name (default: enabled)
+let resizeTimeout = null; // Timeout for debouncing resize operations
 
 // Font size base values
 const abbrBaseFontSize = 20;
@@ -123,6 +126,38 @@ function updateBackgroundVisibility() {
   }
 }
 
+// Update header layout based on inline setting
+function updateHeaderLayout() {
+  const tumblerContainer = document.querySelector('.tumbler-container');
+  const tumblerHeader = document.querySelector('.tumbler-header');
+  const tumblerHeaderLeft = document.querySelector('.tumbler-header-left');
+  const tumblerHeaderRight = document.querySelector('.tumbler-header-right');
+  const tumblerContent = document.querySelector('.tumbler-content');
+  
+  if (inlineHeaderLayout) {
+    document.body.classList.add('inline-header-layout');
+    
+    // Move left and right elements to be direct children of container
+    if (tumblerHeaderLeft && tumblerHeaderRight && tumblerContent) {
+      // Remove from header and append to container in correct order
+      tumblerContainer.appendChild(tumblerHeaderLeft);
+      tumblerContainer.appendChild(tumblerContent);
+      tumblerContainer.appendChild(tumblerHeaderRight);
+    }
+  } else {
+    document.body.classList.remove('inline-header-layout');
+    
+    // Restore original structure - move elements back to header
+    if (tumblerHeaderLeft && tumblerHeaderRight && tumblerHeader) {
+      tumblerHeader.appendChild(tumblerHeaderLeft);
+      tumblerHeader.appendChild(tumblerHeaderRight);
+      
+      // Ensure header is positioned before content
+      tumblerContainer.insertBefore(tumblerHeader, tumblerContent);
+    }
+  }
+}
+
 // Load settings from backend
 function loadSettings() {
   window.electronAPI.callAPI('get_tumbler_settings', {});
@@ -146,7 +181,10 @@ function loadSettings() {
         
         hideBackground = data.result.hideBackground || false;
         showChapterAsChunk = data.result.showChapterAsChunk || false; // Load the new setting
+        inlineHeaderLayout = data.result.inlineHeaderLayout || false; // Load the inline header setting
+        hideViewPlaneInChapter = data.result.hideViewPlaneInChapter !== undefined ? data.result.hideViewPlaneInChapter : true; // Default to true (enabled)
         updateBackgroundVisibility();
+        updateHeaderLayout();
       }
     }
   });
@@ -154,12 +192,14 @@ function loadSettings() {
 
 // Load a pattern
 function loadPattern(patternName) {
-  // Send request to backend
-  window.electronAPI.callAPI('get_pattern', { pattern_name: patternName });
+  // Send request to backend - use get_pattern_with_outro to include Outro items
+  window.electronAPI.callAPI('get_pattern_with_outro', { pattern_name: patternName });
 
   // Listen for response
-  window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'get_pattern' && Array.isArray(data.result)) {
+  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_pattern_with_outro' && Array.isArray(data.result)) {
+      unsubscribe(); // Unsubscribe after handling the response
+      
       patternItems = data.result;
       displayableUnits = [];
       const processedChunkIDs = new Set();
@@ -216,7 +256,9 @@ function loadPattern(patternName) {
       totalDisplayItems = displayableUnits.length;
       currentDisplayIndex = 0;
       displayCurrentItem();
-    } else if (data && data.responseFor === 'get_pattern' && data.error) {
+    } else if (data && data.responseFor === 'get_pattern_with_outro' && data.error) {
+      unsubscribe(); // Also unsubscribe on error
+      
       console.error("Error loading pattern:", data.error);
       // Handle error display if necessary
       tumblerCounter.textContent = "Error";
@@ -261,6 +303,11 @@ function formatStrategyText(text) {
 
 // Helper function to check if view_plane should be hidden for a chapter
 function shouldHideViewPlaneForChapter(chapter, items) {
+  // If the setting is disabled, never hide view_plane
+  if (!hideViewPlaneInChapter) {
+    return false;
+  }
+  
   if (!chapter || !items || items.length === 0) {
     return false;
   }
@@ -386,8 +433,9 @@ function displayCurrentItem() {
     itemsToDisplay.forEach(item => {
       // Make sure to use item.view_plane for chunk item view, but hide if determined
       const chunkItemViewText = (item.view_plane && !hideViewPlane) ? `${item.view_plane} ` : '';
+      const outroClass = item.isOutroItem ? ' outro-item' : '';
       chunkHTML += `
-        <div class="chunk-item">
+        <div class="chunk-item${outroClass}">
           <span class="chunk-item-view">${chunkItemViewText}</span>
           <span class="chunk-item-abbr">${item.abbr}</span>
           <span class="chunk-item-strategy">${formatStrategyText(item.strategy)}</span>
@@ -424,6 +472,13 @@ function displayCurrentItem() {
     tumblerViewDynamic.textContent = itemView ? itemView : ''; // Display view or empty
     tumblerAbbr.textContent = itemAbbr;
     tumblerStrategy.innerHTML = formatStrategyText(itemStrategy);
+
+    // Add outro-item class if this is an outro item
+    if (representativeItem.isOutroItem) {
+      unchunkedItemRow.classList.add('outro-item');
+    } else {
+      unchunkedItemRow.classList.remove('outro-item');
+    }
 
     // Set visibility of individual elements within the row
     tumblerViewDynamic.style.display = (itemView && !hideViewPlane) ? 'block' : 'none'; // Show if itemView exists and not hidden

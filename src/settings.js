@@ -7,6 +7,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const transparencySlider = document.getElementById('transparency-slider');
   const transparencyValue = document.getElementById('transparency-value');
   const hideBackgroundCheckbox = document.getElementById('hide-background');
+  const showChapterAsChunkCheckbox = document.getElementById('show-chapter-as-chunk');
+  const inlineHeaderLayoutCheckbox = document.getElementById('inline-header-layout');
+  const hideViewPlaneInChapterCheckbox = document.getElementById('hide-view-plane-in-chapter');
+  const hideOutroInEditorCheckbox = document.getElementById('hide-outro-in-editor');
   const closeBtn = document.getElementById('close-btn');
   const closeSettingsBtn = document.getElementById('close-settings-btn');
   
@@ -14,6 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
   let shortcuts = [];
   let currentTransparency = 1.0;
   let hideBackground = false;
+  let showChapterAsChunk = false;
+  let inlineHeaderLayout = false;
+  let hideViewPlaneInChapter = true;
+  let editorSettings = { hideOutroInEditor: false };
   
   // Initialize
   init();
@@ -27,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Load settings
     loadShortcuts();
     loadGeneralSettings();
+    loadEditorSettings();
     
     // Update transparency display
     updateTransparencyDisplay();
@@ -68,6 +77,35 @@ document.addEventListener('DOMContentLoaded', function() {
       hideBackgroundCheckbox.addEventListener('change', () => {
         hideBackground = hideBackgroundCheckbox.checked;
         saveGeneralSettings();
+      });
+    }
+    
+    if (showChapterAsChunkCheckbox) {
+      showChapterAsChunkCheckbox.addEventListener('change', () => {
+        showChapterAsChunk = showChapterAsChunkCheckbox.checked;
+        saveGeneralSettings();
+      });
+    }
+    
+    if (inlineHeaderLayoutCheckbox) {
+      inlineHeaderLayoutCheckbox.addEventListener('change', () => {
+        inlineHeaderLayout = inlineHeaderLayoutCheckbox.checked;
+        saveGeneralSettings();
+      });
+    }
+    
+    if (hideViewPlaneInChapterCheckbox) {
+      hideViewPlaneInChapterCheckbox.addEventListener('change', () => {
+        hideViewPlaneInChapter = hideViewPlaneInChapterCheckbox.checked;
+        saveGeneralSettings();
+      });
+    }
+    
+    // Editor settings
+    if (hideOutroInEditorCheckbox) {
+      hideOutroInEditorCheckbox.addEventListener('change', () => {
+        editorSettings.hideOutroInEditor = hideOutroInEditorCheckbox.checked;
+        saveEditorSettings();
       });
     }
   }
@@ -115,18 +153,17 @@ document.addEventListener('DOMContentLoaded', function() {
       shortcutItem.className = 'shortcut-item';
       
       shortcutItem.innerHTML = `
+	    <div class="shortcut-enabled">
+          <label>
+            <input type="checkbox" ${shortcut.enabled ? 'checked' : ''} 
+                   data-shortcut-id="${shortcut.id}"> 
+          </label>
+        </div>
         <div class="shortcut-info">
           <div class="shortcut-name">${shortcut.name}</div>
-          <div class="shortcut-description">${shortcut.description}</div>
         </div>
         <input type="text" class="shortcut-key" value="${shortcut.accelerator}" 
                data-shortcut-id="${shortcut.id}" placeholder="e.g., Alt+Q">
-        <div class="shortcut-enabled">
-          <label>
-            <input type="checkbox" ${shortcut.enabled ? 'checked' : ''} 
-                   data-shortcut-id="${shortcut.id}"> Enabled
-          </label>
-        </div>
       `;
       
       shortcutsList.appendChild(shortcutItem);
@@ -277,8 +314,20 @@ document.addEventListener('DOMContentLoaded', function() {
           }
           
           hideBackground = data.result.hideBackground || false;
+          showChapterAsChunk = data.result.showChapterAsChunk || false;
+          inlineHeaderLayout = data.result.inlineHeaderLayout || false;
+          hideViewPlaneInChapter = data.result.hideViewPlaneInChapter !== undefined ? data.result.hideViewPlaneInChapter : true;
           if (hideBackgroundCheckbox) {
             hideBackgroundCheckbox.checked = hideBackground;
+          }
+          if (showChapterAsChunkCheckbox) {
+            showChapterAsChunkCheckbox.checked = showChapterAsChunk;
+          }
+          if (inlineHeaderLayoutCheckbox) {
+            inlineHeaderLayoutCheckbox.checked = inlineHeaderLayout;
+          }
+          if (hideViewPlaneInChapterCheckbox) {
+            hideViewPlaneInChapterCheckbox.checked = hideViewPlaneInChapter;
           }
         }
       }
@@ -289,7 +338,10 @@ document.addEventListener('DOMContentLoaded', function() {
   
   function saveGeneralSettings() {
     const settings = {
-      hideBackground: hideBackground
+      hideBackground: hideBackground,
+      showChapterAsChunk: showChapterAsChunk,
+      inlineHeaderLayout: inlineHeaderLayout,
+      hideViewPlaneInChapter: hideViewPlaneInChapter
     };
     
     console.log('Saving general settings:', settings);
@@ -309,6 +361,58 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     window.electronAPI.callAPI('save_tumbler_settings', settings);
+  }
+  
+  // Editor settings management
+  function loadEditorSettings() {
+    console.log('Loading editor settings');
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'get_editor_settings') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error loading editor settings:', data.error);
+          return;
+        }
+        
+        if (data.result && typeof data.result === 'object') {
+          editorSettings = {
+            hideOutroInEditor: false,
+            ...data.result
+          };
+          
+          if (hideOutroInEditorCheckbox) {
+            hideOutroInEditorCheckbox.checked = editorSettings.hideOutroInEditor;
+          }
+          
+          console.log('Editor settings loaded:', editorSettings);
+        }
+      }
+    });
+    
+    window.electronAPI.callAPI('get_editor_settings', {});
+  }
+  
+  function saveEditorSettings() {
+    console.log('Saving editor settings:', editorSettings);
+    
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      if (data && data.responseFor === 'save_editor_settings') {
+        unsubscribe();
+        
+        if (data.error) {
+          console.error('Error saving editor settings:', data.error);
+          showMessage(`Error saving editor settings: ${data.error}`, 'error');
+          return;
+        }
+        
+        console.log('Editor settings saved successfully');
+        showMessage('Editor settings saved!', 'success');
+      }
+    });
+    
+    window.electronAPI.callAPI('save_editor_settings', editorSettings);
   }
   
   function updateTransparencyDisplay() {
