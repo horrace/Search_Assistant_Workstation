@@ -12,13 +12,21 @@ const { api } = require('./api'); // Import the JavaScript API
 //}
 
 // Hot reload setup in development mode
+// Alternative solution: Move settings.json to a directory not watched by electron-reloader
 try {
   if (process.env.NODE_ENV === 'development') {
     console.log('Hot reload enabled for development');
     require('electron-reloader')(module, {
-      //debug: true,
-      //watchRenderer: true,
-      ignore: ['*.json', 'sp_list.json', 'settings.json']
+      // debug: true, // Enable debug to see what files are being watched
+      watchRenderer: true,
+      ignore: [
+        /node_modules/,
+        /\.git/,
+        /\.map$/,
+        /data[\/\\]/,           // Ignore data directory completely
+        /settings\.json$/,      // More specific pattern for settings.json
+        /sp_list\.json$/,       // More specific pattern for sp_list.json
+      ]
     });
   }
 } catch (err) {
