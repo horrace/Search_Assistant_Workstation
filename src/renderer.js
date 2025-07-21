@@ -73,15 +73,11 @@ document.addEventListener('DOMContentLoaded', function() {
   const editButton = document.getElementById('edit-button');
   const transparencySlider = document.getElementById('transparency-slider');
   const transparencyValue = document.getElementById('transparency-value');
-  const hideBackgroundCheckbox = document.getElementById('hide-background');
-  const showChapterAsChunkCheckbox = document.getElementById('show-chapter-as-chunk');
   const errorMessage = document.getElementById('error-message');
   
   // Current state
   let patterns = [];
   let currentTransparency = 1.0;
-  let hideBackground = false;
-  let showChapterAsChunk = false;
   
   // Initialize the application
   init();
@@ -114,6 +110,15 @@ document.addEventListener('DOMContentLoaded', function() {
       editButton.addEventListener('click', () => {
         console.log('Edit button clicked');
         window.electronAPI.openEditor();
+      });
+    }
+    
+    // Refresh button (development only)
+    const refreshButton = document.getElementById('refresh-button');
+    if (refreshButton) {
+      refreshButton.addEventListener('click', () => {
+        console.log('Refresh button clicked');
+        window.location.reload();
       });
     }
     
@@ -156,31 +161,6 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     }
     
-    // Hide background checkbox
-    if (hideBackgroundCheckbox) {
-       // Stop propagation on mousedown to prevent closing menu prematurely
-       hideBackgroundCheckbox.addEventListener('mousedown', (event) => {
-        event.stopPropagation();
-      });
-      hideBackgroundCheckbox.addEventListener('change', () => {
-        // No stopPropagation here
-        hideBackground = hideBackgroundCheckbox.checked;
-        saveSettings();
-      });
-    }
-    
-    // Show chapter as chunk checkbox
-    if (showChapterAsChunkCheckbox) {
-       // Stop propagation on mousedown to prevent closing menu prematurely
-       showChapterAsChunkCheckbox.addEventListener('mousedown', (event) => {
-        event.stopPropagation();
-      });
-      showChapterAsChunkCheckbox.addEventListener('change', () => {
-        // No stopPropagation here
-        showChapterAsChunk = showChapterAsChunkCheckbox.checked;
-        saveSettings();
-      });
-    }
     
     // Settings window management
     setupSettingsEventListeners();
@@ -207,14 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
           }
           
-          hideBackground = data.result.hideBackground || false;
-          showChapterAsChunk = data.result.showChapterAsChunk || false;
-          if (hideBackgroundCheckbox) {
-            hideBackgroundCheckbox.checked = hideBackground;
-          }
-          if (showChapterAsChunkCheckbox) {
-            showChapterAsChunkCheckbox.checked = showChapterAsChunk;
-          }
         }
       }
     });
@@ -222,13 +194,8 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // Save settings
   function saveSettings() {
-    const settings = {
-      hideBackground: hideBackground,
-      showChapterAsChunk: showChapterAsChunk
-    };
-    
-    // Send to backend
-    window.electronAPI.callAPI('save_tumbler_settings', settings);
+    // Settings are now managed in the settings window
+    // This function is kept for potential future local settings
   }
   
   // Update transparency display
@@ -325,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Render the pattern list
+  // Render the pattern list (for editor window [pretty sure])
   function renderPatternList() {
     console.log('Rendering pattern list with', patterns.length, 'patterns');
     
@@ -337,8 +304,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Clear pattern list
     patternList.innerHTML = '';
     
-    // Create pattern items as grid
-    patterns.forEach(pattern => {
+    // Create pattern items as grid (filter out Outro pattern)
+    patterns.filter(pattern => pattern !== 'Outro').forEach(pattern => {
       const patternItem = document.createElement('div');
       patternItem.className = 'pattern-item';
       patternItem.setAttribute('data-pattern', pattern);

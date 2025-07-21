@@ -95,6 +95,9 @@ footer {
 /* Settings wrapper and menu */
 .settings-wrapper {
   position: relative;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .settings-menu {
@@ -400,6 +403,7 @@ footer {
   font-weight: normal;
   text-align: left;
   width: 100%; /* Ensure it takes full width for left alignment */
+  margin-top: 12px;
   display: none; /* Initially hidden, shown by JS when chapter exists */
 }
 
@@ -475,6 +479,52 @@ footer {
 .tumbler-strategy .parenthesized {
   color: #5a5a5a; /* A darker gray for parenthesized text */
 }
+
+/* Outro item styling in tumbler */
+.outro-item .tumbler-abbr,
+.outro-item .chunk-item-abbr {
+}
+
+.outro-item .tumbler-strategy,
+.outro-item .chunk-item-strategy {
+  color: #757575; /* Dimmed strategy text for outro items */
+  opacity: 0.85;
+}
+/* No background mode styling for outro items */
+.tumbler-container.no-background .outro-item .tumbler-abbr,
+.tumbler-container.no-background .outro-item .chunk-item-abbr {
+  color: #999999;
+}
+
+.tumbler-container.no-background .outro-item .tumbler-strategy,
+.tumbler-container.no-background .outro-item .chunk-item-strategy {
+  color: #666666;
+}
+
+/* Editor outro item styling */
+.draggable-item.outro-item {
+  opacity: 0.7;
+  background-color: rgba(100, 100, 150, 0.1);
+}
+
+.draggable-item.outro-item .item-abbr,
+.draggable-item.outro-item .item-strategy {
+  color: #999999;
+}
+
+.draggable-item.outro-item .item-view-select,
+.draggable-item.outro-item .item-window-select {
+  background-color: #333333;
+  color: #999999;
+  cursor: not-allowed;
+}
+
+.draggable-item.outro-item .item-abbr[contenteditable="false"],
+.draggable-item.outro-item .item-strategy[contenteditable="false"] {
+  cursor: not-allowed;
+  background-color: transparent;
+}
+
 
 /* Draggable list item */
 .draggable-item {
@@ -708,13 +758,58 @@ footer {
 .settings-container {
   position: relative;
   margin-right: auto;
-  margin-left: 20px;
 }
 
 .settings-button {
   cursor: pointer;
   font-size: 16px;
   padding: 5px;
+}
+
+/* Inline Header Layout for Tumbler */
+.inline-header-layout .tumbler-container {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: flex-start;
+  padding: 8px 10px;
+  gap: 6px;
+  height: 200px;
+  -webkit-app-region: drag; 
+}
+
+/* Inline Header Layout for Tumbler */
+.inline-header-layout .tumbler-header {
+	padding: 0px;
+  }
+
+/* Left header elements when moved to container level */
+.inline-header-layout .tumbler-header-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 70px;
+  overflow: wrap;
+}
+
+/* Content takes the middle flexible space */
+.inline-header-layout .tumbler-content {
+  flex: 1;
+  min-width: 0; /* Allow content to shrink */
+}
+
+/* Right header elements when moved to container level */
+.inline-header-layout .tumbler-header-right {
+  display: flex;
+  align-items: flex-start; /* Align with top of content */
+  flex-shrink: 0;
+  gap: 8px; /* Maintain spacing between controls */
+  margin-top: -8px;
+}
+
+/* Adjust next-area for inline layout */
+.inline-header-layout .next-area {
+  right: 0;
+  width: 25%; /* Reduce width to avoid overlapping with right header */
 }
 
 /* Make text content visible in no-background mode */

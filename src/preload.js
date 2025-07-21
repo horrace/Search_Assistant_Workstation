@@ -34,12 +34,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onAPIResponse: (callback) => {
     // Create a handler function
     const handler = (event, data) => {
-    //   log.info('Received response from backend', { 
-    //     method: data.responseFor,
-    //     hasError: !!data.error,
-    //     hasResult: !!data.result,
-    //     resultType: data.result ? (Array.isArray(data.result) ? 'array' : typeof data.result) : 'none'
-    //   });
+      log.info('Received response from backend', { 
+        method: data.responseFor,
+        hasError: !!data.error,
+        hasResult: !!data.result,
+        resultType: data.result ? (Array.isArray(data.result) ? 'array' : typeof data.result) : 'none'
+      });
       
       if (data.error) {
         log.error('Response contains error', data.error);

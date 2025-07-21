@@ -123,6 +123,7 @@ let patterns = [];
 let currentPattern = '';
 let currentPatternItems = [];
 let partsBankList = [];
+let editorSettings = { hideOutroInEditor: false }; // Default editor settings
 let selectedIndex = -1;
 let selectedIndices = [];
 let multiSelectionMode = false;
@@ -212,6 +213,44 @@ async function loadPatterns() {
   }
 }
 
+// Load editor settings
+async function loadEditorSettings() {
+  try {
+    // Send request to backend
+    window.electronAPI.callAPI('get_editor_settings', {});
+    
+    // Listen for response
+    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+      // Only process responses for the editor settings request
+      if (data && data.responseFor === 'get_editor_settings') {
+        if (data.error) {
+          console.error('Error loading editor settings:', data.error);
+        } else if (data.result) {
+          // Update editor settings with defaults for any missing properties
+          editorSettings = {
+            hideOutroInEditor: false,
+            ...data.result
+          };
+          console.log('Editor settings loaded:', editorSettings);
+        }
+        unsubscribe();
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error loading editor settings:', error);
+  }
+}
+
+// Save editor settings
+function saveEditorSettings() {
+  try {
+    window.electronAPI.callAPI('save_editor_settings', editorSettings);
+  } catch (error) {
+    console.error('Error saving editor settings:', error);
+  }
+}
+
 // Render the pattern selector dropdown
 function renderPatternSelector() {
   let html = '';
@@ -276,15 +315,18 @@ function loadPattern(patternName) {
     }
   };
   
+  // Determine which API call to use based on pattern name and editor settings
+  const apiMethod = patternName === 'Outro' || editorSettings.hideOutroInEditor ? 'get_pattern' : 'get_pattern_with_outro';
+  
   // Send request to backend
-  window.electronAPI.callAPI('get_pattern', { pattern_name: patternName });
+  window.electronAPI.callAPI(apiMethod, { pattern_name: patternName });
   
   // Listen for response
   const unsubscribe = window.electronAPI.onAPIResponse((data) => {
     //console.log('Received pattern data response:', data);
     
     // Only process responses for this pattern request
-    if (data && data.responseFor === 'get_pattern') {
+    if (data && data.responseFor === apiMethod) {
       if (data.error) {
         console.error('Error loading pattern:', data.error);
         
@@ -459,11 +501,16 @@ function renderPatternItems() {
             const chunkItemActualIndex = chunkIndices[chunkIdx];
             const chunkItemView = chunkItem.view_plane || '';
             const chunkItemWindow = chunkItem.window || '';
+            const isOutroItem = chunkItem.isOutroItem || false;
+            const outroClass = isOutroItem ? 'outro-item' : '';
+            const editableAttr = isOutroItem ? 'false' : 'true';
+            const selectDisabled = isOutroItem ? 'disabled' : '';
+            
             html += `
-              <div class="chunk-item-part draggable-item ${chunkItem.isMirror ? 'mirror-item' : ''}" data-chunk-index="${chunkItemActualIndex}" data-item-index="${chunkItemActualIndex}">
+              <div class="chunk-item-part draggable-item ${chunkItem.isMirror ? 'mirror-item' : ''} ${outroClass}" data-chunk-index="${chunkItemActualIndex}" data-item-index="${chunkItemActualIndex}">
                 <div class="drag-handle" data-handle="true"></div>
                 <div class="item-view">
-                  <select class="item-view-select" data-index="${chunkItemActualIndex}">
+                  <select class="item-view-select" data-index="${chunkItemActualIndex}" ${selectDisabled}>
                     <option value="" ${!chunkItemView ? 'selected' : ''}>-</option>
                     <option value="ax" ${chunkItemView === 'ax' ? 'selected' : ''}>ax</option>
                     <option value="cor" ${chunkItemView === 'cor' ? 'selected' : ''}>cor</option>
@@ -471,7 +518,7 @@ function renderPatternItems() {
                   </select>
                 </div>
                 <div class="item-window">
-                  <select class="item-window-select" data-index="${chunkItemActualIndex}">
+                  <select class="item-window-select" data-index="${chunkItemActualIndex}" ${selectDisabled}>
                     <option value="" ${!chunkItemWindow ? 'selected' : ''}>-</option>
                     <option value="ST" ${chunkItemWindow === 'ST' ? 'selected' : ''}>ST</option>
                     <option value="bone" ${chunkItemWindow === 'bone' ? 'selected' : ''}>bone</option>
@@ -486,8 +533,8 @@ function renderPatternItems() {
                     <option value="3D" ${chunkItemWindow === '3D' ? 'selected' : ''}>3D</option>
                   </select>
                 </div>
-                <div class="item-abbr" contenteditable="true" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
-                <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${chunkItemActualIndex}">${formatStrategyText(chunkItem.strategy || '')}</div>
+                <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
+                <div class="item-strategy" contenteditable="${editableAttr}" data-field="strategy" data-index="${chunkItemActualIndex}">${formatStrategyText(chunkItem.strategy || '')}</div>
               </div>
             `;
           });
@@ -509,10 +556,15 @@ function renderPatternItems() {
       // Regular single item
       const itemWindow = item.window || '';
       const isMirrorItem = item.isMirror || false;
+      const isOutroItem = item.isOutroItem || false;
       const mirrorClass = isMirrorItem ? 'mirror-item' : '';
+      const outroClass = isOutroItem ? 'outro-item' : '';
+      const editableAttr = isOutroItem ? 'false' : 'true';
+      const selectDisabled = isOutroItem ? 'disabled' : '';
+      
       html += `
         <div
-          class="draggable-item ${isSelected ? 'selected' : ''} ${isChunkStart ? 'chunk-start' : ''} ${mirrorClass}"
+          class="draggable-item ${isSelected ? 'selected' : ''} ${isChunkStart ? 'chunk-start' : ''} ${mirrorClass} ${outroClass}"
           data-item-index="${itemIndexCounter}"
           data-rendered-index="${renderedItemIndex}"
           data-is-chunk="false"
@@ -522,7 +574,7 @@ function renderPatternItems() {
           <div class="item-content">
             <div class="drag-handle" data-handle="true"></div>
             <div class="item-view">
-              <select class="item-view-select" data-index="${itemIndexCounter}">
+              <select class="item-view-select" data-index="${itemIndexCounter}" ${selectDisabled}>
                 <option value="" ${!item.view_plane ? 'selected' : ''}>-</option>
                 <option value="ax" ${item.view_plane === 'ax' ? 'selected' : ''}>ax</option>
                 <option value="cor" ${item.view_plane === 'cor' ? 'selected' : ''}>cor</option>
@@ -530,7 +582,7 @@ function renderPatternItems() {
               </select>
             </div>
             <div class="item-window">
-                <select class="item-window-select" data-index="${itemIndexCounter}">
+                <select class="item-window-select" data-index="${itemIndexCounter}" ${selectDisabled}>
                     <option value="" ${!itemWindow ? 'selected' : ''}>-</option>
                     <option value="ST" ${itemWindow === 'ST' ? 'selected' : ''}>ST</option>
                     <option value="bone" ${itemWindow === 'bone' ? 'selected' : ''}>bone</option>
@@ -545,8 +597,8 @@ function renderPatternItems() {
                     <option value="3D" ${itemWindow === '3D' ? 'selected' : ''}>3D</option>
                 </select>
             </div>
-            <div class="item-abbr" contenteditable="true" data-field="abbr" data-index="${itemIndexCounter}">${item.abbr || ''}</div>
-            <div class="item-strategy" contenteditable="true" data-field="strategy" data-index="${itemIndexCounter}">${formatStrategyText(item.strategy || '')}</div>
+            <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${itemIndexCounter}">${item.abbr || ''}</div>
+            <div class="item-strategy" contenteditable="${editableAttr}" data-field="strategy" data-index="${itemIndexCounter}">${formatStrategyText(item.strategy || '')}</div>
           </div>
         </div>
       `;
@@ -2885,8 +2937,9 @@ function init() {
   //console.log(' - chapterDialogCancelBtn:', chapterDialogCancelBtn);
   // *** End Debugging ***
 
-  // Load available patterns
+  // Load available patterns and editor settings
   loadPatterns();
+  loadEditorSettings();
   
   // Set up event listeners
   patternSelector.addEventListener('change', () => {

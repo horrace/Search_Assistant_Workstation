@@ -1,3 +1,6 @@
+// Set NODE_ENV for development mode BEFORE importing API
+process.env.NODE_ENV = 'development';
+
 const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
@@ -7,9 +10,6 @@ const { api } = require('./api'); // Import the JavaScript API
 //if (api && typeof api.create_pattern === 'function') {
     //console.log(">>>> MAIN.JS DEBUG: api.create_pattern function body (first 100 chars):", api.create_pattern.toString().substring(0, 100));
 //}
-
-// Set NODE_ENV for development mode
-process.env.NODE_ENV = 'development';
 
 // Hot reload setup in development mode
 try {
@@ -232,16 +232,25 @@ function createEditorWindow() {
 
 function createTumblerWindow(patternName) {
   const savedPosition = api.get_tumbler_window_position();
+  const savedSize = api.get_tumbler_window_size();
   let initialX, initialY;
-  const windowWidth = 500;
-  const windowHeight = 300;
+  let windowWidth = 500; // Default width
+  const windowHeight = 300; // Fixed height
+  
+  // Use saved width if available
+  if (savedSize && typeof savedSize.width === 'number') {
+    windowWidth = Math.max(300, Math.min(1200, savedSize.width)); // Constrain to min/max
+    console.log(`Found saved Tumbler width: ${windowWidth}`);
+  } else {
+    console.log("No saved Tumbler width found, using default.");
+  }
 
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
     // Validate the saved position
     const validatedPos = ensureWindowInBounds(savedPosition.x, savedPosition.y, windowWidth, windowHeight);
     initialX = validatedPos.x;
     initialY = validatedPos.y;
-    //console.log(`Found saved Tumbler position: x=${initialX}, y=${initialY}`);
+    console.log(`Found saved Tumbler position: x=${initialX}, y=${initialY}`);
   } else {
     // Default position if none saved (e.g., centered on parent or primary display)
     // For now, let Electron handle default positioning if nothing is saved.
@@ -267,7 +276,11 @@ function createTumblerWindow(patternName) {
     },
     backgroundColor: '#00000000', // Fully transparent background
     show: false,
-    resizable: false, // Prevent user resizing which can interfere with dragging
+    resizable: true, // Allow resizing
+    minWidth: 300, // Minimum width
+    maxWidth: 1200, // Maximum width
+    minHeight: windowHeight, // Fix height to original
+    maxHeight: windowHeight, // Fix height to original
     fullscreenable: false // Prevent fullscreen which can affect size
   });
 
@@ -285,24 +298,40 @@ function createTumblerWindow(patternName) {
     moveTimeout = setTimeout(() => {
       if (tumblerWindow) { // Check if window still exists
         const [x, y] = tumblerWindow.getPosition();
-        //console.log(`Tumbler moved to: x=${x}, y=${y}. Saving position.`);
+        console.log(`Tumbler moved to: x=${x}, y=${y}. Saving position.`);
         api.save_tumbler_window_position({ x, y });
       }
     }, 500);
   });
   
+//   // Save size on resize (debounced)
+//   let resizeTimeout;
+//   tumblerWindow.on('resize', () => {
+//     clearTimeout(resizeTimeout);
+//     resizeTimeout = setTimeout(() => {
+//       if (tumblerWindow && !tumblerWindow.isDestroyed()) {
+//         const [width, height] = tumblerWindow.getSize();
+//         //console.log(`Tumbler resized to: width=${width}, height=${height}. Saving size.`);
+//         api.save_tumbler_window_size({ width, height });
+//       }
+//     }, 500);
+//   });
+  
   // Use 'close' event to save position *before* the window is destroyed
   tumblerWindow.on('close', () => {
-    clearTimeout(moveTimeout); // Clear any pending save on move
+    // clearTimeout(moveTimeout); // Clear any pending save on move
+    // clearTimeout(resizeTimeout); // Clear any pending save on resize
     
     // Check if tumblerWindow still exists and is not yet destroyed
     // This check is more of a safeguard; 'close' should fire before destruction.
     if (tumblerWindow && !tumblerWindow.isDestroyed()) {
       const [x, y] = tumblerWindow.getPosition();
-      //console.log(`Tumbler about to close at: x=${x}, y=${y}. Saving final position.`);
+      const [width, height] = tumblerWindow.getSize();
+      console.log(`Tumbler about to close at: x=${x}, y=${y}, size: ${width}x${height}. Saving final position and size.`);
       api.save_tumbler_window_position({ x, y });
+      api.save_tumbler_window_size({ width, height });
     } else {
-      console.log("Tumbler window was already destroyed or null before 'close' event finished processing for saving position.");
+      console.log("Tumbler window was already destroyed or null before 'close' event finished processing for saving position and size.");
     }
     // It's important that tumblerWindow is nulled *after* any operations on it.
     // And mainWindow.show() should be called after we're done with tumblerWindow.
@@ -319,11 +348,13 @@ function createTumblerWindow(patternName) {
   tumblerWindow.once('ready-to-show', () => {
     mainWindow.hide();
     tumblerWindow.show();
-    // Save initial position once shown, in case it's a new window or position was defaulted
+    // Save initial position and size once shown, in case it's a new window or defaults were used
     if (tumblerWindow) {
         const [x, y] = tumblerWindow.getPosition();
-        //console.log(`Tumbler shown at: x=${x}, y=${y}. Saving initial position.`);
-        api.save_tumbler_window_position({ x, y });
+        const [width, height] = tumblerWindow.getSize();
+    	console.log(`Tumbler shown at: x, y;  at size: width}xheight. Saving initial position and size.`);
+        // api.save_tumbler_window_position({ x, y });
+        // api.save_tumbler_window_size({ width, height });
     }
   });
 
@@ -331,6 +362,7 @@ function createTumblerWindow(patternName) {
   if (/^(27|28)\.\d+\.\d+/.test(process.versions.electron) && process.platform === "win32") {
     tumblerWindow.on("blur", () => {
       if (!tumblerWindow) return; // Check if window still exists
+      console.log("Tumbler window blurred, workaround logic activated");
       try {
         const [width_39959, height_39959] = tumblerWindow.getSize();
         if (width_39959 > 0 && height_39959 > 0) { // Ensure size is valid
@@ -343,6 +375,7 @@ function createTumblerWindow(patternName) {
     });
     tumblerWindow.on("focus", () => {
        if (!tumblerWindow) return; // Check if window still exists
+       console.log("Tumbler window focused, workaround logic activated");
        try {
         const [width_39959, height_39959] = tumblerWindow.getSize();
         if (width_39959 > 0 && height_39959 > 0) { // Ensure size is valid
@@ -508,7 +541,6 @@ function registerGlobalShortcuts() {
     console.error('Error in registerGlobalShortcuts:', error);
   }
 }
-
 function unregisterAllShortcuts() {
   registeredShortcuts.forEach(accelerator => {
     globalShortcut.unregister(accelerator);
@@ -516,7 +548,6 @@ function unregisterAllShortcuts() {
   registeredShortcuts = [];
   console.log('Unregistered all global shortcuts');
 }
-
 function executeShortcutAction(shortcut) {
   try {
     console.log(`Executing shortcut action: ${shortcut.action}`);
@@ -594,7 +625,6 @@ function executeShortcutAction(shortcut) {
 ipcMain.on('register-shortcuts', () => {
   registerGlobalShortcuts();
 });
-
 ipcMain.on('unregister-shortcuts', () => {
   unregisterAllShortcuts();
 });
@@ -603,11 +633,9 @@ ipcMain.on('unregister-shortcuts', () => {
 ipcMain.on('open-editor', () => {
   if (!editorWindow) createEditorWindow();
 });
-
 ipcMain.on('open-tumbler', (event, patternName) => {
   if (!tumblerWindow) createTumblerWindow(patternName);
 });
-
 ipcMain.on('open-settings', () => {
   if (!settingsWindow || settingsWindow.isDestroyed()) {
     createSettingsWindow();
@@ -624,11 +652,9 @@ ipcMain.on('open-settings', () => {
 ipcMain.on('close-editor', () => {
   if (editorWindow) editorWindow.close();
 });
-
 ipcMain.on('close-tumbler', () => {
   if (tumblerWindow) tumblerWindow.close();
 });
-
 ipcMain.on('close-settings', () => {
   if (settingsWindow) settingsWindow.close();
 });
@@ -685,7 +711,7 @@ ipcMain.on('set-transparency', (event, value) => {
 
 // Handle API requests from the renderer process
 ipcMain.on('api-request', (event, data) => {
-  //console.log('Received API request:', data);
+//   console.log('Received API request:', data);
   
   try {
     const { method, params = {} } = data;
@@ -696,7 +722,7 @@ ipcMain.on('api-request', (event, data) => {
       // Convert snake_case to camelCase if needed (for future compatibility)
       const jsMethod = method.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
       
-      //console.log(`Calling API method: ${jsMethod || method}`);
+    //   console.log(`Calling API method: ${jsMethod || method}`);
       
       // Call the method with parameters
       if (typeof api[method] === 'function') {
@@ -704,6 +730,14 @@ ipcMain.on('api-request', (event, data) => {
         switch (method) {
           case 'get_pattern':
             result = api[method](params.pattern_name);
+            break;
+            
+          case 'get_pattern_with_outro':
+            result = api[method](params.pattern_name);
+            break;
+            
+          case 'reload_patterns':
+            result = api[method]();
             break;
             
           case 'update_pattern':
@@ -783,6 +817,14 @@ ipcMain.on('api-request', (event, data) => {
             result = api[method](params);
             break;
             
+          case 'get_editor_settings':
+            result = api[method]();
+            break;
+            
+          case 'save_editor_settings':
+            result = api[method](params);
+            break;
+            
           case 'get_parts_bank':
             result = api[method]();
             break;
@@ -835,11 +877,13 @@ ipcMain.on('api-request', (event, data) => {
     }
     
     // Send the result back to the renderer
-    // console.log(`Sending response for ${method}:`, 
-    //   typeof result === 'object' ? 
-    //     JSON.stringify(result).substring(0, 100) + (JSON.stringify(result).length > 100 ? '...' : '') : 
-    //     result
-    // );
+	if (method != "get_available_patterns" || method != "get_tumbler_settings") {
+		console.log(`${method}:`, 
+		typeof result === 'object' ? 
+			JSON.stringify(result).substring(0, 100) + (JSON.stringify(result).length > 100 ? '...' : '') : 
+			result
+		);
+	}
     
     // If result is undefined, send an empty array to prevent errors
     if (result === undefined) {

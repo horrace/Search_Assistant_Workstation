@@ -182,42 +182,6 @@
       "window": ""
     },
     {
-      "abbr": "Chart Hx, final checks",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Proofread",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "End – move on quickly",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "End – move on quickly",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
       "abbr": "MCA/ACA HD, sup Cisterns",
       "full_name": "MCA/ACA HyperDensities, Superior Cisterns",
       "strategy": "SupS+Qdr cisterns",
@@ -772,43 +736,6 @@
       "view_plane": "sag",
       "window": "bone",
       "chapterID": "chapter_1750997448877_2qentj6r2"
-    },
-    {
-      "abbr": "Chart Hx, final checks",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Proofread",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": "",
-      "chapterID": "chapter_1750997634008_uqhaa1n4y"
-    },
-    {
-      "abbr": "End – move on quickly",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "End – move on quickly",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
     }
   ],
   "MR Brain": [
@@ -1001,42 +928,6 @@
       "groupID": 0,
       "chunkID": 0,
       "chapter": "5",
-      "view_plane": "ax",
-      "window": ""
-    },
-    {
-      "abbr": "Chart Hx, final checks",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "ax",
-      "window": ""
-    },
-    {
-      "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Proofread",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "ax",
-      "window": ""
-    },
-    {
-      "abbr": "End – move on quickly",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "End – move on quickly",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
       "view_plane": "ax",
       "window": ""
     }
@@ -1350,42 +1241,6 @@
       "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1751086857135_duf0xqvcz"
-    },
-    {
-      "abbr": "Chart Hx, final checks",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Proofread",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "End",
-      "strategy": "move on quickly",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "End",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
     }
   ],
   "CT Chest": [
@@ -1700,42 +1555,6 @@
       "view_plane": "sag",
       "window": "",
       "chapterID": "chapter_1750993111805_bxykzcved"
-    },
-    {
-      "abbr": "Chart Hx, final checks",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Proofread",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "End – move on quickly",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "End – move on quickly",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
     }
   ],
   "CT AP": [
@@ -2154,42 +1973,6 @@
       "window": "",
       "chapter": "Bone/ST",
       "chapterID": "chapter_1750997108450_san49i9n4"
-    },
-    {
-      "abbr": "Chart Hx, final checks",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Proofread",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
-    },
-    {
-      "abbr": "End – MOVE ON QUICKLY",
-      "strategy": "",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "End – move on quickly",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "",
-      "view_plane": "",
-      "window": ""
     }
   ],
   "CT CAP": [
@@ -2749,13 +2532,14 @@
       "view_plane": "sag",
       "window": "",
       "chapterID": "chapter_1750980254082_aq0io076v"
-    },
+    }
+  ],
+  "Outro": [
     {
       "abbr": "Chart Hx, final checks",
       "strategy": "",
-      "window_level": "",
+      "full_name": "",
       "best_seen_on": "",
-      "full_name": "Chart Hx, final checks",
       "groupID": 0,
       "chunkID": 0,
       "chapter": "",
@@ -2764,10 +2548,9 @@
     },
     {
       "abbr": "Proofread",
-      "strategy": "impression > findings",
-      "window_level": "",
+      "strategy": "Impression > findings",
+      "full_name": "",
       "best_seen_on": "",
-      "full_name": "Proofread",
       "groupID": 0,
       "chunkID": 0,
       "chapter": "",
@@ -2775,11 +2558,10 @@
       "window": ""
     },
     {
-      "abbr": "End",
-      "strategy": "move on quickly",
-      "window_level": "",
+      "abbr": "End - Move on Quickly",
+      "strategy": "",
+      "full_name": "",
       "best_seen_on": "",
-      "full_name": "End – move on quickly",
       "groupID": 0,
       "chunkID": 0,
       "chapter": "",

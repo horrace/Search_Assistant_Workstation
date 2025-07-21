@@ -1,24 +1,26 @@
 {
   "transparency": 1,
   "tumbler": {
-    "hideBackground": false,
-    "showChapterAsChunk": true
+    "hideBackground": true,
+    "showChapterAsChunk": true,
+    "inlineHeaderLayout": true,
+    "hideViewPlaneInChapter": true
   },
   "mainWindowPosition": {
-    "x": 596,
-    "y": 246
+    "x": 1712,
+    "y": 298
   },
   "editorWindowPosition": {
-    "x": 862,
-    "y": 82
+    "x": 603,
+    "y": 190
   },
   "tumblerWindowPosition": {
-    "x": 302,
-    "y": 250
+    "x": 549,
+    "y": 558
   },
   "settingsWindowPosition": {
-    "x": 574,
-    "y": 148
+    "x": 622,
+    "y": 404
   },
   "shortcuts": [
     {
@@ -48,7 +50,7 @@
     {
       "id": "advance-tumbler",
       "name": "Advance Tumbler",
-      "accelerator": "Ctrl+Alt+D",
+      "accelerator": "Ctrl+Space",
       "action": "advance-tumbler",
       "enabled": true,
       "description": ""
@@ -61,5 +63,12 @@
       "enabled": false,
       "description": "(editor and tumbler)"
     }
-  ]
+  ],
+  "editor": {
+    "hideOutroInEditor": true
+  },
+  "tumblerWindowSize": {
+    "width": 771,
+    "height": 301
+  }
 }

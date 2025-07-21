@@ -20,11 +20,11 @@
         
         .window-header {
             display: flex;
+			height: 5px;
             justify-content: space-between;
             align-items: center;
             padding: 10px 15px;
             background-color: #404040;
-            border-bottom: 1px solid #505050;
             -webkit-app-region: drag;
         }
         
@@ -57,14 +57,14 @@
         .settings-container {
             flex: 1;
             overflow-y: auto;
-            padding: 20px;
+            padding: 0px 15px;
         }
         
         .settings-section {
             background-color: #404040;
             border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 15px 18px;
+            margin-bottom: 15px;
         }
         
         .section-title {
@@ -72,13 +72,13 @@
             font-weight: bold;
             color: #f0f0f0;
             border-bottom: 1px solid #505050;
-            padding-bottom: 10px;
+            padding-bottom: 6px;
         }
         
         .section-description {
             color: #a0a0a0;
             font-size: 14px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             line-height: 1.4;
         }
         
@@ -88,17 +88,16 @@
         }
         
         .shortcut-item {
-            background-color: #505050;
             border-radius: 6px;
-            padding: 15px;
+            padding: 0px;
             margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 5px;
         }
         
         .shortcut-info {
-            flex: 1;
+            flex: 0.7;
         }
         
         .shortcut-name {
@@ -106,12 +105,6 @@
             color: #f0f0f0;
             margin-bottom: 4px;
             font-size: 15px;
-        }
-        
-        .shortcut-description {
-            color: #a0a0a0;
-            font-size: 13px;
-            line-height: 1.3;
         }
         
         .shortcut-key {
@@ -132,7 +125,7 @@
         }
         
         .shortcut-enabled {
-            margin-left: 15px;
+            margin-left: 5px;
         }
         
         .shortcut-enabled label {
@@ -184,7 +177,7 @@
         
         .checkbox-control input[type="checkbox"] {
             margin-right: 10px;
-            margin-left: 0;
+            margin-left: 5px;
         }
         
         .checkbox-control label {
@@ -272,25 +265,92 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+    <!-- Window Header -->
+    <div class="window-header">
+        <div class="window-title"></div>
+        <div class="window-controls">
+            <button class="window-close-btn" id="close-settings-btn">✕</button>
+        </div>
+    </div>
 
-    
-	<!-- Global Shortcuts Section -->
-	<div class="settings-section">
-		<div class="shortcuts-header">
-			<div class="window-title">Keyboard Shortcuts</div>
-			<button class="window-close-btn" id="close-settings-btn">✕</button>
-		</div>
+    <!-- Settings Container -->
+    <div class="settings-container">
+        <!-- Pattern Reviewer Settings Section -->
+        <div class="settings-section">
+            <div class="section-title">Pattern Reviewer Settings</div>
+            <div class="section-description"></div>
+            
+            <div class="settings-item">
+                <div class="checkbox-control">
+                    <input type="checkbox" id="hide-background">
+                    <label for="hide-background">Text Only Mode</label>
+                </div>
+                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+                    Minimalist Reviewer for least visual distraction
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="checkbox-control">
+                    <input type="checkbox" id="show-chapter-as-chunk">
+                    <label for="show-chapter-as-chunk">Review by Chapter</label>
+                </div>
+                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+                    When disabled, Reviewer advances one part at a time. Only applies to non-chunked chapters.
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="checkbox-control">
+                    <input type="checkbox" id="inline-header-layout">
+                    <label for="inline-header-layout">Inline Header Layout</label>
+                </div>
+                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+                    Move header controls to same row as content: chapter label on left, controls on right.
+                </div>
+            </div>
+            
+            <div class="settings-item">
+                <div class="checkbox-control">
+                    <input type="checkbox" id="hide-view-plane-in-chapter">
+                    <label for="hide-view-plane-in-chapter">Hide View Plane when in Chapter Name</label>
+                </div>
+                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+                    When enabled, hides view plane display if it appears in the chapter title (e.g., "Axial Brain" chapter hides "ax" view planes).
+                </div>
+            </div>
+        </div>
 
-		<div id="shortcuts-list" class="shortcuts-list">
-			<!-- Shortcuts will be populated here -->
-		</div>
+        <!-- Editor Settings Section -->
+        <div class="settings-section">
+            <div class="section-title">Editor Settings</div>
+            <div class="section-description"></div>
+            
+            <div class="settings-item">
+                <div class="checkbox-control">
+                    <input type="checkbox" id="hide-outro-in-editor">
+                    <label for="hide-outro-in-editor">Hide Outro while editing other patterns</label>
+                </div>
+                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+                </div>
+            </div>
+        </div>
 
-		<div style="display: flex; gap: 10px;">
-			<button id="reset-shortcuts-btn" class="btn btn-secondary">Reset to Defaults</button>
-			<button id="save-shortcuts-btn" class="btn btn-primary">Save & Apply Shortcuts</button>
-			<button id="close-btn" class="btn btn-secondary">Close</button>
-		</div>
-	</div>
+        <!-- Keyboard Shortcuts Section -->
+        <div class="settings-section">
+            <div class="section-title">Keyboard Shortcuts</div>
+            <div class="section-description"></div>
+
+            <div id="shortcuts-list" class="shortcuts-list">
+                <!-- Shortcuts will be populated here -->
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px;">
+                <button id="reset-shortcuts-btn" class="btn btn-secondary">Reset Shortcuts</button>
+                <button id="save-shortcuts-btn" class="btn btn-primary">Save Shortcuts</button>
+            </div>
+        </div>
+    </div>
     
     <script src="settings.js"></script>
 </body>

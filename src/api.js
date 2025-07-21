@@ -17,32 +17,70 @@ class SearchPatternAPI {
     this.appPath = app.getAppPath();
     console.log('App path:', this.appPath);
     
-    // For portable apps, prioritize the directory next to the executable
+    // Determine if we're in development mode
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    console.log('Running in development mode:', isDevelopment);
+    
     const executableDir = path.dirname(process.execPath);
     console.log('Executable directory:', executableDir);
     
-    // Try multiple locations for data files (portable-first approach)
-    this.dataLocations = [
-      executableDir,                                   // Directory next to executable (portable)
-      path.join(this.appPath, 'src'),                  // Check in src directory
-      path.join(this.appPath),                         // Check in app root
-      path.dirname(this.appPath),                      // Check in parent directory
-      path.join(app.getPath('userData')),              // Check in user data directory
-      path.join(app.getPath('userData'), 'data'),      // Check in user data/data directory
-    ];
+    // Configure data locations based on mode
+    if (isDevelopment) {
+      // Development mode: prioritize project directories
+      this.dataLocations = [
+        path.join(this.appPath, 'src'),                  // Check in src directory first
+        path.join(this.appPath),                         // Check in app root
+        path.dirname(this.appPath),                      // Check in parent directory
+        path.join(app.getPath('userData')),              // Check in user data directory
+        path.join(app.getPath('userData'), 'data'),      // Check in user data/data directory
+        executableDir,                                   // Directory next to executable (last resort)
+      ];
+      this.dataDir = this.dataLocations[0]; // Default to src directory in development
+    } else {
+      // Production mode: prioritize executable directory (portable-first approach)
+      this.dataLocations = [
+        executableDir,                                   // Directory next to executable (portable)
+        path.join(this.appPath, 'src'),                  // Check in src directory
+        path.join(this.appPath),                         // Check in app root
+        path.dirname(this.appPath),                      // Check in parent directory
+        path.join(app.getPath('userData')),              // Check in user data directory
+        path.join(app.getPath('userData'), 'data'),      // Check in user data/data directory
+      ];
+      this.dataDir = this.dataLocations[0]; // Default to executable directory in production
+    }
     
     // Log all potential locations
-    console.log('Checking these locations for data files:');
-    this.dataLocations.forEach(location => console.log('- ' + location));
+    console.log('Checking these locations for data files (priority order):');
+    this.dataLocations.forEach((location, index) => console.log(`${index + 1}. ${location}`));
     
-    // Set default data directory to executable directory (portable-first)
-    this.dataDir = this.dataLocations[0]; // Default to executable directory
+    // Initialize portable data files if needed
+    this.initializePortableFiles();
     
     // Try to load existing patterns and settings
     this.load_patterns();
     this.load_settings();
     
     console.log('SearchPatternAPI initialized');
+  }
+  
+  /**
+   * Initialize data files (passive approach to avoid security software detection)
+   */
+  initializePortableFiles() {
+    // We'll be passive - only create files when the user actually saves data
+    // This avoids triggering security software that monitors file creation on startup
+    
+    const primaryDataDir = this.dataLocations[0];
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      console.log('Development mode ready - data files will be created in project directory when needed:', primaryDataDir);
+    } else {
+      console.log('Portable mode ready - data files will be created in executable directory when needed:', primaryDataDir);
+    }
+    
+    // Note: We don't test write permissions or create files proactively anymore
+    // Files will be created naturally when the user saves patterns or settings
   }
   
   /**
@@ -74,7 +112,7 @@ class SearchPatternAPI {
       if (sp_list_path) {
         const data = fs.readFileSync(sp_list_path, 'utf8');
         this.patterns = JSON.parse(data);
-        //console.log(`Loaded patterns for ${Object.keys(this.patterns).length} modality/parts`);
+        console.log(`Loaded patterns for ${Object.keys(this.patterns).length} modality/parts`);
         
         // Remember this directory for future saves
         this.dataDir = path.dirname(sp_list_path);
@@ -114,17 +152,10 @@ class SearchPatternAPI {
   }
   
   /**
-   * Save patterns to sp_list.json
+   * Save patterns to sp_list.json (with fallback for portable mode)
    */
   save_patterns() {
     try {
-      // Create the directory if it doesn't exist
-      if (!fs.existsSync(this.dataDir)) {
-        fs.mkdirSync(this.dataDir, { recursive: true });
-      }
-      
-      const sp_list_path = path.join(this.dataDir, 'sp_list.json');
-      
       // Log a snippet of the data about to be saved for the first pattern found
       if (this.patterns && Object.keys(this.patterns).length > 0) {
         const firstPatternName = Object.keys(this.patterns)[0];
@@ -135,9 +166,33 @@ class SearchPatternAPI {
       }
 
       const data_to_save = JSON.stringify(this.patterns, null, 2);
-      fs.writeFileSync(sp_list_path, data_to_save);
-      console.log("[API save_patterns] Patterns saved successfully to:", sp_list_path);
-      return true;
+      
+      // Try to save to each location until one succeeds (portable-first approach)
+      for (const location of this.dataLocations) {
+        try {
+          // Create the directory if it doesn't exist
+          if (!fs.existsSync(location)) {
+            fs.mkdirSync(location, { recursive: true });
+          }
+          
+          const sp_list_path = path.join(location, 'sp_list.json');
+          fs.writeFileSync(sp_list_path, data_to_save);
+          
+          // If successful, update our data directory and return
+          this.dataDir = location;
+          console.log("[API save_patterns] Patterns saved successfully to:", sp_list_path);
+          return true;
+          
+        } catch (locationError) {
+          console.log(`[API save_patterns] Cannot write to ${location}: ${locationError.message}`);
+          // Continue to next location
+        }
+      }
+      
+      // If we get here, all locations failed
+      console.error("[API save_patterns] Failed to save to any location");
+      return false;
+      
     } catch (error) {
       console.error(`Error saving patterns: ${error.message}`);
       console.error(error.stack);
@@ -146,19 +201,38 @@ class SearchPatternAPI {
   }
   
   /**
-   * Save settings to settings.json
+   * Save settings to settings.json (with fallback for portable mode)
    */
   save_settings() {
     try {
-      // Create the directory if it doesn't exist
-      if (!fs.existsSync(this.dataDir)) {
-        fs.mkdirSync(this.dataDir, { recursive: true });
+      const data_to_save = JSON.stringify(this.settings, null, 2);
+      
+      // Try to save to each location until one succeeds (portable-first approach)
+      for (const location of this.dataLocations) {
+        try {
+          // Create the directory if it doesn't exist
+          if (!fs.existsSync(location)) {
+            fs.mkdirSync(location, { recursive: true });
+          }
+          
+          const settings_path = path.join(location, 'settings.json');
+          fs.writeFileSync(settings_path, data_to_save);
+          
+          // If successful, update our data directory and return
+          this.dataDir = location;
+          console.log("[API save_settings] Settings saved successfully to:", settings_path);
+          return true;
+          
+        } catch (locationError) {
+          console.log(`[API save_settings] Cannot write to ${location}: ${locationError.message}`);
+          // Continue to next location
+        }
       }
       
-      const settings_path = path.join(this.dataDir, 'settings.json');
-      fs.writeFileSync(settings_path, JSON.stringify(this.settings, null, 2));
-      //console.log("Settings saved successfully to:", settings_path);
-      return true;
+      // If we get here, all locations failed
+      console.error("[API save_settings] Failed to save settings to any location");
+      return false;
+      
     } catch (error) {
       console.error(`Error saving settings: ${error.message}`);
       console.error(error.stack);
@@ -182,6 +256,22 @@ class SearchPatternAPI {
       console.error(`Error in get_available_patterns: ${error.message}`);
       console.error(error.stack);
       return [];
+    }
+  }
+
+  /**
+   * Reload patterns from disk (useful when patterns file is updated externally)
+   */
+  reload_patterns() {
+    try {
+      console.log('Reloading patterns from disk...');
+      this.load_patterns();
+      const patternCount = Object.keys(this.patterns).length;
+      console.log(`Reloaded ${patternCount} patterns successfully`);
+      return { success: true, pattern_count: patternCount, patterns: Object.keys(this.patterns) };
+    } catch (error) {
+      console.error(`Error reloading patterns: ${error.message}`);
+      return { success: false, error: error.message };
     }
   }
   
@@ -209,6 +299,50 @@ class SearchPatternAPI {
       console.error(`Error in get_pattern: ${error.message}`);
       console.error(error.stack);
       return []; // Or an error object
+    }
+  }
+
+  /**
+   * Get a specific pattern by name with Outro automatically appended (for tumbler display)
+   */
+  get_pattern_with_outro(pattern_name) {
+    // Check if pattern_name is a string
+    if (typeof pattern_name !== 'string') {
+      console.error('Invalid pattern_name type, expected string');
+      return [];
+    }
+    
+    try {
+      // Don't append Outro to itself
+      if (pattern_name === 'Outro') {
+        return this.get_pattern(pattern_name);
+      }
+      
+      const basePattern = this.get_pattern(pattern_name);
+      const outroPattern = this.get_pattern('Outro');
+      
+      // If no Outro pattern exists, just return the base pattern
+      if (!outroPattern || outroPattern.length === 0) {
+        return basePattern;
+      }
+      
+      // Create a deep copy of the base pattern and append Outro items
+      const result = JSON.parse(JSON.stringify(basePattern));
+      
+      // Mark Outro items to distinguish them visually
+      const outroItems = outroPattern.map(item => ({
+        ...JSON.parse(JSON.stringify(item)),
+        isOutroItem: true // Flag to identify Outro items
+      }));
+      
+      result.push(...outroItems);
+      
+      console.log(`Pattern with Outro: ${pattern_name} has ${basePattern.length} base items + ${outroItems.length} outro items = ${result.length} total`);
+      return result;
+      
+    } catch (error) {
+      console.error(`Error getting pattern with outro ${pattern_name}: ${error.message}`);
+      return this.get_pattern(pattern_name); // Fallback to base pattern
     }
   }
   
@@ -822,6 +956,28 @@ class SearchPatternAPI {
   }
 
   /**
+   * Get the current editor settings
+   */
+  get_editor_settings() {
+    return this.settings.editor || {};
+  }
+  
+  /**
+   * Save editor settings
+   */
+  save_editor_settings(settings_data) {
+    try {
+      // Store the editor settings
+      this.settings.editor = settings_data;
+      this.save_settings();
+      return { success: true, settings: settings_data };
+    } catch (error) {
+      console.error(`Error saving editor settings: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
    * Get the current tumbler window position settings
    */
   get_tumbler_window_position() {
@@ -842,6 +998,31 @@ class SearchPatternAPI {
       return { success: true, position: position_data };
     } catch (error) {
       console.error(`Error saving tumbler window position: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get the current tumbler window size settings
+   */
+  get_tumbler_window_size() {
+    return this.settings.tumblerWindowSize || null;
+  }
+
+  /**
+   * Save tumbler window size settings
+   */
+  save_tumbler_window_size(size_data) {
+    try {
+      // Ensure this.settings is initialized
+      if (!this.settings) {
+        this.settings = {};
+      }
+      this.settings.tumblerWindowSize = size_data;
+      this.save_settings();
+      return { success: true, size: size_data };
+    } catch (error) {
+      console.error(`Error saving tumbler window size: ${error.message}`);
       return { success: false, error: error.message };
     }
   }
@@ -1309,7 +1490,7 @@ class SearchPatternAPI {
         accelerator: 'Alt+Q',
         action: 'toggle-main',
         enabled: false,
-        description: 'Show/hide the main application window'
+        description: ''
       },
       {
         id: 'show-main',
@@ -1317,7 +1498,7 @@ class SearchPatternAPI {
         accelerator: 'Alt+S',
         action: 'show-main',
         enabled: false,
-        description: 'Show and focus the main application window'
+        description: 'Show and focus main window'
       },
       {
         id: 'open-editor',
@@ -1325,7 +1506,7 @@ class SearchPatternAPI {
         accelerator: 'Alt+E',
         action: 'open-editor',
         enabled: false,
-        description: 'Open the pattern editor window'
+        description: ''
       },
       {
         id: 'advance-tumbler',
@@ -1333,7 +1514,7 @@ class SearchPatternAPI {
         accelerator: 'Alt+D',
         action: 'advance-tumbler',
         enabled: true,
-        description: 'Advance to the next item in the tumbler when tumbler is open'
+        description: ''
       },
       {
         id: 'close-all',
