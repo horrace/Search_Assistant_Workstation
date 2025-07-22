@@ -184,6 +184,7 @@
             margin-bottom: 0;
             font-weight: normal;
             cursor: pointer;
+			text-wrap: nowrap;
         }
         
         /* Action buttons */
@@ -284,19 +285,20 @@
                 <div class="checkbox-control">
                     <input type="checkbox" id="hide-background">
                     <label for="hide-background">Text Only Mode</label>
+					<div style="margin-left: 10px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+						Minimalist Reviewer for least visual distraction
+					</div>
                 </div>
-                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
-                    Minimalist Reviewer for least visual distraction
-                </div>
+
             </div>
             
             <div class="settings-item">
                 <div class="checkbox-control">
                     <input type="checkbox" id="show-chapter-as-chunk">
                     <label for="show-chapter-as-chunk">Review by Chapter</label>
-                </div>
-                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
-                    When disabled, Reviewer advances one part at a time. Only applies to non-chunked chapters.
+					<div style="margin-left: 10px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+						Advance by chapter (not part). Only applies to non-chunked chapters.
+					</div>
                 </div>
             </div>
             
@@ -304,19 +306,19 @@
                 <div class="checkbox-control">
                     <input type="checkbox" id="inline-header-layout">
                     <label for="inline-header-layout">Inline Header Layout</label>
-                </div>
-                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
-                    Move header controls to same row as content: chapter label on left, controls on right.
+					<div style="margin-left: 10px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+						Move header controls to same row as content
+					</div>
                 </div>
             </div>
             
             <div class="settings-item">
                 <div class="checkbox-control">
                     <input type="checkbox" id="hide-view-plane-in-chapter">
-                    <label for="hide-view-plane-in-chapter">Hide View Plane when in Chapter Name</label>
-                </div>
-                <div style="margin-left: 30px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
-                    When enabled, hides view plane display if it appears in the chapter title (e.g., "Axial Brain" chapter hides "ax" view planes).
+                    <label for="hide-view-plane-in-chapter">Decrease View Plane Redundancy</label>
+					<div style="margin-left: 10px; margin-top: 5px; color: #a0a0a0; font-size: 13px;">
+						(e.g., "Axial Brain" chapter hides "ax" view planes).
+					</div>
                 </div>
             </div>
         </div>

@@ -292,7 +292,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
   
-  // Render the pattern list
+  // Render the pattern list (for editor window [pretty sure])
   function renderPatternList() {
     console.log('Rendering pattern list with', patterns.length, 'patterns');
     

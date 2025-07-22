@@ -547,7 +547,6 @@ function registerGlobalShortcuts() {
     console.error('Error in registerGlobalShortcuts:', error);
   }
 }
-
 function unregisterAllShortcuts() {
   registeredShortcuts.forEach(accelerator => {
     globalShortcut.unregister(accelerator);
@@ -555,7 +554,6 @@ function unregisterAllShortcuts() {
   registeredShortcuts = [];
   console.log('Unregistered all global shortcuts');
 }
-
 function executeShortcutAction(shortcut) {
   try {
     console.log(`Executing shortcut action: ${shortcut.action}`);
@@ -633,7 +631,6 @@ function executeShortcutAction(shortcut) {
 ipcMain.on('register-shortcuts', () => {
   registerGlobalShortcuts();
 });
-
 ipcMain.on('unregister-shortcuts', () => {
   unregisterAllShortcuts();
 });
@@ -642,11 +639,9 @@ ipcMain.on('unregister-shortcuts', () => {
 ipcMain.on('open-editor', () => {
   if (!editorWindow) createEditorWindow();
 });
-
 ipcMain.on('open-tumbler', (event, patternName) => {
   if (!tumblerWindow) createTumblerWindow(patternName);
 });
-
 ipcMain.on('open-settings', () => {
   if (!settingsWindow || settingsWindow.isDestroyed()) {
     createSettingsWindow();
@@ -663,11 +658,9 @@ ipcMain.on('open-settings', () => {
 ipcMain.on('close-editor', () => {
   if (editorWindow) editorWindow.close();
 });
-
 ipcMain.on('close-tumbler', () => {
   if (tumblerWindow) tumblerWindow.close();
 });
-
 ipcMain.on('close-settings', () => {
   if (settingsWindow) settingsWindow.close();
 });

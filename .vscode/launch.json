@@ -17,6 +17,48 @@
       "skipFiles": [
         "<node_internals>/**"
       ]
+    },
+
+    {
+        "name": "Debug Main Process",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "program": "${workspaceFolder}/src/main.js",
+        "env": {
+            "NODE_ENV": "development"
+        },
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"]
+    },
+    {
+        "name": "Debug Renderer Process", 
+        "type": "chrome",
+        "request": "launch",
+        "url": "http://localhost:3000",
+        "webRoot": "${workspaceFolder}/src",
+        "skipFiles": ["<node_internals>/**"]
+    },
+
+
+    {
+        "name": "Debug Electron Main",
+        "type": "node",
+        "request": "launch",
+        "cwd": "${workspaceFolder}",
+        "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+        "windows": {
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+        },
+        "args": ["."],
+        "outputCapture": "std",
+        "console": "integratedTerminal"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Debug Both Processes",
+      "configurations": ["Debug Main Process", "Debug Renderer Process"]
     }
   ]
 } 
