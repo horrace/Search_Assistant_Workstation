@@ -1,5 +1,13 @@
-// Set NODE_ENV for development mode BEFORE importing API
-process.env.NODE_ENV = 'development';
+// Set NODE_ENV for development mode BEFORE importing API only if not already set
+// In portable mode, NODE_ENV should remain undefined or 'production'
+if (!process.env.NODE_ENV) {
+  // Only set to development if we're actually running from source (not packaged)
+  if (process.defaultApp || /[\\/]electron-prebuilt[\\/]/.test(process.execPath) || /[\\/]electron[\\/]/.test(process.execPath)) {
+    process.env.NODE_ENV = 'development';
+  } else {
+    process.env.NODE_ENV = 'production';
+  }
+}
 
 const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
 const path = require('path');

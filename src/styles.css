@@ -757,7 +757,7 @@ footer {
 /* Settings menu styles */
 .settings-container {
   position: relative;
-  margin-right: auto;
+  margin-right: 15px;
 }
 
 .settings-button {

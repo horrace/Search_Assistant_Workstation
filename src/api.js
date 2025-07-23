@@ -37,14 +37,9 @@ class SearchPatternAPI {
       ];
       this.dataDir = this.dataLocations[0]; // Default to src directory in development
     } else {
-      // Production mode: prioritize executable directory (portable-first approach)
+      // Production mode: ONLY use executable directory (true portable mode)
       this.dataLocations = [
-        executableDir,                                   // Directory next to executable (portable)
-        path.join(this.appPath, 'src'),                  // Check in src directory
-        path.join(this.appPath),                         // Check in app root
-        path.dirname(this.appPath),                      // Check in parent directory
-        path.join(app.getPath('userData')),              // Check in user data directory
-        path.join(app.getPath('userData'), 'data'),      // Check in user data/data directory
+        executableDir,                                   // Directory next to executable (portable) - ONLY location
       ];
       this.dataDir = this.dataLocations[0]; // Default to executable directory in production
     }
@@ -76,7 +71,8 @@ class SearchPatternAPI {
     if (isDevelopment) {
       console.log('Development mode ready - data files will be created in project directory when needed:', primaryDataDir);
     } else {
-      console.log('Portable mode ready - data files will be created in executable directory when needed:', primaryDataDir);
+      console.log('True portable mode - data files will ONLY be created in executable directory:', primaryDataDir);
+      console.log('No fallback locations - executable directory must be writable for app to function');
     }
     
     // Note: We don't test write permissions or create files proactively anymore
@@ -167,7 +163,9 @@ class SearchPatternAPI {
 
       const data_to_save = JSON.stringify(this.patterns, null, 2);
       
-      // Try to save to each location until one succeeds (portable-first approach)
+      // Try to save to each location until one succeeds
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
       for (const location of this.dataLocations) {
         try {
           // Create the directory if it doesn't exist
@@ -184,12 +182,19 @@ class SearchPatternAPI {
           return true;
           
         } catch (locationError) {
-          console.log(`[API save_patterns] Cannot write to ${location}: ${locationError.message}`);
-          // Continue to next location
+          if (isDevelopment) {
+            console.log(`[API save_patterns] Cannot write to ${location}: ${locationError.message}`);
+            // Continue to next location in development mode
+          } else {
+            // In production (portable) mode, there's only one location - fail immediately with clear message
+            console.error(`[API save_patterns] PORTABLE MODE ERROR: Cannot write to executable directory ${location}: ${locationError.message}`);
+            console.error("[API save_patterns] The executable directory must be writable for the portable app to function");
+            return false;
+          }
         }
       }
       
-      // If we get here, all locations failed
+      // If we get here, all locations failed (only possible in development mode)
       console.error("[API save_patterns] Failed to save to any location");
       return false;
       
@@ -207,7 +212,9 @@ class SearchPatternAPI {
     try {
       const data_to_save = JSON.stringify(this.settings, null, 2);
       
-      // Try to save to each location until one succeeds (portable-first approach)
+      // Try to save to each location until one succeeds
+      const isDevelopment = process.env.NODE_ENV === 'development';
+      
       for (const location of this.dataLocations) {
         try {
           // Create the directory if it doesn't exist
@@ -224,12 +231,19 @@ class SearchPatternAPI {
           return true;
           
         } catch (locationError) {
-          console.log(`[API save_settings] Cannot write to ${location}: ${locationError.message}`);
-          // Continue to next location
+          if (isDevelopment) {
+            console.log(`[API save_settings] Cannot write to ${location}: ${locationError.message}`);
+            // Continue to next location in development mode
+          } else {
+            // In production (portable) mode, there's only one location - fail immediately with clear message
+            console.error(`[API save_settings] PORTABLE MODE ERROR: Cannot write to executable directory ${location}: ${locationError.message}`);
+            console.error("[API save_settings] The executable directory must be writable for the portable app to function");
+            return false;
+          }
         }
       }
       
-      // If we get here, all locations failed
+      // If we get here, all locations failed (only possible in development mode)
       console.error("[API save_settings] Failed to save settings to any location");
       return false;
       

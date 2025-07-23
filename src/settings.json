@@ -7,20 +7,20 @@
     "hideViewPlaneInChapter": true
   },
   "mainWindowPosition": {
-    "x": 20,
-    "y": 809
+    "x": 198,
+    "y": 290
   },
   "editorWindowPosition": {
-    "x": 410,
-    "y": 46
+    "x": 190,
+    "y": 78
   },
   "tumblerWindowPosition": {
-    "x": 1256,
-    "y": 294
+    "x": 424,
+    "y": 389
   },
   "settingsWindowPosition": {
-    "x": 574,
-    "y": 148
+    "x": 398,
+    "y": 174
   },
   "shortcuts": [
     {
@@ -56,6 +56,14 @@
       "description": ""
     },
     {
+      "id": "advance-tumbler",
+      "name": "Advance Tumbler",
+      "accelerator": "Alt+Space",
+      "action": "advance-tumbler",
+      "enabled": true,
+      "description": ""
+    },
+    {
       "id": "close-all",
       "name": "Close All Windows",
       "accelerator": "Alt+X",
@@ -69,6 +77,6 @@
   },
   "tumblerWindowSize": {
     "width": 730,
-    "height": 300
+    "height": 301
   }
 }

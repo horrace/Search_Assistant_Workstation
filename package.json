@@ -6,7 +6,8 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build-portable": "electron-builder --win portable"
   },
   "author": "",
   "license": "ISC",

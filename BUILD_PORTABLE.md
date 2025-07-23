@@ -18,7 +18,7 @@ npm run build-portable
 ```
 
 This will create a portable executable in the `dist` folder with the name:
-`Search Assistant-1.0.0-portable.exe`
+`search-assistant 1.0.0.exe`
 
 ## Portable App Features
 
