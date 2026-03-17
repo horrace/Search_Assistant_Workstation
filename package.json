@@ -7,7 +7,7 @@
     "start": "electron .",
     "dev": "electron . --dev",
     "build": "electron-builder",
-    "build-portable": "electron-builder --win portable"
+    "build-portable": "electron-builder --win portable --publish never && node scripts\\clean-dist.js"
   },
   "author": "",
   "license": "ISC",
@@ -26,11 +26,23 @@
   },
   "build": {
     "appId": "com.searchassistant.app",
+    "asar": false,
+    "compression": "normal",
     "win": {
-      "target": [
-        "nsis",
-        "portable"
-      ]
-    }
+      "target": "portable"
+    },
+    "portable": {
+      "artifactName": "SearchAssistant_Portable_${version}.exe",
+      "requestExecutionLevel": "user",
+      "unpackDirName": "app"
+    },
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*",
+      "node_modules/**/*",
+      "package.json"
+    ]
   }
 }

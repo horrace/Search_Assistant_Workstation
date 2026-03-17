@@ -9,7 +9,7 @@ if (!process.env.NODE_ENV) {
   }
 }
 
-const { app, BrowserWindow, ipcMain, screen, globalShortcut } = require('electron');
+const { app, BrowserWindow, ipcMain, screen, globalShortcut, dialog } = require('electron');
 const path = require('path');
 const Store = require('electron-store');
 const { api } = require('./api'); // Import the JavaScript API
@@ -879,6 +879,10 @@ ipcMain.on('api-request', (event, data) => {
             result = api[method](params.target_pattern, params.mirror_configs, params.replacement_context);
             break;
             
+          case 'load_sp_list_from_path':
+            result = api[method](params.filePath);
+            break;
+            
           default:
             // For simple methods with no parameters or a single parameter object
             result = params && Object.keys(params).length > 0 ? api[method](params) : api[method]();
@@ -891,11 +895,11 @@ ipcMain.on('api-request', (event, data) => {
     }
     
     // Send the result back to the renderer
-    // console.log(`Sending response for ${method}:`, 
-    //   typeof result === 'object' ? 
-    //     JSON.stringify(result).substring(0, 100) + (JSON.stringify(result).length > 100 ? '...' : '') : 
-    //     result
-    // );
+    console.log(`Sending response for ${method}:`, 
+      typeof result === 'object' ? 
+        JSON.stringify(result).substring(0, 100) + (JSON.stringify(result).length > 100 ? '...' : '') : 
+        result
+    );
     
     // If result is undefined, send an empty array to prevent errors
     if (result === undefined) {
@@ -928,6 +932,20 @@ ipcMain.handle('undo-last-action', async (event, pattern_name) => {
 
 ipcMain.handle('redo-last-action', async (event, pattern_name) => {
   return api.redo_last_action(pattern_name);
+});
+
+// File dialog for selecting SP list file
+ipcMain.handle('show-sp-list-file-dialog', async (event) => {
+  const result = await dialog.showOpenDialog({
+    title: 'Select SP List File',
+    filters: [
+      { name: 'JSON Files', extensions: ['json'] },
+      { name: 'All Files', extensions: ['*'] }
+    ],
+    properties: ['openFile']
+  });
+  
+  return result;
 });
 
 // App lifecycle events
