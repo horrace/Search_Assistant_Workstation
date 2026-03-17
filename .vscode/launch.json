@@ -18,6 +18,26 @@
         "<node_internals>/**"
       ]
     },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Debug Electron via npm run dev (D: portable Node)",
+      "runtimeExecutable": "D:/node-v24.14.0-win-x64/npm.cmd",
+      "runtimeArgs": [
+        "run-script",
+        "dev"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "outputCapture": "std",
+      "autoAttachChildProcesses": true,
+      "skipFiles": [
+        "<node_internals>/**"
+      ],
+      "env": {
+        "PATH": "D:/node-v24.14.0-win-x64;${env:PATH}"
+      }
+    },
 
     {
         "name": "Debug Main Process",
