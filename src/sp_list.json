@@ -1606,11 +1606,11 @@
       "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
-      "abbr": "Lung bases",
-      "strategy": "(Thin + MIP)",
+      "abbr": "Heart, PE",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
-      "full_name": "AxLung basesMIP often sees airspace dz better",
+      "full_name": "AxHeart",
       "groupID": 0,
       "chunkID": 0,
       "chapter": "Lower chest",
@@ -1619,11 +1619,11 @@
       "chapterID": "chapter_1750997108450_4tuf52b86"
     },
     {
-      "abbr": "Heart, PE",
-      "strategy": "",
+      "abbr": "Lung bases",
+      "strategy": "(Thin + MIP)",
       "window_level": "",
       "best_seen_on": "",
-      "full_name": "AxHeart",
+      "full_name": "AxLung basesMIP often sees airspace dz better",
       "groupID": 0,
       "chunkID": 0,
       "chapter": "Lower chest",

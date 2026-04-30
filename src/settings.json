@@ -1,26 +1,31 @@
 {
   "transparency": 1,
   "tumbler": {
-    "hideBackground": true,
+    "hideBackground": false,
     "showChapterAsChunk": true,
-    "inlineHeaderLayout": true,
+    "inlineHeaderLayout": false,
     "hideViewPlaneInChapter": true
   },
   "mainWindowPosition": {
-    "x": 198,
-    "y": 290
-  },
-  "editorWindowPosition": {
-    "x": 190,
-    "y": 78
-  },
-  "tumblerWindowPosition": {
-    "x": 424,
-    "y": 389
+    "x": 776,
+    "y": 176
   },
   "settingsWindowPosition": {
-    "x": 398,
-    "y": 174
+    "x": 682,
+    "y": 196
+  },
+  "editorWindowPosition": {
+    "x": 772,
+    "y": 244
+  },
+  "dataDirectory": "C:\\Users\\Jeff\\OneDrive\\Source\\PythonProjects\\SearchAssistant_Electron\\src",
+  "tumblerWindowPosition": {
+    "x": 650,
+    "y": 228
+  },
+  "tumblerWindowSize": {
+    "width": 520,
+    "height": 301
   },
   "shortcuts": [
     {
@@ -29,7 +34,7 @@
       "accelerator": "Alt+Q",
       "action": "toggle-main",
       "enabled": false,
-      "description": "Show/hide main window"
+      "description": ""
     },
     {
       "id": "show-main",
@@ -45,20 +50,12 @@
       "accelerator": "Alt+E",
       "action": "open-editor",
       "enabled": false,
-      "description": "Open Pattern Editor window"
-    },
-    {
-      "id": "advance-tumbler",
-      "name": "Advance Tumbler",
-      "accelerator": "Ctrl+Space",
-      "action": "advance-tumbler",
-      "enabled": true,
       "description": ""
     },
     {
       "id": "advance-tumbler",
       "name": "Advance Tumbler",
-      "accelerator": "Alt+Space",
+      "accelerator": "Alt+D",
       "action": "advance-tumbler",
       "enabled": true,
       "description": ""
@@ -69,14 +66,7 @@
       "accelerator": "Alt+X",
       "action": "close-all",
       "enabled": false,
-      "description": "(editor and tumbler)"
+      "description": "Close all secondary windows (editor and tumbler)"
     }
-  ],
-  "editor": {
-    "hideOutroInEditor": true
-  },
-  "tumblerWindowSize": {
-    "width": 730,
-    "height": 301
-  }
+  ]
 }
