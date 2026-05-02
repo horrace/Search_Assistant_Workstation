@@ -98,6 +98,37 @@ const chunkAssignDialogCancelBtn = document.getElementById('chunk-assign-dialog-
 
 // Mirror Content Dialog
 const mirrorContentDialog = document.getElementById('mirror-content-dialog');
+
+// SP List Menu Elements
+const spListMenuBtn = document.getElementById('sp-list-menu-btn');
+const spListDropdown = document.getElementById('sp-list-dropdown');
+const spListFilename = document.getElementById('sp-list-filename');
+const currentSpListPath = document.getElementById('current-sp-list-path');
+const loadDifferentSpListBtn = document.getElementById('load-different-sp-list-btn');
+
+// Path Information Elements
+const pathProcessCwd = document.getElementById('path-process-cwd');
+const pathProcessExecPath = document.getElementById('path-process-exec-path');
+const pathAppPath = document.getElementById('path-app-path');
+const pathPortableExecutableDir = document.getElementById('path-portable-executable-dir');
+const pathPortableExecutableFile = document.getElementById('path-portable-executable-file');
+const pathCurrentDir = document.getElementById('path-current-dir');
+const pathFilePath = document.getElementById('path-file-path');
+const pathSpListPath = document.getElementById('path-sp-list-path');
+const pathDataDir = document.getElementById('path-data-dir');
+const pathSettingsDataDir = document.getElementById('path-settings-data-dir');
+const pathNodeEnv = document.getElementById('path-node-env');
+const pathAppIsPackaged = document.getElementById('path-app-is-packaged');
+
+// Debug: Check if all elements were found (only log if any are missing)
+if (!spListMenuBtn || !spListDropdown || !spListFilename || !currentSpListPath || !loadDifferentSpListBtn) {
+  console.error('[SP List Menu] Missing DOM Elements:');
+  if (!spListMenuBtn) console.error('spListMenuBtn not found');
+  if (!spListDropdown) console.error('spListDropdown not found');
+  if (!spListFilename) console.error('spListFilename not found');
+  if (!currentSpListPath) console.error('currentSpListPath not found');
+  if (!loadDifferentSpListBtn) console.error('loadDifferentSpListBtn not found');
+}
 const mirrorSourcePatternSelect = document.getElementById('mirror-source-pattern');
 const mirrorContentSelection = document.getElementById('mirror-content-selection');
 const mirrorContentOptions = document.getElementById('mirror-content-options');
@@ -232,6 +263,10 @@ async function loadEditorSettings() {
             ...data.result
           };
           console.log('Editor settings loaded:', editorSettings);
+          // Fix race condition: if a pattern was already loaded before settings arrived, reload it
+          if (currentPattern) {
+            loadPattern(currentPattern);
+          }
         }
         unsubscribe();
       }
@@ -531,6 +566,8 @@ function renderPatternItems() {
                     <option value="MinIP" ${chunkItemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
                     <option value="Thin" ${chunkItemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
                     <option value="3D" ${chunkItemWindow === '3D' ? 'selected' : ''}>3D</option>
+					<option value="CPR" ${chunkItemWindow === 'CPR' ? 'selected' : ''}>CPR</option>
+					<option value="tMIP" ${chunkItemWindow === 'tMIP' ? 'selected' : ''}>tMIP</option>
                   </select>
                 </div>
                 <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
@@ -2847,6 +2884,133 @@ function handleSortEnd(evt) {
 }
 
 // Initialize
+// SP List Menu Functionality
+function initializeSpListMenu() {
+  // Set up event listeners for SP list menu
+  spListMenuBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleSpListDropdown();
+  });
+  
+  loadDifferentSpListBtn.addEventListener('click', () => {
+    hideSpListDropdown();
+    openSpListFileDialog();
+  });
+  
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!spListMenuBtn.contains(e.target) && !spListDropdown.contains(e.target)) {
+      hideSpListDropdown();
+    }
+  });
+  
+  // Load initial SP list info
+  updateSpListDisplay();
+}
+
+function toggleSpListDropdown() {
+  const isVisible = spListDropdown.style.display !== 'none';
+  if (isVisible) {
+    hideSpListDropdown();
+  } else {
+    showSpListDropdown();
+  }
+}
+
+function showSpListDropdown() {
+  spListDropdown.style.display = 'block';
+  updateSpListDisplay(); // Refresh the display when showing
+}
+
+function hideSpListDropdown() {
+  spListDropdown.style.display = 'none';
+}
+
+function updateSpListDisplay() {
+  // Request current SP list info from the backend
+  window.electronAPI.callAPI('get_sp_list_info', {});
+  
+  // Set up listener for the response
+  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_sp_list_info') {
+      unsubscribe(); // Remove this listener
+      
+      if (data.error) {
+        console.error('[SP List Menu] Error getting SP list info:', data.error);
+        spListFilename.textContent = 'Error loading';
+        currentSpListPath.textContent = 'Error: ' + data.error;
+        // Clear path info on error
+        pathProcessCwd.textContent = 'Error';
+        pathProcessExecPath.textContent = 'Error';
+        pathAppPath.textContent = 'Error';
+        pathCurrentDir.textContent = 'Error';
+        pathFilePath.textContent = 'Error';
+        pathSpListPath.textContent = 'Error';
+        pathDataDir.textContent = 'Error';
+        pathSettingsDataDir.textContent = 'Error';
+        pathNodeEnv.textContent = 'Error';
+        pathAppIsPackaged.textContent = 'Error';
+      } else if (data.result) {
+        const info = data.result;
+        // Update the display with the current SP list info
+        spListFilename.textContent = info.filename || 'sp_list.json';
+        currentSpListPath.textContent = info.fullPath || 'Path not available';
+        
+        // Update all the additional path information
+        pathProcessCwd.textContent = info.processCwd || 'Not available';
+        pathProcessExecPath.textContent = info.processExecPath || 'Not available';
+        pathAppPath.textContent = info.appPath || 'Not available';
+        if (pathPortableExecutableDir) pathPortableExecutableDir.textContent = info.portableExecutableDir || 'Not available';
+        if (pathPortableExecutableFile) pathPortableExecutableFile.textContent = info.portableExecutableFile || 'Not available';
+        pathCurrentDir.textContent = info.currentDir || 'Not available';
+        pathFilePath.textContent = info.filePath || 'Not available';
+        pathSpListPath.textContent = info.spListPath || 'Not available';
+        pathDataDir.textContent = info.dataDir || 'Not available';
+        pathSettingsDataDir.textContent = info.settingsDataDirectory || 'Not set';
+        pathNodeEnv.textContent = info.nodeEnv || 'Not set';
+        pathAppIsPackaged.textContent = info.appIsPackaged !== undefined ? info.appIsPackaged.toString() : 'Not available';
+      }
+    }
+  });
+}
+
+function openSpListFileDialog() {
+  // Request file dialog from main process
+  window.electronAPI.invoke('show-sp-list-file-dialog')
+    .then((result) => {
+      if (result && !result.canceled && result.filePaths && result.filePaths.length > 0) {
+        const selectedPath = result.filePaths[0];
+        loadSpListFromPath(selectedPath);
+      }
+    })
+    .catch((error) => {
+      console.error('[SP List Menu] Error opening file dialog:', error);
+    });
+}
+
+function loadSpListFromPath(filePath) {
+  // Request backend to load SP list from the specified path
+  window.electronAPI.callAPI('load_sp_list_from_path', { filePath: filePath });
+  
+  // Set up listener for the response
+  const unsubscribe = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'load_sp_list_from_path') {
+      unsubscribe(); // Remove this listener
+      
+      if (data.error) {
+        console.error('[SP List Menu] Error loading SP list from path:', data.error);
+        alert('Failed to load SP list: ' + data.error);
+      } else {
+        console.log('[SP List Menu] Successfully loaded SP list from:', filePath);
+        // Refresh the display
+        updateSpListDisplay();
+        // Reload the patterns to reflect the new SP list
+        loadPatterns();
+      }
+    }
+  });
+}
+
 function init() {
   // Add global error handler for all errors including ReferenceErrors
   window.addEventListener('error', function(event) {
@@ -2940,6 +3104,15 @@ function init() {
   // Load available patterns and editor settings
   loadPatterns();
   loadEditorSettings();
+
+  // Listen for editor settings changes from the settings window
+  window.electronAPI.on('editor-settings-changed', (newSettings) => {
+    editorSettings = { hideOutroInEditor: false, ...newSettings };
+    console.log('Editor settings changed, reloading pattern:', editorSettings);
+    if (currentPattern) {
+      loadPattern(currentPattern);
+    }
+  });
   
   // Set up event listeners
   patternSelector.addEventListener('change', () => {
@@ -2989,6 +3162,9 @@ function init() {
 
   loadPartsBank();
   setupPatternDropZone(); // Add drop zone setup
+  
+  // Initialize SP List Menu
+  initializeSpListMenu();
 
   // Debounce save pattern changes
   // Moved saveTimeout declaration outside saveCurrentPattern

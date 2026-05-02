@@ -20,6 +20,37 @@
 	<select id="pattern-selector" class="pattern-selector"></select>
 	
 	<div style="flex: 1;"></div>
+	<div class="editor-header-center">
+	  <div class="sp-list-menu">
+		<button id="sp-list-menu-btn" class="btn btn-secondary">SP List: <span id="sp-list-filename">Loading...</span></button>
+		<div id="sp-list-dropdown" class="dropdown-menu" style="display: none;">
+		  <div class="dropdown-item current-file">
+			<strong>Current File:</strong>
+			<div id="current-sp-list-path" class="file-path">Loading...</div>
+		  </div>
+		  <div class="dropdown-divider"></div>
+		  <div class="dropdown-item path-info">
+			<strong>Path Information:</strong>
+			<div class="path-details">
+			  <div class="path-item"><strong>process.cwd():</strong> <span id="path-process-cwd">Loading...</span></div>
+			  <div class="path-item"><strong>process.execPath:</strong> <span id="path-process-exec-path">Loading...</span></div>
+			  <div class="path-item"><strong>process.env.PORTABLE_EXECUTABLE_DIR:</strong> <span id="path-portable-executable-dir">Loading...</span></div>
+			  <div class="path-item"><strong>process.env.PORTABLE_EXECUTABLE_FILE:</strong> <span id="path-portable-executable-file">Loading...</span></div>
+			  <div class="path-item"><strong>app.getAppPath():</strong> <span id="path-app-path">Loading...</span></div>
+			  <div class="path-item"><strong>currentDir:</strong> <span id="path-current-dir">Loading...</span></div>
+			  <div class="path-item"><strong>filePath:</strong> <span id="path-file-path">Loading...</span></div>
+			  <div class="path-item"><strong>sp_list_path:</strong> <span id="path-sp-list-path">Loading...</span></div>
+			  <div class="path-item"><strong>this.dataDir:</strong> <span id="path-data-dir">Loading...</span></div>
+			  <div class="path-item"><strong>this.settings.dataDirectory:</strong> <span id="path-settings-data-dir">Loading...</span></div>
+			  <div class="path-item"><strong>process.env.NODE_ENV:</strong> <span id="path-node-env">Loading...</span></div>
+			  <div class="path-item"><strong>app.isPackaged:</strong> <span id="path-app-is-packaged">Loading...</span></div>
+			</div>
+		  </div>
+		  <div class="dropdown-divider"></div>
+		  <button id="load-different-sp-list-btn" class="dropdown-item-btn">Load Different SP List...</button>
+		</div>
+	  </div>
+	</div>
 	<div class="editor-header-right">
 	  <button id="new-pattern-btn" class="btn">New Pattern</button>
 	  <button id="undo-btn" class="btn" disabled>Undo</button>

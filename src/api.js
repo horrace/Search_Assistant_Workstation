@@ -17,82 +17,108 @@ class SearchPatternAPI {
     this.appPath = app.getAppPath();
     console.log('App path:', this.appPath);
     
-    // Determine if we're in development mode
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    console.log('Running in development mode:', isDevelopment);
+    // Enhanced detection for portable builds
+    const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+    // Prefer electron-builder provided env vars when running as a Portable build
+    const portableEnvDir = process.env.PORTABLE_EXECUTABLE_DIR || (process.env.PORTABLE_EXECUTABLE_FILE ? path.dirname(process.env.PORTABLE_EXECUTABLE_FILE) : null);
+    //const isPortable = process.execPath.includes('.exe') && !process.execPath.includes('node_modules');
+    const isPortable = !!portableEnvDir || (process.execPath.toLowerCase().endsWith('.exe') && !process.execPath.includes('node_modules'));
+    console.log(`[API constructor] Environment detection:`);
+    console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
+    console.log(`  - app.isPackaged: ${app.isPackaged}`);
+    console.log(`  - process.execPath: ${process.execPath}`);
+    console.log(`  - process.cwd(): ${process.cwd()}`);
+    console.log(`  - PORTABLE_EXECUTABLE_DIR: ${process.env.PORTABLE_EXECUTABLE_DIR || 'unset'}`);
+    console.log(`  - PORTABLE_EXECUTABLE_FILE: ${process.env.PORTABLE_EXECUTABLE_FILE || 'unset'}`);
+    console.log(`  - isDev: ${isDev}`);
+    console.log(`  - isPortable: ${isPortable}`);
     
-    const executableDir = path.dirname(process.execPath);
-    console.log('Executable directory:', executableDir);
+    let currentDir;
     
-    // Configure data locations based on mode
-    if (isDevelopment) {
-      // Development mode: prioritize project directories
-      this.dataLocations = [
-        path.join(this.appPath, 'src'),                  // Check in src directory first
-        path.join(this.appPath),                         // Check in app root
-        path.dirname(this.appPath),                      // Check in parent directory
-        path.join(app.getPath('userData')),              // Check in user data directory
-        path.join(app.getPath('userData'), 'data'),      // Check in user data/data directory
-        executableDir,                                   // Directory next to executable (last resort)
-      ];
-      this.dataDir = this.dataLocations[0]; // Default to src directory in development
+    // Force production mode for portable executables
+    if (portableEnvDir && fs.existsSync(portableEnvDir)) {
+      // electron-builder Portable exposes the original EXE location here
+      currentDir = portableEnvDir;
+      console.log(`[API constructor] Portable mode detected via PORTABLE_EXECUTABLE_DIR`);
+      console.log(`[API constructor] Using portable executable directory: ${currentDir}`);
+    } else if (!isDev && process.execPath.toLowerCase().endsWith('.exe')) {
+      // Packaged (non-dev) without the env var → fall back sensibly
+      // Prefer the directory of the executable
+      currentDir = path.dirname(process.execPath);
+      console.log(`[API constructor] Packaged/Production mode detected`);
+      console.log(`[API constructor] Using executable directory: ${currentDir}`);
     } else {
-      // Production mode: ONLY use executable directory (true portable mode)
-      this.dataLocations = [
-        executableDir,                                   // Directory next to executable (portable) - ONLY location
-      ];
-      this.dataDir = this.dataLocations[0]; // Default to executable directory in production
+      // Development mode
+      currentDir = process.cwd();
+      console.log(`[API constructor] Development mode detected, using project directory: ${currentDir}`);
     }
     
-    // Log all potential locations
-    console.log('Checking these locations for data files (priority order):');
-    this.dataLocations.forEach((location, index) => console.log(`${index + 1}. ${location}`));
+    this.dataDir = currentDir;
+    this.dataLocations = [currentDir];
     
-    // Initialize portable data files if needed
-    this.initializePortableFiles();
+
+    // Special handling for unexpected temp directories (some packagers extract to temp)
+    if (currentDir.includes('AppData\\Local\\Temp') || currentDir.includes('/tmp/')) {
+      console.log(`[API constructor] WARNING: Detected temp directory usage: ${currentDir}`);
+      console.log(`[API constructor] This suggests a portable build issue. Attempting to find proper executable location...`);
+      
+      // Try to find the real executable location by looking for common patterns
+      const possiblePaths = [
+        // Check if there's a settings.json in the current working directory
+        process.cwd(),
+        // Check parent directories of the temp location
+        path.dirname(path.dirname(currentDir)),
+        path.dirname(currentDir)
+      ];
+      
+      for (const testPath of possiblePaths) {
+        const testSettingsPath = path.join(testPath, 'settings.json');
+        console.log(`[API constructor] Testing for settings at: ${testSettingsPath}`);
+        if (fs.existsSync(testSettingsPath)) {
+          try {
+            const testData = fs.readFileSync(testSettingsPath, 'utf8');
+            const testSettings = JSON.parse(testData);
+            if (testSettings.dataDirectory && fs.existsSync(testSettings.dataDirectory)) {
+              console.log(`[API constructor] Found valid bootstrap settings at: ${testSettingsPath}`);
+              console.log(`[API constructor] Redirecting to: ${testSettings.dataDirectory}`);
+              currentDir = testPath;
+              this.dataDir = currentDir;
+              break;
+            }
+          } catch (error) {
+            console.log(`[API constructor] Invalid settings file at ${testSettingsPath}: ${error.message}`);
+          }
+        }
+      }
+    }
     
-    // Try to load existing patterns and settings
-    this.load_patterns();
+    // Try to load existing settings first to get saved data directory
     this.load_settings();
     
-    console.log('SearchPatternAPI initialized');
-  }
-  
-  /**
-   * Initialize data files (passive approach to avoid security software detection)
-   */
-  initializePortableFiles() {
-    // We'll be passive - only create files when the user actually saves data
-    // This avoids triggering security software that monitors file creation on startup
-    
-    const primaryDataDir = this.dataLocations[0];
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
-    if (isDevelopment) {
-      console.log('Development mode ready - data files will be created in project directory when needed:', primaryDataDir);
+    // If settings contain a saved data directory, use that instead
+    if (this.settings && this.settings.dataDirectory && fs.existsSync(this.settings.dataDirectory)) {
+      console.log(`[API constructor] Using saved dataDirectory from settings: ${this.settings.dataDirectory}`);
+      this.dataDir = this.settings.dataDirectory;
+      
+      // Reload settings from the correct directory to get the complete settings
+      this.load_settings();
     } else {
-      console.log('True portable mode - data files will ONLY be created in executable directory:', primaryDataDir);
-      console.log('No fallback locations - executable directory must be writable for app to function');
+      console.log(`[API constructor] Using default dataDirectory: ${this.dataDir}`);
     }
     
-    // Note: We don't test write permissions or create files proactively anymore
-    // Files will be created naturally when the user saves patterns or settings
+    // Now load patterns from the determined directory
+    this.load_patterns();
+    
+    console.log('SearchPatternAPI initialized');
   }
   
   /**
    * Find file in possible locations
    */
   findFile(filename) {
-    for (const location of this.dataLocations) {
-      const filePath = path.join(location, filename);
-      console.log(`Checking for ${filename} at: ${filePath}`);
-      if (fs.existsSync(filePath)) {
-        console.log(`Found ${filename} at: ${filePath}`);
-        return filePath;
-      }
-    }
-    console.log(`Could not find ${filename} in any location`);
-    return null;
+    // In portable mode, only check next to the executable
+    const filePath = path.join(this.dataDir, filename);
+    return fs.existsSync(filePath) ? filePath : null;
   }
   
   /**
@@ -100,12 +126,12 @@ class SearchPatternAPI {
    */
   load_patterns() {
     try {
-      // Try to find sp_list.json in any of our locations
-      const sp_list_path = this.findFile('sp_list.json');
+      // Always read sp_list.json from the executable directory
+      const sp_list_path = path.join(this.dataDir, 'sp_list.json');
       
       this.patternHistory = {}; // Reset history on load
 
-      if (sp_list_path) {
+      if (fs.existsSync(sp_list_path)) {
         const data = fs.readFileSync(sp_list_path, 'utf8');
         this.patterns = JSON.parse(data);
         //console.log(`Loaded patterns for ${Object.keys(this.patterns).length} modality/parts`);
@@ -129,29 +155,29 @@ class SearchPatternAPI {
    */
   load_settings() {
     try {
-      // Try to find settings.json in any of our locations
-      const settings_path = this.findFile('settings.json');
+      // Always read settings.json from the current data directory
+      const settings_path = path.join(this.dataDir, 'settings.json');
       
-      if (settings_path) {
+      if (fs.existsSync(settings_path)) {
         const data = fs.readFileSync(settings_path, 'utf8');
         this.settings = JSON.parse(data);
-        //console.log("Settings loaded successfully");
         
         // Remember this directory for future saves if not already set
-        if (!this.dataDir) {
-          this.dataDir = path.dirname(settings_path);
-        }
+        if (!this.dataDir) this.dataDir = path.dirname(settings_path);
       }
     } catch (error) {
-      console.error(`Error loading settings: ${error.message}`);
+      console.error(`[API load_settings] Error loading settings: ${error.message}`);
     }
   }
   
   /**
-   * Save patterns to sp_list.json (with fallback for portable mode)
+   * Save patterns to sp_list.json in executable directory
    */
   save_patterns() {
     try {
+      console.log(`[API save_patterns] Starting save process`);
+      console.log(`[API save_patterns] Number of pattern groups: ${Object.keys(this.patterns || {}).length}`);
+      
       // Log a snippet of the data about to be saved for the first pattern found
       if (this.patterns && Object.keys(this.patterns).length > 0) {
         const firstPatternName = Object.keys(this.patterns)[0];
@@ -162,93 +188,52 @@ class SearchPatternAPI {
       }
 
       const data_to_save = JSON.stringify(this.patterns, null, 2);
+      const location = this.dataDir; // Use current data directory
       
-      // Try to save to each location until one succeeds
-      const isDevelopment = process.env.NODE_ENV === 'development';
+      console.log(`[API save_patterns] Saving to data directory: ${location}`);
       
-      for (const location of this.dataLocations) {
-        try {
-          // Create the directory if it doesn't exist
-          if (!fs.existsSync(location)) {
-            fs.mkdirSync(location, { recursive: true });
-          }
-          
-          const sp_list_path = path.join(location, 'sp_list.json');
-          fs.writeFileSync(sp_list_path, data_to_save);
-          
-          // If successful, update our data directory and return
-          this.dataDir = location;
-          console.log("[API save_patterns] Patterns saved successfully to:", sp_list_path);
-          return true;
-          
-        } catch (locationError) {
-          if (isDevelopment) {
-            console.log(`[API save_patterns] Cannot write to ${location}: ${locationError.message}`);
-            // Continue to next location in development mode
-          } else {
-            // In production (portable) mode, there's only one location - fail immediately with clear message
-            console.error(`[API save_patterns] PORTABLE MODE ERROR: Cannot write to executable directory ${location}: ${locationError.message}`);
-            console.error("[API save_patterns] The executable directory must be writable for the portable app to function");
-            return false;
-          }
-        }
+      // Create the directory if it doesn't exist
+      if (!fs.existsSync(location)) {
+        console.log(`[API save_patterns] Directory doesn't exist, creating: ${location}`);
+        fs.mkdirSync(location, { recursive: true });
       }
       
-      // If we get here, all locations failed (only possible in development mode)
-      console.error("[API save_patterns] Failed to save to any location");
-      return false;
+      const sp_list_path = path.join(location, 'sp_list.json');
+      fs.writeFileSync(sp_list_path, data_to_save);
+      
+      console.log("[API save_patterns] Patterns saved successfully to:", sp_list_path);
+      return true;
       
     } catch (error) {
-      console.error(`Error saving patterns: ${error.message}`);
+      console.error(`[API save_patterns] ERROR: Cannot write to executable directory: ${error.message}`);
+      console.error("[API save_patterns] The executable directory must be writable for the portable app to function");
       console.error(error.stack);
       return false;
     }
   }
   
   /**
-   * Save settings to settings.json (with fallback for portable mode)
+   * Save settings to settings.json in executable directory
    */
   save_settings() {
     try {
       const data_to_save = JSON.stringify(this.settings, null, 2);
+      const location = this.dataDir; // Use current data directory
       
-      // Try to save to each location until one succeeds
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      
-      for (const location of this.dataLocations) {
-        try {
-          // Create the directory if it doesn't exist
-          if (!fs.existsSync(location)) {
-            fs.mkdirSync(location, { recursive: true });
-          }
-          
-          const settings_path = path.join(location, 'settings.json');
-          fs.writeFileSync(settings_path, data_to_save);
-          
-          // If successful, update our data directory and return
-          this.dataDir = location;
-          console.log("[API save_settings] Settings saved successfully to:", settings_path);
-          return true;
-          
-        } catch (locationError) {
-          if (isDevelopment) {
-            console.log(`[API save_settings] Cannot write to ${location}: ${locationError.message}`);
-            // Continue to next location in development mode
-          } else {
-            // In production (portable) mode, there's only one location - fail immediately with clear message
-            console.error(`[API save_settings] PORTABLE MODE ERROR: Cannot write to executable directory ${location}: ${locationError.message}`);
-            console.error("[API save_settings] The executable directory must be writable for the portable app to function");
-            return false;
-          }
-        }
+      // Create the directory if it doesn't exist
+      if (!fs.existsSync(location)) {
+        fs.mkdirSync(location, { recursive: true });
       }
       
-      // If we get here, all locations failed (only possible in development mode)
-      console.error("[API save_settings] Failed to save settings to any location");
-      return false;
+      const settings_path = path.join(location, 'settings.json');
+      fs.writeFileSync(settings_path, data_to_save);
+      
+      console.log("[API save_settings] Settings saved successfully to:", settings_path);
+      return true;
       
     } catch (error) {
-      console.error(`Error saving settings: ${error.message}`);
+      console.error(`[API save_settings] ERROR: Cannot write to executable directory: ${error.message}`);
+      console.error("[API save_settings] The executable directory must be writable for the portable app to function");
       console.error(error.stack);
       return false;
     }
@@ -2134,6 +2119,122 @@ class SearchPatternAPI {
       }
     } catch (error) {
       console.error(`[API replace_with_mirrors] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get information about the currently loaded SP list file
+   */
+  get_sp_list_info() {
+    try {
+      const sp_list_path = path.join(this.dataDir, 'sp_list.json');
+      const filename = path.basename(sp_list_path);
+      const fullPath = sp_list_path;
+      const exists = fs.existsSync(sp_list_path);
+      
+      return {
+        success: true,
+        filename: filename,
+        fullPath: fullPath,
+        exists: exists,
+        directory: this.dataDir,
+        // Additional path information requested
+        processCwd: process.cwd(),
+        processExecPath: process.execPath,
+        appPath: app.getAppPath(),
+        portableExecutableDir: process.env.PORTABLE_EXECUTABLE_DIR || null,
+        portableExecutableFile: process.env.PORTABLE_EXECUTABLE_FILE || null,
+        currentDir: this.dataDir,
+        filePath: fullPath,
+        spListPath: sp_list_path,
+        dataDir: this.dataDir,
+        settingsDataDirectory: this.settings ? this.settings.dataDirectory : null,
+        nodeEnv: process.env.NODE_ENV || 'not set',
+        appIsPackaged: app.isPackaged
+      };
+    } catch (error) {
+      console.error(`[API get_sp_list_info] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Load SP list from a specific file path
+   */
+  load_sp_list_from_path(filePath) {
+    try {
+      console.log(`[API load_sp_list_from_path] Loading SP list from: ${filePath}`);
+      
+      // Validate the file exists
+      if (!fs.existsSync(filePath)) {
+        return { success: false, error: "File does not exist" };
+      }
+      
+      // Validate it's a JSON file
+      if (!filePath.toLowerCase().endsWith('.json')) {
+        return { success: false, error: "File must be a JSON file" };
+      }
+      
+      // Try to parse the JSON to validate it
+      const data = fs.readFileSync(filePath, 'utf8');
+      const parsedData = JSON.parse(data);
+      
+      // Update the data directory to the directory containing the selected file
+      this.dataDir = path.dirname(filePath);
+      console.log(`[API load_sp_list_from_path] Updated dataDir to: ${this.dataDir}`);
+      
+      // Save the new data directory to settings
+      if (!this.settings) {
+        this.settings = {};
+      }
+      this.settings.dataDirectory = this.dataDir;
+      console.log(`[API load_sp_list_from_path] Saving new dataDirectory to settings: ${this.dataDir}`);
+      
+      // Save the updated settings to the new location
+      this.save_settings();
+      
+      // Also save a bootstrap settings file to the original directory
+      // This allows the app to find the correct data directory on next startup
+      const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
+      const portableEnvDirAtLoad = process.env.PORTABLE_EXECUTABLE_DIR || (process.env.PORTABLE_EXECUTABLE_FILE ? path.dirname(process.env.PORTABLE_EXECUTABLE_FILE) : null);
+      let originalDir;
+      
+      if (portableEnvDirAtLoad && fs.existsSync(portableEnvDirAtLoad)) {
+        originalDir = portableEnvDirAtLoad;
+      } else if (!isDev && process.execPath.toLowerCase().endsWith('.exe')) {
+        // Packaged mode without env var
+        originalDir = path.dirname(process.execPath);
+      } else {
+        // Development mode
+        originalDir = process.cwd();
+      }
+      
+      const bootstrapSettingsPath = path.join(originalDir, 'settings.json');
+      const bootstrapSettings = { dataDirectory: this.dataDir };
+      
+      try {
+        fs.writeFileSync(bootstrapSettingsPath, JSON.stringify(bootstrapSettings, null, 2));
+        console.log(`[API load_sp_list_from_path] Bootstrap settings saved to: ${bootstrapSettingsPath}`);
+      } catch (error) {
+        console.error(`[API load_sp_list_from_path] Failed to save bootstrap settings: ${error.message}`);
+      }
+      
+      // Load the patterns from the new file
+      this.patterns = parsedData;
+      this.patternHistory = {}; // Reset history when loading new file
+      
+      console.log(`[API load_sp_list_from_path] Successfully loaded ${Object.keys(this.patterns).length} patterns`);
+      
+      return {
+        success: true,
+        message: `Successfully loaded SP list from ${path.basename(filePath)}`,
+        patternCount: Object.keys(this.patterns).length,
+        filePath: filePath
+      };
+      
+    } catch (error) {
+      console.error(`[API load_sp_list_from_path] Error: ${error.message}`);
       return { success: false, error: error.message };
     }
   }
