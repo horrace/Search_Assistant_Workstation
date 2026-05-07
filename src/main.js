@@ -765,7 +765,8 @@ ipcMain.on('api-request', (event, data) => {
               params.to_index,
               params.count,
               params.new_chapter,
-              params.moved_chapter_name
+              params.moved_chapter_name,
+              params.new_chapter_id
             );
             break;
             

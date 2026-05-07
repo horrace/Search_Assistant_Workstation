@@ -223,19 +223,6 @@
       "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
-      "abbr": "Aorta, Carotids,  verts",
-      "strategy": "±Opth, up right, down left, *Bifurcations*",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Ax   thinAorta, Carotids,  verts",
-      "groupID": 0,
-      "chunkID": 0,
-      "chapter": "MIPscreen",
-      "view_plane": "ax",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_shhv3bass"
-    },
-    {
       "abbr": "Carotids",
       "strategy": "CPR",
       "window_level": "",
@@ -243,9 +230,22 @@
       "full_name": "CPRCarotids",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MPRact ser",
+      "chapter": "MIPscreen",
       "view_plane": "ax",
       "window": "",
+      "chapterID": "chapter_1750997448877_shhv3bass"
+    },
+    {
+      "abbr": "Aorta, Carotids,  verts",
+      "strategy": "±Opth, up right, down left, *Bifurcations*",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax   thinAorta, Carotids,  verts",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser",
+      "view_plane": "ax",
+      "window": "Thin",
       "chapterID": "chapter_1750997448877_2ldqlj4v3"
     },
     {
