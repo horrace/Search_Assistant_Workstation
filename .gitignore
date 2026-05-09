@@ -148,6 +148,12 @@ my-vscode-extension/extension.js
 my-vscode-extension/package-lock.json
 my-vscode-extension/package.json
 
-settings.json
+./settings.json
+.\settings.json
+.\src\settings.json
+./src/settings.json
+src\settings.json
 src/settings.json
+src/settings.json
+
 SearchAssistant_Portable_2025.07.23.zip

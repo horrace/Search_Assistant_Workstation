@@ -242,8 +242,8 @@ footer {
   flex-direction: column;
   height: calc(100vh - 60px);
   padding-bottom: 20px;
-  padding-left: 20px;
-  padding-right: 20px;
+  /* padding-left: 20px; */
+  /* padding-right: 20px; */
 }
 
 .editor-header {
@@ -419,6 +419,7 @@ footer {
 .tumbler-container.no-background {
   background-color: transparent;
   backdrop-filter: none;
+  min-width: 550px;
 }
 
 .tumbler-header {
@@ -1571,10 +1572,10 @@ footer {
 }
 
 .next-area:hover::after {
-  content: "→";
+  content: "➜";
   position: absolute;
   top: 50%;
-  right: 20%;
+  right: 30%;
   transform: translateY(-50%);
   font-size: 90px; /* Increased from 40px to 60px */
   color: rgba(255, 255, 255, 0.5); /* Slightly more visible */
@@ -1620,7 +1621,7 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px;
+  padding: 5px;
   background-color: #252525;
 }
 
@@ -1643,7 +1644,7 @@ footer {
 }
 
 .parts-bank-container.collapsed {
-  width: 50px; /* Collapsed width */
+  width: 33px; /* Collapsed width */
 }
 
 .parts-bank-container.collapsed .parts-bank {

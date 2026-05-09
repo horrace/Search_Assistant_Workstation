@@ -111,6 +111,30 @@ class SearchPatternAPI {
     
     console.log('SearchPatternAPI initialized');
   }
+
+  _generateChapterID() {
+    return 'chapter_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+  }
+
+  _resolveTargetChapterID(pattern, chapterName, excludeIndices = []) {
+    if (!chapterName) {
+      return '';
+    }
+
+    const excludeSet = new Set(excludeIndices);
+    for (let i = 0; i < pattern.length; i++) {
+      if (excludeSet.has(i)) {
+        continue;
+      }
+
+      const item = pattern[i];
+      if ((item.chapter || '') === chapterName && item.chapterID) {
+        return item.chapterID;
+      }
+    }
+
+    return this._generateChapterID();
+  }
   
   /**
    * Find file in possible locations
@@ -601,7 +625,7 @@ class SearchPatternAPI {
   /**
    * Move item(s) from one position to another in a pattern, potentially updating chapter.
    */
-  move_item(pattern_name, from_index, to_index, count = 1, new_chapter = undefined, moved_chapter_name = undefined) {
+  move_item(pattern_name, from_index, to_index, count = 1, new_chapter = undefined, moved_chapter_name = undefined, new_chapter_id = undefined) {
     try {
       this._saveStateToHistory(pattern_name); // Save state before modification
       const pattern = this.patterns[pattern_name] || [];
@@ -611,7 +635,7 @@ class SearchPatternAPI {
       }
       count = Math.max(1, parseInt(count)); // Ensure count is at least 1
 
-      console.log(`API: move_item received: pattern='${pattern_name}', from=${from_index}, to=${to_index}, count=${count}, new_chapter='${new_chapter}', moved_chapter_name='${moved_chapter_name}'`);
+      console.log(`API: move_item received: pattern='${pattern_name}', from=${from_index}, to=${to_index}, count=${count}, new_chapter='${new_chapter}', moved_chapter_name='${moved_chapter_name}', new_chapter_id='${new_chapter_id}'`);
 
       // Validate indices and count
       if (!(0 <= from_index && from_index < pattern.length) || count <= 0 || from_index + count > pattern.length) {
@@ -659,19 +683,24 @@ class SearchPatternAPI {
         // Only update chapter if it's actually different from each item's current chapter
         // This prevents items from being moved out of their chapter when moving within the same chapter
         console.log(` -> Checking if chapter update is needed for moved items to '${new_chapter}'`);
+        const resolvedChapterID = new_chapter === ''
+          ? ''
+          : (new_chapter_id || this._resolveTargetChapterID(pattern, new_chapter, []));
         
         let itemsUpdated = 0;
         for (let i = 0; i < count; i++) {
             const currentItemIndex = adjusted_to_index + i;
             if (pattern[currentItemIndex]) {
                 const currentItemChapter = pattern[currentItemIndex].chapter || '';
+            const currentItemChapterID = pattern[currentItemIndex].chapterID || '';
                 // Only update if the target chapter is different from the item's current chapter
-                if (new_chapter !== currentItemChapter) {
+            if (new_chapter !== currentItemChapter || resolvedChapterID !== currentItemChapterID) {
                     pattern[currentItemIndex].chapter = new_chapter;
+              pattern[currentItemIndex].chapterID = resolvedChapterID;
                     itemsUpdated++;
-                    console.log(`   -> Updated item ${currentItemIndex} chapter from '${currentItemChapter}' to '${new_chapter}'`);
+              console.log(`   -> Updated item ${currentItemIndex} chapter from '${currentItemChapter}' (${currentItemChapterID}) to '${new_chapter}' (${resolvedChapterID})`);
                 } else {
-                    console.log(`   -> Item ${currentItemIndex} already in target chapter '${new_chapter}', no update needed`);
+              console.log(`   -> Item ${currentItemIndex} already in target chapter '${new_chapter}' (${resolvedChapterID}), no update needed`);
                 }
             } else {
                  console.warn(`move_item: Index out of bounds during chapter update: ${currentItemIndex}`);
@@ -1232,7 +1261,7 @@ class SearchPatternAPI {
            return { success: true }; // No items to update, operation is vacuously successful.
        }
 
-       // Check if a change is actually needed before doing complex operations
+         // Check if a change is actually needed before doing complex operations
        let needs_change = false;
        for (const idx of items_to_update_indices) {
            if (pattern[idx].chapter !== new_chapter) {
@@ -1246,7 +1275,9 @@ class SearchPatternAPI {
            return { success: true };
        }
 
-       // Store items to move and their original first index
+         const targetChapterID = this._resolveTargetChapterID(pattern, new_chapter, items_to_update_indices);
+
+         // Store items to move and their original first index
        const original_first_index = Math.min(...items_to_update_indices);
        const items_to_move = items_to_update_indices
            .sort((a, b) => a - b) // Process in original order
@@ -1258,14 +1289,15 @@ class SearchPatternAPI {
        // Update chapter for the items to move
        items_to_move.forEach(item => {
            item.chapter = new_chapter;
+           item.chapterID = targetChapterID;
        });
-       console.log(` -> Updated chapter to '${new_chapter}' for ${items_to_move.length} item(s)`);
+         console.log(` -> Updated chapter to '${new_chapter}' (${targetChapterID}) for ${items_to_move.length} item(s)`);
 
        // Determine insertion point
        let insertion_point = -1;
        if (new_chapter !== '') { // Only try to append to existing if new_chapter is not root
             for (let i = remaining_items.length - 1; i >= 0; i--) {
-                if (remaining_items[i].chapter === new_chapter) {
+            if ((remaining_items[i].chapterID || '') === targetChapterID) {
                     insertion_point = i + 1;
                     break;
                 }
