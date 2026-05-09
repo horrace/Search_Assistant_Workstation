@@ -2,43 +2,42 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Electron via npm run dev",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run-script",
-        "dev"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "outputCapture": "std",
-      "autoAttachChildProcesses": true,
-      "skipFiles": [
-        "<node_internals>/**"
-      ]
+		"name": "Debug Electron via npm run dev",
+		"type": "node",
+		"request": "launch",
+		"runtimeExecutable": "npm",
+		"runtimeArgs": [
+			"run-script",
+			"dev"
+		],
+		"cwd": "${workspaceFolder}",
+		"console": "integratedTerminal",
+		"outputCapture": "std",
+		"autoAttachChildProcesses": true,
+		"skipFiles": [
+			"<node_internals>/**"
+		]
     },
     {
-      "type": "node",
-      "request": "launch",
-      "name": "Debug Electron via npm run dev (D: portable Node)",
-      "runtimeExecutable": "D:/node-v24.14.0-win-x64/npm.cmd",
-      "runtimeArgs": [
-        "run-script",
-        "dev"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal",
-      "outputCapture": "std",
-      "autoAttachChildProcesses": true,
-      "skipFiles": [
-        "<node_internals>/**"
-      ],
-      "env": {
-        "PATH": "D:/node-v24.14.0-win-x64;${env:PATH}"
-      }
-    },
-
+		"name": "Debug Electron via npm run dev (D: portable Node)",
+		"type": "node",
+		"request": "launch",
+		"runtimeExecutable": "D:/node-v24.14.0-win-x64/npm.cmd",
+		"runtimeArgs": [
+		  "run-script",
+		  "dev"
+		],
+		"cwd": "${workspaceFolder}",
+		"console": "integratedTerminal",
+		"outputCapture": "std",
+		"autoAttachChildProcesses": true,
+		"skipFiles": [
+		  "<node_internals>/**"
+		],
+		"env": {
+		  "PATH": "D:/node-v24.14.0-win-x64;${env:PATH}"
+		}
+	},
     {
         "name": "Debug Main Process",
         "type": "node",

@@ -765,7 +765,8 @@ ipcMain.on('api-request', (event, data) => {
               params.to_index,
               params.count,
               params.new_chapter,
-              params.moved_chapter_name
+              params.moved_chapter_name,
+              params.new_chapter_id
             );
             break;
             
@@ -911,6 +912,11 @@ ipcMain.on('api-request', (event, data) => {
       responseFor: method,
       result
     });
+
+    // Notify the editor window when editor settings are saved
+    if (method === 'save_editor_settings' && editorWindow && !editorWindow.isDestroyed()) {
+      editorWindow.webContents.send('editor-settings-changed', params);
+    }
     
   } catch (error) {
     console.error(`Error processing request: ${error.message}`);

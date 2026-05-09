@@ -263,6 +263,10 @@ async function loadEditorSettings() {
             ...data.result
           };
           console.log('Editor settings loaded:', editorSettings);
+          // Fix race condition: if a pattern was already loaded before settings arrived, reload it
+          if (currentPattern) {
+            loadPattern(currentPattern);
+          }
         }
         unsubscribe();
       }
@@ -562,6 +566,8 @@ function renderPatternItems() {
                     <option value="MinIP" ${chunkItemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
                     <option value="Thin" ${chunkItemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
                     <option value="3D" ${chunkItemWindow === '3D' ? 'selected' : ''}>3D</option>
+					<option value="CPR" ${chunkItemWindow === 'CPR' ? 'selected' : ''}>CPR</option>
+					<option value="tMIP" ${chunkItemWindow === 'tMIP' ? 'selected' : ''}>tMIP</option>
                   </select>
                 </div>
                 <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
@@ -626,6 +632,8 @@ function renderPatternItems() {
                     <option value="MinIP" ${itemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
                     <option value="Thin" ${itemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
                     <option value="3D" ${itemWindow === '3D' ? 'selected' : ''}>3D</option>
+					<option value="CPR" ${itemWindow === 'CPR' ? 'selected' : ''}>CPR</option>
+					<option value="tMIP" ${itemWindow === 'tMIP' ? 'selected' : ''}>tMIP</option>
                 </select>
             </div>
             <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${itemIndexCounter}">${item.abbr || ''}</div>
@@ -1520,15 +1528,23 @@ function handleChapterDialogOk() {
                 // Find the first item of the chunk to get its current chapter
                 const firstChunkItemToAssign = currentPatternItems.find(it => it.chunkID === context.chunkId); // Renamed variable
                 const currentChunkChapterToAssign = firstChunkItemToAssign?.chapter || ''; // Renamed variable
+              const firstChunkItemIndex = currentPatternItems.findIndex(it => it.chunkID === context.chunkId);
 
                 if (newName !== currentChunkChapterToAssign) {
-                    console.log(`Calling API: update_chunk_chapter pattern='${currentPattern}', chunk_id=${context.chunkId}, new_chapter='${newName}'`);
-                    window.electronAPI.callAPI('update_chunk_chapter', { // This API call will update all items in the chunk
-                        pattern_name: currentPattern,
-                        chunk_id: context.chunkId,
-                        new_chapter: newName
-                    });
-                    handleApiResponse('update_chunk_chapter', `assigning chapter to chunk`);
+                if (firstChunkItemIndex < 0) {
+                  console.error(`Could not find a valid index for chunk ${context.chunkId}`);
+                  alert(`Chunk ${context.chunkId} not found.`);
+                  break;
+                }
+                console.log(`Calling API: update_item_chapter pattern='${currentPattern}', item_index=${firstChunkItemIndex}, new_chapter='${newName}', is_chunk=true, chunk_id=${context.chunkId}`);
+                window.electronAPI.callAPI('update_item_chapter', {
+                  pattern_name: currentPattern,
+                  item_index: firstChunkItemIndex,
+                  new_chapter: newName,
+                  is_chunk: true,
+                  chunk_id: context.chunkId
+                });
+                handleApiResponse('update_item_chapter', `assigning chapter to chunk`);
                 } else {
                     console.log("No change in chapter assignment for chunk.");
                 }
@@ -2634,16 +2650,21 @@ function handleSortEnd(evt) {
     let originalDataStartIndex = -1;
     let movedItemSize = 1;
     let movedItemOriginalChapter = '';
+    let movedItemOriginalChapterID = '';
 
     if (isChapterContainer) {
         // Dragging a chapter container.
         const chapterName = movedElement.dataset.chapterName;
-        const chapterItems = currentPatternItems.filter(item => (item.chapter || '') === chapterName);
+      const chapterID = movedElement.dataset.chapterId || '';
+      const chapterItems = currentPatternItems.filter(item =>
+        chapterID ? ((item.chapterID || '') === chapterID) : ((item.chapter || '') === chapterName)
+      );
         if (chapterItems.length > 0) {
             originalDataStartIndex = currentPatternItems.findIndex(item => item === chapterItems[0]);
             movedItemSize = chapterItems.length;
             movedItemOriginalChapter = chapterName; // Chapter name is its own 'chapter'
-            console.log(` -> Moving CHAPTER '${chapterName}': Starts at data index ${originalDataStartIndex}, size ${movedItemSize}`);
+        movedItemOriginalChapterID = chapterID;
+        console.log(` -> Moving CHAPTER '${chapterName}' (${movedItemOriginalChapterID}): Starts at data index ${originalDataStartIndex}, size ${movedItemSize}`);
         } else {
             console.error(`Cannot move chapter '${chapterName}': No items found in data.`);
             loadPattern(currentPattern); return;
@@ -2653,13 +2674,15 @@ function handleSortEnd(evt) {
         originalDataStartIndex = parseInt(movedElement.dataset.itemIndex);
         movedItemSize = parseInt(movedElement.dataset.chunkSize);
         movedItemOriginalChapter = movedElement.dataset.parentChapter || '';
-        console.log(` -> Moving CHUNK ID ${movedElement.dataset.chunkId}: Starts at data index ${originalDataStartIndex}, size ${movedItemSize}, from chapter '${movedItemOriginalChapter}'`);
+        movedItemOriginalChapterID = currentPatternItems[originalDataStartIndex]?.chapterID || '';
+        console.log(` -> Moving CHUNK ID ${movedElement.dataset.chunkId}: Starts at data index ${originalDataStartIndex}, size ${movedItemSize}, from chapter '${movedItemOriginalChapter}' (${movedItemOriginalChapterID})`);
     } else {
         // Dragging a single item.
         originalDataStartIndex = parseInt(movedElement.dataset.itemIndex);
         movedItemSize = 1;
         movedItemOriginalChapter = movedElement.dataset.parentChapter || '';
-        console.log(` -> Moving SINGLE ITEM: Data index ${originalDataStartIndex}, from chapter '${movedItemOriginalChapter}'`);
+        movedItemOriginalChapterID = currentPatternItems[originalDataStartIndex]?.chapterID || '';
+        console.log(` -> Moving SINGLE ITEM: Data index ${originalDataStartIndex}, from chapter '${movedItemOriginalChapter}' (${movedItemOriginalChapterID})`);
     }
 
     // Validate parsed indices/size
@@ -2670,6 +2693,7 @@ function handleSortEnd(evt) {
 
     // --- Determine Target Chapter ---
     let targetChapterName = '';
+    let targetChapterID = '';
     if (isChapterContainer) {
         // Custom handling for dropping a chapter onto another chapter
         if (toContainer !== patternItems && toContainer.classList.contains('chapter-items')) {
@@ -2699,17 +2723,22 @@ function handleSortEnd(evt) {
             }
         }
         targetChapterName = movedElement.dataset.chapterName; // A chapter defines its own target name
+        targetChapterID = movedElement.dataset.chapterId || '';
     } else if (toContainer.classList.contains('chapter-items')) {
         // Dropped inside a chapter's item list
-        targetChapterName = toContainer.closest('.chapter-container')?.dataset.chapterName || '';
+        const targetChapterContainer = toContainer.closest('.chapter-container');
+        targetChapterName = targetChapterContainer?.dataset.chapterName || '';
+        targetChapterID = targetChapterContainer?.dataset.chapterId || '';
     } else if (toContainer === patternItems) {
         // Dropped in the main list (outside any chapter container)
         targetChapterName = ''; // Explicitly set to no chapter
+        targetChapterID = '';
     } else {
         console.warn("Dropped into an unexpected container:", toContainer, "Assuming root (no chapter).");
         targetChapterName = '';
+        targetChapterID = '';
     }
-    console.log(` -> Target Chapter Name: '${targetChapterName}'`);
+      console.log(` -> Target Chapter: '${targetChapterName}' (${targetChapterID})`);
 
     // --- Calculate Target API Linear Index --- Based on final visual order
     let targetApiIndex = 0;
@@ -2736,6 +2765,7 @@ function handleSortEnd(evt) {
 
         if (nodeIsChapter) {
             const chapterName = topLevelNode.dataset.chapterName;
+          const chapterID = topLevelNode.dataset.chapterId || '';
             const itemsInsideChapter = Array.from(topLevelNode.querySelector('.chapter-items')?.children || [])
                                         .filter(child => child.nodeType === Node.ELEMENT_NODE && child.classList.contains('draggable-item'));
 
@@ -2767,9 +2797,11 @@ function handleSortEnd(evt) {
             } else {
                 // Drop target is not in this chapter, just add the size of all its items.
                 // Use original data to get accurate size, as DOM might be mid-update.
-                const chapterItemsInData = currentPatternItems.filter(d => (d.chapter || '') === chapterName);
+                const chapterItemsInData = currentPatternItems.filter(d =>
+                  chapterID ? ((d.chapterID || '') === chapterID) : ((d.chapter || '') === chapterName)
+                );
                 const chapterDataSize = chapterItemsInData.length > 0 ? chapterItemsInData.length : 0;
-                console.log(` -> Accumulating size for chapter '${chapterName}': ${chapterDataSize}`);
+                console.log(` -> Accumulating size for chapter '${chapterName}' (${chapterID}): ${chapterDataSize}`);
                 currentLinearIndex += chapterDataSize;
             }
         } else {
@@ -2810,8 +2842,8 @@ function handleSortEnd(evt) {
     let finalApiTargetIndex = targetApiIndex; // Start with the visually calculated target index
 
     if (originalDataStartIndex < targetApiIndex && movedItemSize > 0) { // It's a downward move relative to data indices.
-        const isMovingOutOfChapterToRoot = (movedItemOriginalChapter !== '' && targetChapterName === '');
-        const isMovingWithinSameChapter = (movedItemOriginalChapter === targetChapterName && movedItemOriginalChapter !== '');
+      const isMovingOutOfChapterToRoot = (movedItemOriginalChapterID !== '' && targetChapterID === '');
+      const isMovingWithinSameChapter = (movedItemOriginalChapterID === targetChapterID);
 
         if (isMovingOutOfChapterToRoot) {
             // When moving out of a chapter downwards to the root,
@@ -2839,7 +2871,9 @@ function handleSortEnd(evt) {
     // --- End of modified block ---
 
     // --- Handle Chapter Change --- Determine if the effective chapter changed
-    const needsChapterUpdate = !isChapterContainer && targetChapterName !== movedItemOriginalChapter;
+    const needsChapterUpdate = !isChapterContainer && (
+      targetChapterName !== movedItemOriginalChapter || targetChapterID !== movedItemOriginalChapterID
+    );
     // When moving a chapter container, its items intrinsically adopt the new position's context (which is always root).
     // The backend needs to handle setting the chapter field for all items within the moved chapter if necessary.
     // For now, we assume moving a chapter sets its items' chapter field TO the chapter name.
@@ -2862,7 +2896,8 @@ function handleSortEnd(evt) {
     } else if (needsChapterUpdate) {
         // Moving an item/chunk into a different chapter or into/out of the root.
         apiParams.new_chapter = targetChapterName; // Can be empty string for root
-        console.log(` -> API Call: Updating chapter for moved item/chunk to '${targetChapterName}'`);
+      apiParams.new_chapter_id = targetChapterID;
+      console.log(` -> API Call: Updating chapter for moved item/chunk to '${targetChapterName}' (${targetChapterID})`);
     }
 
     console.log(` -> Calling API: move_item with params:`, apiParams);
@@ -3098,6 +3133,15 @@ function init() {
   // Load available patterns and editor settings
   loadPatterns();
   loadEditorSettings();
+
+  // Listen for editor settings changes from the settings window
+  window.electronAPI.on('editor-settings-changed', (newSettings) => {
+    editorSettings = { hideOutroInEditor: false, ...newSettings };
+    console.log('Editor settings changed, reloading pattern:', editorSettings);
+    if (currentPattern) {
+      loadPattern(currentPattern);
+    }
+  });
   
   // Set up event listeners
   patternSelector.addEventListener('change', () => {

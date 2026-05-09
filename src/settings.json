@@ -1,4 +1,5 @@
 {
+  "dataDirectory": "D:\\PythonProjects\\SearchAssistant_Electron\\src",
   "transparency": 1,
   "tumbler": {
     "hideBackground": false,
@@ -7,25 +8,24 @@
     "hideViewPlaneInChapter": true
   },
   "mainWindowPosition": {
-    "x": 776,
-    "y": 176
-  },
-  "settingsWindowPosition": {
-    "x": 682,
-    "y": 196
+    "x": 878,
+    "y": 618
   },
   "editorWindowPosition": {
-    "x": 772,
-    "y": 244
+    "x": 1759,
+    "y": 659
   },
-  "dataDirectory": "C:\\Users\\Jeff\\OneDrive\\Source\\PythonProjects\\SearchAssistant_Electron\\src",
   "tumblerWindowPosition": {
-    "x": 650,
-    "y": 228
+    "x": 1332,
+    "y": 922
   },
   "tumblerWindowSize": {
-    "width": 520,
-    "height": 301
+    "width": 576,
+    "height": 300
+  },
+  "settingsWindowPosition": {
+    "x": 610,
+    "y": 528
   },
   "shortcuts": [
     {
@@ -55,7 +55,7 @@
     {
       "id": "advance-tumbler",
       "name": "Advance Tumbler",
-      "accelerator": "Alt+D",
+      "accelerator": "Alt+A",
       "action": "advance-tumbler",
       "enabled": true,
       "description": ""
@@ -68,5 +68,8 @@
       "enabled": false,
       "description": "Close all secondary windows (editor and tumbler)"
     }
-  ]
+  ],
+  "editor": {
+    "hideOutroInEditor": true
+  }
 }
