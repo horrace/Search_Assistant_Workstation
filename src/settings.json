@@ -1,26 +1,31 @@
 {
+  "dataDirectory": "D:\\PythonProjects\\SearchAssistant_Electron\\src",
   "transparency": 1,
   "tumbler": {
     "hideBackground": true,
     "showChapterAsChunk": true,
-    "inlineHeaderLayout": true,
+    "inlineHeaderLayout": false,
     "hideViewPlaneInChapter": true
   },
   "mainWindowPosition": {
-    "x": 198,
-    "y": 290
+    "x": 878,
+    "y": 618
   },
   "editorWindowPosition": {
-    "x": 190,
-    "y": 78
+    "x": 1759,
+    "y": 659
   },
   "tumblerWindowPosition": {
-    "x": 424,
-    "y": 389
+    "x": 1332,
+    "y": 922
+  },
+  "tumblerWindowSize": {
+    "width": 576,
+    "height": 300
   },
   "settingsWindowPosition": {
-    "x": 398,
-    "y": 174
+    "x": 610,
+    "y": 528
   },
   "shortcuts": [
     {
@@ -29,7 +34,7 @@
       "accelerator": "Alt+Q",
       "action": "toggle-main",
       "enabled": false,
-      "description": "Show/hide main window"
+      "description": ""
     },
     {
       "id": "show-main",
@@ -45,20 +50,12 @@
       "accelerator": "Alt+E",
       "action": "open-editor",
       "enabled": false,
-      "description": "Open Pattern Editor window"
-    },
-    {
-      "id": "advance-tumbler",
-      "name": "Advance Tumbler",
-      "accelerator": "Ctrl+Space",
-      "action": "advance-tumbler",
-      "enabled": true,
       "description": ""
     },
     {
       "id": "advance-tumbler",
       "name": "Advance Tumbler",
-      "accelerator": "Alt+Space",
+      "accelerator": "Alt+A",
       "action": "advance-tumbler",
       "enabled": true,
       "description": ""
@@ -69,14 +66,10 @@
       "accelerator": "Alt+X",
       "action": "close-all",
       "enabled": false,
-      "description": "(editor and tumbler)"
+      "description": "Close all secondary windows (editor and tumbler)"
     }
   ],
   "editor": {
     "hideOutroInEditor": true
-  },
-  "tumblerWindowSize": {
-    "width": 730,
-    "height": 301
   }
 }
