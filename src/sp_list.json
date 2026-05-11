@@ -15,7 +15,7 @@
     },
     {
       "abbr": "excl hemorrhage",
-      "strategy": "(quadr x1, down middle)  dSAH (vertex, O/Pcortex, OccHorns, DepSylv, IPfoss, lat Qdrg Cist/folia, FMag)",
+      "strategy": "(quadr, down middle)  dSAH (vertex, O/Pcortex, OccHorns, DepSylv, IPfoss, lat Qdrg Cist/folia, FMag)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ax  brainexcl hemorrhage+dSAHvertex, O/Pcortex, OccHorns, DepSylv, IPfoss, lat Qdrg Cist/folia, FMag",
@@ -185,7 +185,7 @@
     },
     {
       "abbr": "MCA",
-      "strategy": "optional/quick, M1, bifurc, M2PCA",
+      "strategy": "(optional/quick) M1, bifurc, M2PCA",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "MCA",
@@ -211,7 +211,7 @@
     },
     {
       "abbr": "MCA",
-      "strategy": "M1, M2sup, VESSEL DENSITY",
+      "strategy": "M1, M2sup  (VESSEL DENSITY)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Cor MIPMCA",
@@ -224,7 +224,7 @@
     },
     {
       "abbr": "Carotids",
-      "strategy": "CPR",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CPRCarotids",
@@ -232,12 +232,12 @@
       "chunkID": 0,
       "chapter": "MIP screen",
       "view_plane": "ax",
-      "window": "",
+      "window": "CPR",
       "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
-      "abbr": "Aorta, Carotids,  verts",
-      "strategy": "±Opth, up right, down left, *Bifurcations*",
+      "abbr": "Aorta, Subclav, CCA/ICA, Verts",
+      "strategy": "(🠉R, 🠋L) ±Opth, *Bifurcations*",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ax   thinAorta, Carotids,  verts",
@@ -249,8 +249,8 @@
       "chapterID": "chapter_1750997448877_2ldqlj4v3"
     },
     {
-      "abbr": "entire Aorta , subclav;  CCA/ICAs;  verts",
-      "strategy": "trace each side (Cor or Sag)",
+      "abbr": "Aorta, subclav;  CCA/ICAs;  verts",
+      "strategy": "(trace each side) (Cor or Sag)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Cor orSag thinentire Aorta , subclav;  CCA/ICAs;  verts",
@@ -276,7 +276,7 @@
     },
     {
       "abbr": "A1, ACOM, A2-3",
-      "strategy": "R/L",
+      "strategy": "(R/L)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Cor thinA1, ACOM, A2-3",
@@ -315,7 +315,7 @@
     },
     {
       "abbr": "Aneurysm",
-      "strategy": "Opthalm, A+PCOM/Bifurc/bas tip (quick)",
+      "strategy": "Opth, A/P-COMM, Bifurc/Bas_tip (quick)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ax   thinAneurysmOpthalm, A+PCOM/Bifurc/bas tip",
@@ -367,7 +367,7 @@
     },
     {
       "abbr": "Thin",
-      "strategy": "sag SSS (± ISS), VoG/straight, Trans/sigm, JugB/IJVs (into mediast/SVC)",
+      "strategy": "sag SSS (± ISS), VoG/Straight, Trans/sigm, JugB/IJVs (into mediast/SVC)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV Ax  Thinsag SSS, VoG/straight, trans/sigm, JugB/IJVsinto mediast/SVC",
@@ -380,7 +380,7 @@
     },
     {
       "abbr": "Salivary",
-      "strategy": "(qs down) Parotid, SMG, SLG",
+      "strategy": "(qs🠋) Parotid, SMG, SLG",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV   AxParotid,SMG, SLG",
@@ -393,7 +393,7 @@
     },
     {
       "abbr": "Thyroid, Esophagus",
-      "strategy": "(qs down)",
+      "strategy": "(qs🠋)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV   AxThyroid, Esophagus",
@@ -406,7 +406,7 @@
     },
     {
       "abbr": "ADT",
-      "strategy": "(qs up)  Trachea -> Larynx, HP, OP, NP",
+      "strategy": "(qs🠉)  Trach -> Larynx, HP, OP, NP",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV   AxADT",
@@ -419,7 +419,7 @@
     },
     {
       "abbr": "Fat pads",
-      "strategy": "(qs down) PPF→retromax→pterygoid→parapharyng",
+      "strategy": "(qs🠋) PPF→retromax→pterygoid→parapharyng",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV   AxFat pads",
@@ -458,7 +458,7 @@
     },
     {
       "abbr": "Bronch/Hilar Nodes, Lungs",
-      "strategy": "MIP/Thin, already did trachea on ADT",
+      "strategy": "MIP/Thin (already did trach on ADT)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTA  AxBronch/Hilar Nodes, Lungs",
@@ -471,7 +471,7 @@
     },
     {
       "abbr": "Nodes",
-      "strategy": "(double check) Supraclav/Upper Mediastinal",
+      "strategy": "(☑) Supraclav/Upper Mediast",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorNodes",
@@ -484,7 +484,7 @@
     },
     {
       "abbr": "Lung Apex/Hila mass",
-      "strategy": "(double check) ax blind spots",
+      "strategy": "(☑) ax blind spots",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorLung Apex/Hila mass",
@@ -496,8 +496,8 @@
       "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
-      "abbr": "Dens, vertebral bodies",
-      "strategy": "(double check) quick/optional",
+      "abbr": "Dens, vert bodies",
+      "strategy": "(☑) quick/optional",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorDens, vertebral bodies",
@@ -509,8 +509,8 @@
       "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
-      "abbr": "",
-      "strategy": "(quick/optional) Face ST",
+      "abbr": "Face ST",
+      "strategy": "(quick/optional)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV Cor",
@@ -523,7 +523,7 @@
     },
     {
       "abbr": "Ant superfic ST",
-      "strategy": "(qs down) Breast in F + subQ face",
+      "strategy": "(qs🠋) Breast in F + subQ face",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxAnt superfic ST",
@@ -536,7 +536,7 @@
     },
     {
       "abbr": "Canal run + post ST",
-      "strategy": "(qs up) eye on canal, peripheral vision ST",
+      "strategy": "(qs🠉)  eye on canal, periph vision ST",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxCanal run + post ST",
@@ -549,7 +549,7 @@
     },
     {
       "abbr": "Spine",
-      "strategy": "TVproc, Canal",
+      "strategy": "Canal",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ax  BoneSpine",
@@ -613,7 +613,7 @@
       "chapterID": "chapter_1750997448877_2qentj6r2"
     },
     {
-      "abbr": "R Scap/Clav, Sternum, L Scap/Clav",
+      "abbr": "R ScapClav, Sternum, L ScapClav",
       "strategy": "",
       "window_level": "",
       "best_seen_on": "",
@@ -640,7 +640,7 @@
     },
     {
       "abbr": "Spine",
-      "strategy": "middle, L, R",
+      "strategy": "(middle, L, R)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Sag BoneSpine",
@@ -889,8 +889,8 @@
       "chapterID": "chapter_1751086857135_mbuybzf1g"
     },
     {
-      "abbr": "NPharynx",
-      "strategy": "F.Rmuller, torus tubarius, Eustachian tube",
+      "abbr": "NP",
+      "strategy": "F.Rmuller, torus T, Eustachian tube",
       "window_level": "ST",
       "best_seen_on": "Ax",
       "full_name": "NPharynx",
@@ -902,8 +902,8 @@
       "chapterID": "chapter_1751086857135_mbuybzf1g"
     },
     {
-      "abbr": "OPharynx",
-      "strategy": "BOT / lingual tonsils,   palatine tonsils / soft palate, post pharyng wall",
+      "abbr": "OP",
+      "strategy": "BOT / lingual T,   palatine T / soft palate, post wall",
       "window_level": "ST",
       "best_seen_on": "Ax",
       "full_name": "OPharynx",
@@ -915,8 +915,8 @@
       "chapterID": "chapter_1751086857135_mbuybzf1g"
     },
     {
-      "abbr": "HPharynx",
-      "strategy": "post pharyng wall,  Pyriform sinus, post-cric mucosa",
+      "abbr": "HP",
+      "strategy": "post wall,  Pyriforms, post-cric mucosa",
       "window_level": "ST",
       "best_seen_on": "Ax",
       "full_name": "HPharynx",
@@ -955,7 +955,7 @@
     },
     {
       "abbr": "Nodes / Breast nodes",
-      "strategy": "1, 2/3/4, 5, 6, 7=RP;   mediastinum, axillalevels1-3 in F",
+      "strategy": "1, 2/3/4, 5, 6;  mediast, axilla (levels 1-3 in F)",
       "window_level": "ST",
       "best_seen_on": "Ax",
       "full_name": "Nodes / Breast nodes",
@@ -968,7 +968,7 @@
     },
     {
       "abbr": "Breast, RP nodes",
-      "strategy": "",
+      "strategy": "7=RP",
       "window_level": "ST",
       "best_seen_on": "Ax",
       "full_name": "Breast, RP nodes",
@@ -980,8 +980,8 @@
       "chapterID": "chapter_1751086857135_ni8davyci"
     },
     {
-      "abbr": "oral cavity, Nodes Level 4 + Breast/ Axillary, Aorta",
-      "strategy": "double check",
+      "abbr": "OC, Level 4 LN + Breast/ Axillary, Aorta",
+      "strategy": "(☑✔)",
       "window_level": "ST",
       "best_seen_on": "Cor",
       "full_name": "oral cavity, Nodes Level 4 + Breast/ Axillary, Aorta",
@@ -1017,7 +1017,7 @@
       "window": ""
     },
     {
-      "abbr": "Thyroid, Esophagus, Lung apices",
+      "abbr": "Thyroid, Esoph, Lung apices",
       "strategy": "",
       "window_level": "ST",
       "best_seen_on": "Ax",
@@ -1057,7 +1057,7 @@
     },
     {
       "abbr": "Brain",
-      "strategy": "narrower window, edema, abn enh,Meckel's cave,",
+      "strategy": "(narrower window✔) edema, abn enh,Meckel's cave,",
       "window_level": "ST",
       "best_seen_on": "Ax",
       "full_name": "Brain",
@@ -1082,7 +1082,7 @@
       "chapterID": "chapter_1751086857135_64m3hpgxf"
     },
     {
-      "abbr": "Superfic ST/Spinal canal",
+      "abbr": "spfc ST / Canal",
       "strategy": "fat stranding, dermal lesions",
       "window_level": "ST",
       "best_seen_on": "Ax",
@@ -1095,7 +1095,7 @@
       "chapterID": "chapter_1751086857135_duf0xqvcz"
     },
     {
-      "abbr": "Sinuses, mastoids, Tbone",
+      "abbr": "Sinuses, mastoids/Tbone",
       "strategy": "middle ear / ossicles, inner ear",
       "window_level": "Bone",
       "best_seen_on": "Ax",
@@ -1108,7 +1108,7 @@
       "chapterID": "chapter_1751086857135_duf0xqvcz"
     },
     {
-      "abbr": "Maxilla/palate,",
+      "abbr": "Maxilla/palate",
       "strategy": "",
       "window_level": "Bone",
       "best_seen_on": "Ax",
@@ -1201,7 +1201,7 @@
       "chapterID": "chapter_1750993111805_2sajtki18"
     },
     {
-      "abbr": "Aorta, arch vessels->subclav, celiac, SMA, renals",
+      "abbr": "Aorta, arch vessels➔subclav, celiac, SMA, renals",
       "strategy": "",
       "window_level": "",
       "best_seen_on": "",
@@ -1279,7 +1279,7 @@
       "chapterID": "chapter_1750993111805_iy64m6zxh"
     },
     {
-      "abbr": "Esophagus",
+      "abbr": "Esoph",
       "strategy": "",
       "window_level": "",
       "best_seen_on": "",
@@ -1292,7 +1292,7 @@
       "chapterID": "chapter_1750993111805_iy64m6zxh"
     },
     {
-      "abbr": "Liver, Upper abdomen",
+      "abbr": "Liver, Upper abd",
       "strategy": "panc + spleen, adrenals, kidneys, stomach, SB, Colon",
       "window_level": "",
       "best_seen_on": "",
@@ -1489,8 +1489,8 @@
   ],
   "CT AP": [
     {
-      "abbr": "Liver",
-      "strategy": "(x1)",
+      "abbr": "Liver, GB, CBD",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Liverx1 cor)do",
@@ -1502,7 +1502,7 @@
       "chapterID": "chapter_1750997108450_m9bu7y364"
     },
     {
-      "abbr": "Panc/CBD",
+      "abbr": "Panc",
       "strategy": "tail -> uncinate",
       "window_level": "",
       "best_seen_on": "",
@@ -1542,7 +1542,7 @@
     },
     {
       "abbr": "SB + Mes",
-      "strategy": "sections: L, mid abd, R",
+      "strategy": "(L, mid abd, R)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "R, L Small Bowel + Mes / SMA",
@@ -1568,7 +1568,7 @@
     },
     {
       "abbr": "Aorta, Celiac, SMA",
-      "strategy": "follow SMA as far as you can",
+      "strategy": "SMA (follow AFAP)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Aorta, Celiac, SMA",
@@ -1599,7 +1599,7 @@
       "best_seen_on": "",
       "full_name": "AxHeart",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 9,
       "chapter": "Lower chest",
       "view_plane": "ax",
       "window": "",
@@ -1612,7 +1612,7 @@
       "best_seen_on": "",
       "full_name": "AxLung basesMIP often sees airspace dz better",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 9,
       "chapter": "Lower chest",
       "view_plane": "ax",
       "window": "",
@@ -1625,7 +1625,7 @@
       "best_seen_on": "",
       "full_name": "AxPneumoperitoneum / Free fluid",
       "groupID": 0,
-      "chunkID": 0,
+      "chunkID": 9,
       "chapter": "Lower chest",
       "view_plane": "ax",
       "window": "",
@@ -1750,7 +1750,7 @@
     },
     {
       "abbr": "Aorta, Celiac, SMA, Renals, IMA",
-      "strategy": "(down)",
+      "strategy": "(🠋)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Aorta, Celiac, SMA, Renals, IMA",
@@ -1894,7 +1894,7 @@
     {
       "abbr": "Sacr",
       "full_name": "",
-      "strategy": "ant cortex line, presacr edema, hard to see trans fxs if at or below S2 on ax",
+      "strategy": "ant cortex line, presacr edema (hard to see trans fxs if at or below S2 on ax)",
       "window_level": "",
       "best_seen_on": "",
       "groupID": 0,
@@ -1947,7 +1947,7 @@
       }
     },
     {
-      "abbr": "Aorta, arch vessels->subclav, celiac, SMA, renals",
+      "abbr": "Aorta, arch vessels➔subclav, celiac, SMA, renals",
       "strategy": "",
       "window_level": "",
       "best_seen_on": "",
@@ -2067,7 +2067,7 @@
       }
     },
     {
-      "abbr": "Esophagus",
+      "abbr": "Esoph",
       "strategy": "",
       "window_level": "",
       "best_seen_on": "",
@@ -2520,15 +2520,15 @@
       }
     },
     {
-      "abbr": "Hips",
-      "strategy": "rami, sacral insufficiency, fx, met, AVN",
+      "abbr": "Heart, PE",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
-      "full_name": "CorHips",
+      "full_name": "AxHeart",
       "groupID": 0,
       "chunkID": 9,
       "chapter": "Bone/ST_",
-      "view_plane": "cor",
+      "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1750980254082_aq0io076v",
       "isMirror": true,
@@ -2540,15 +2540,15 @@
       }
     },
     {
-      "abbr": "Spine",
-      "strategy": "quick look at VB in cor for fxs",
+      "abbr": "Lung bases",
+      "strategy": "(Thin + MIP)",
       "window_level": "",
       "best_seen_on": "",
-      "full_name": "CorSpine",
+      "full_name": "AxLung basesMIP often sees airspace dz better",
       "groupID": 0,
       "chunkID": 9,
       "chapter": "Bone/ST_",
-      "view_plane": "cor",
+      "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1750980254082_aq0io076v",
       "isMirror": true,
@@ -2560,15 +2560,15 @@
       }
     },
     {
-      "abbr": "Canal",
-      "strategy": "ST win, B win, cord compression/obvious mass",
+      "abbr": "Free air / Free fluid",
+      "strategy": "",
       "window_level": "",
       "best_seen_on": "",
-      "full_name": "SagCanal",
+      "full_name": "AxPneumoperitoneum / Free fluid",
       "groupID": 0,
       "chunkID": 9,
       "chapter": "Bone/ST_",
-      "view_plane": "sag",
+      "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1750980254082_aq0io076v",
       "isMirror": true,

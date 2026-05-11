@@ -1,6 +1,6 @@
 {
   "dataDirectory": "D:\\PythonProjects\\SearchAssistant_Electron\\src",
-  "transparency": 1,
+  "transparency": 0.6,
   "tumbler": {
     "hideBackground": true,
     "showChapterAsChunk": true,
@@ -12,15 +12,15 @@
     "y": 730
   },
   "editorWindowPosition": {
-    "x": 2956,
-    "y": 82
+    "x": 2896,
+    "y": 52
   },
   "tumblerWindowPosition": {
-    "x": 3020,
-    "y": 594
+    "x": 3126,
+    "y": 1250
   },
   "tumblerWindowSize": {
-    "width": 580,
+    "width": 788,
     "height": 300
   },
   "settingsWindowPosition": {
