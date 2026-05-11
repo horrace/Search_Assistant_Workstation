@@ -2109,7 +2109,7 @@ class SearchPatternAPI {
 
         for (const { item: sourceItem, originalIndex } of sortedItemsToMirror) {
           const mirrorItem = {
-            ...sourceItem,
+            ...JSON.parse(JSON.stringify(sourceItem)),
             isMirror: true,
             mirrorSource: {
               pattern: source_pattern,
