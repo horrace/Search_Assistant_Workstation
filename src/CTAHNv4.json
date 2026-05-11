@@ -1,0 +1,414 @@
+{
+  "CTA H&N v4": [
+    {
+      "abbr": "Sag MIPPCA, ACA, MCA",
+      "strategy": "M2/3",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Sag MIPPCA, ACA, MCA",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MIPscreen"
+    },
+    {
+      "abbr": "AxMIPMCA",
+      "strategy": "optional/quick, M1, bifurc, M2PCA",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxMIPMCA",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MIPscreen"
+    },
+    {
+      "abbr": "Cor MIPVerts, Basilar",
+      "strategy": "V4 Verts/PICA, AICA, SCA, bas+tip",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor MIPVerts, Basilar",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MIPscreen"
+    },
+    {
+      "abbr": "Cor MIPMCA",
+      "strategy": "M1, M2sup, VESSEL DENSITY",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor MIPMCA",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MIPscreen"
+    },
+    {
+      "abbr": "Ax   thinAorta, Carotids,  verts",
+      "strategy": "±Opth, up right, down left, *Bifurcations*",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax   thinAorta, Carotids,  verts",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MIPscreen"
+    },
+    {
+      "abbr": "CPRCarotids",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CPRCarotids",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Cor orSag thinentire Aorta , subclav;  CCA/ICAs;  verts",
+      "strategy": "trace each side",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor orSag thinentire Aorta , subclav;  CCA/ICAs;  verts",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Cor thinVertebroBas",
+      "strategy": "V4 verts/PICA, AICA, SCA, bas+tip",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor thinVertebroBas",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "Cor thinA1, ACOM, A2-3",
+      "strategy": "R/L",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor thinA1, ACOM, A2-3",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "Cor thinMCA-furcation",
+      "strategy": "sup+inf,  +retrograde confluence",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor thinMCA-furcation",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "AxthinMCA-furcation(Slow Sylvian Scroll)",
+      "strategy": " +retrograde confluence",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxthinMCA-furcation(Slow Sylvian Scroll)",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "Ax   thin/tMIPMCA-furcation",
+      "strategy": "sup+inf,  +retrograde confluence",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax   thin/tMIPMCA-furcation",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "Ax   thinAneurysmOpthalm, A+PCOM/Bifurc/bas tip",
+      "strategy": "quick",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax   thinAneurysmOpthalm, A+PCOM/Bifurc/bas tip",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "3D reconAneurysmA+PCOM/Bifurc/bas tip",
+      "strategy": "quick",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "3D reconAneurysmA+PCOM/Bifurc/bas tip",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "3D reconGlobal",
+      "strategy": "quick, prox MCA/ACA/PCA,   VertebroBasilar",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "3D reconGlobal",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPR + VRT"
+    },
+    {
+      "abbr": "CTV Ax  3.0brain enhanc",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV Ax  3.0brain enhanc",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "CTV"
+    },
+    {
+      "abbr": "CTV Ax  Thinsag SSS, VoG/straight, trans/sigm, JugB/IJVsinto mediast/SVC",
+      "strategy": "± ISS",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV Ax  Thinsag SSS, VoG/straight, trans/sigm, JugB/IJVsinto mediast/SVC",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "CTV"
+    },
+    {
+      "abbr": "CTV   AxParotid,SMG, SLG",
+      "strategy": "quick scroll down",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV   AxParotid,SMG, SLG",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV   AxThyroid, Esophagus",
+      "strategy": "quick scroll down",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV   AxThyroid, Esophagus",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV   AxADT",
+      "strategy": "quick scroll up, Trachea -> Larynx, HP, OP, NP",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV   AxADT",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV   AxFat pads",
+      "strategy": "quick scroll down, PPF→retromax→pterygoid→parapharyng",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV   AxFat pads",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV   AxNodes",
+      "strategy": "quick scroll down, Neck,  Axilla / Breast",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV   AxNodes",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTA  AxPE",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTA  AxPE",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTA  AxBronch/Hilar Nodes, Lungs",
+      "strategy": "MIP/Thin, already did trachea on ADT",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTA  AxBronch/Hilar Nodes, Lungs",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV CorNodes",
+      "strategy": "double check, Supraclav/Upper Mediastinal",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV CorNodes",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV CorLung Apex/Hila mass",
+      "strategy": "double check, ax blind spots",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV CorLung Apex/Hila mass",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV CorDens, vertebral bodies",
+      "strategy": "double check, quick/optional",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV CorDens, vertebral bodies",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "CTV Cor",
+      "strategy": "quick/optional, Face ST",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "CTV Cor",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "AxAnt superfic ST",
+      "strategy": "quick scroll down, Breast in F + subQ face",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxAnt superfic ST",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "AxCanal run + post ST",
+      "strategy": "quick scroll up, eye on canal, peripheral vision ST",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "AxCanal run + post ST",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Ax  BoneSpine",
+      "strategy": ", TVproc, Canal",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax  BoneSpine",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Ax  BoneMandible, maxilla",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax  BoneMandible, maxilla",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Ax  BoneR Scap/Clav, Sternum, L Scap/Clav",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax  BoneR Scap/Clav, Sternum, L Scap/Clav",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Ax  BoneRibs",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Ax  BoneRibs",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Cor BoneMandible, maxilla",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor BoneMandible, maxilla",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Cor BoneR Scap/Clav, Sternum, L Scap/Clav",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor BoneR Scap/Clav, Sternum, L Scap/Clav",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Cor BoneDens, VBs",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Cor BoneDens, VBs",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Sag BoneSpine",
+      "strategy": "middle, L, R",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Sag BoneSpine",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser"
+    },
+    {
+      "abbr": "Chart Hx, final checks",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Chart Hx, final checks",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": ""
+    },
+    {
+      "abbr": "Proofread",
+      "strategy": "impression > findings",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Proofread",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": ""
+    },
+    {
+      "abbr": "End – move on quickly",
+      "strategy": "",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "End – move on quickly",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": ""
+    }
+  ]
+}

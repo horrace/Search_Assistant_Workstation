@@ -432,7 +432,7 @@
     },
     {
       "abbr": "Nodes",
-      "strategy": "(qs down) Neck,  Axilla / Breast",
+      "strategy": "(🠋) Neck,  Axilla / Breast",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV   AxNodes",
@@ -471,7 +471,7 @@
     },
     {
       "abbr": "Nodes",
-      "strategy": "(☑) Supraclav/Upper Mediast",
+      "strategy": "(✔) Supraclav/Upper Mediast",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorNodes",
@@ -484,7 +484,7 @@
     },
     {
       "abbr": "Lung Apex/Hila mass",
-      "strategy": "(☑) ax blind spots",
+      "strategy": "(✔) ax blind spots",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorLung Apex/Hila mass",
@@ -497,7 +497,7 @@
     },
     {
       "abbr": "Dens, vert bodies",
-      "strategy": "(☑) quick/optional",
+      "strategy": "(✔) quick/optional",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorDens, vertebral bodies",
@@ -981,7 +981,7 @@
     },
     {
       "abbr": "OC, Level 4 LN + Breast/ Axillary, Aorta",
-      "strategy": "(☑✔)",
+      "strategy": "(✔)",
       "window_level": "ST",
       "best_seen_on": "Cor",
       "full_name": "oral cavity, Nodes Level 4 + Breast/ Axillary, Aorta",
