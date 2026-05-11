@@ -178,7 +178,7 @@
       "full_name": "PCA, ACA, MCA",
       "groupID": 0,
       "chunkID": 1,
-      "chapter": "MIPscreen",
+      "chapter": "MIP screen",
       "view_plane": "sag",
       "window": "MIP",
       "chapterID": "chapter_1750997448877_shhv3bass"
@@ -191,7 +191,7 @@
       "full_name": "MCA",
       "groupID": 0,
       "chunkID": 1,
-      "chapter": "MIPscreen",
+      "chapter": "MIP screen",
       "view_plane": "ax",
       "window": "MIP",
       "chapterID": "chapter_1750997448877_shhv3bass"
@@ -204,7 +204,7 @@
       "full_name": "Verts, Basilar",
       "groupID": 0,
       "chunkID": 1,
-      "chapter": "MIPscreen",
+      "chapter": "MIP screen",
       "view_plane": "cor",
       "window": "MIP",
       "chapterID": "chapter_1750997448877_shhv3bass"
@@ -217,7 +217,7 @@
       "full_name": "Cor MIPMCA",
       "groupID": 0,
       "chunkID": 1,
-      "chapter": "MIPscreen",
+      "chapter": "MIP screen",
       "view_plane": "cor",
       "window": "MIP",
       "chapterID": "chapter_1750997448877_shhv3bass"
@@ -230,7 +230,7 @@
       "full_name": "CPRCarotids",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "MIPscreen",
+      "chapter": "MIP screen",
       "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1750997448877_shhv3bass"

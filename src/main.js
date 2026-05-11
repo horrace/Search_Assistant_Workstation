@@ -19,8 +19,7 @@ const { api } = require('./api'); // Import the JavaScript API
     //console.log(">>>> MAIN.JS DEBUG: api.create_pattern function body (first 100 chars):", api.create_pattern.toString().substring(0, 100));
 //}
 
-// Hot reload setup in development mode
-// Alternative solution: Move settings.json to a directory not watched by electron-reloader
+// Hot reload setup in development mode  (// Alternative solution: Move settings.json to a directory not watched by electron-reloader
 try {
   if (process.env.NODE_ENV === 'development') {
     console.log('Hot reload enabled for development');
@@ -127,6 +126,13 @@ function createMainWindow() {
   // Set the opacity from stored settings or default
   const transparency = store.get('transparency', 1.0);
   mainWindow.setOpacity(transparency);
+
+  // After reload/hot-reload the renderer resets the slider DOM; re-apply opacity from store.
+  mainWindow.webContents.on('did-finish-load', () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const t = store.get('transparency', 1.0);
+    mainWindow.setOpacity(t);
+  });
   
   // Save position on move (debounced)
   let moveTimeout;
@@ -299,6 +305,9 @@ function createTumblerWindow(patternName) {
     maxHeight: windowHeight, // Fix height to original
     fullscreenable: false // Prevent fullscreen which can affect size
   });
+
+  const tumblerTransparency = store.get('transparency', 1.0);
+  tumblerWindow.setOpacity(tumblerTransparency);
 
   tumblerWindow.loadFile(path.join(__dirname, 'tumbler.html'));
   
@@ -710,6 +719,8 @@ ipcMain.handle('get-window-position', (event) => {
   } 
   return [0, 0]; // Default or error case
 });
+
+ipcMain.handle('get-transparency', () => store.get('transparency', 1.0));
 
 ipcMain.on('set-transparency', (event, value) => {
   // Store the transparency setting

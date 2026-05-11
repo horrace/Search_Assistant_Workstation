@@ -17,17 +17,38 @@ document.addEventListener('DOMContentLoaded', function() {
   // State
   let shortcuts = [];
   let currentTransparency = 1.0;
+
+  const TRANSPARENCY_SLIDER_MIN = 0.2;
+  const TRANSPARENCY_SLIDER_MAX = 1;
   let hideBackground = false;
   let showChapterAsChunk = false;
   let inlineHeaderLayout = false;
   let hideViewPlaneInChapter = true;
   let editorSettings = { hideOutroInEditor: false };
   
+  async function syncTransparencySliderFromMain() {
+    if (!transparencySlider || !window.electronAPI.getTransparency) return;
+    try {
+      let t = await window.electronAPI.getTransparency();
+      t = Number(t);
+      if (Number.isNaN(t)) t = 1.0;
+      t = Math.min(TRANSPARENCY_SLIDER_MAX, Math.max(TRANSPARENCY_SLIDER_MIN, t));
+      currentTransparency = t;
+      transparencySlider.value = String(t);
+      updateTransparencyDisplay();
+    } catch (e) {
+      console.error('Failed to sync transparency slider:', e);
+    }
+  }
+
   // Initialize
   init();
   
-  function init() {
+  async function init() {
     console.log('Settings window initialized');
+    
+    await syncTransparencySliderFromMain();
+    updateTransparencyDisplay();
     
     // Set up event listeners
     setupEventListeners();
@@ -36,9 +57,6 @@ document.addEventListener('DOMContentLoaded', function() {
     loadShortcuts();
     loadGeneralSettings();
     loadEditorSettings();
-    
-    // Update transparency display
-    updateTransparencyDisplay();
   }
   
   function setupEventListeners() {

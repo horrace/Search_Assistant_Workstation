@@ -78,13 +78,31 @@ document.addEventListener('DOMContentLoaded', function() {
   // Current state
   let patterns = [];
   let currentTransparency = 1.0;
+
+  const TRANSPARENCY_SLIDER_MIN = 0.2;
+  const TRANSPARENCY_SLIDER_MAX = 1;
   
   // Initialize the application
   init();
   
+  async function syncTransparencySliderFromMain() {
+    if (!transparencySlider || !window.electronAPI.getTransparency) return;
+    try {
+      let t = await window.electronAPI.getTransparency();
+      t = Number(t);
+      if (Number.isNaN(t)) t = 1.0;
+      t = Math.min(TRANSPARENCY_SLIDER_MAX, Math.max(TRANSPARENCY_SLIDER_MIN, t));
+      currentTransparency = t;
+      transparencySlider.value = String(t);
+      updateTransparencyDisplay();
+    } catch (e) {
+      console.error('Failed to sync transparency slider:', e);
+    }
+  }
+  
   // Initialize the application
-  function init() {
-    // Update transparency display
+  async function init() {
+    await syncTransparencySliderFromMain();
     updateTransparencyDisplay();
     
     // Set up event listeners

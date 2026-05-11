@@ -906,10 +906,24 @@ footer {
 .inline-header-layout .tumbler-header-left {
   display: flex;
   align-items: center;
+  align-self: center; /* Fallback; inline layout uses tumbler.js margin for chunk / unchunked row midpoint */
   flex-shrink: 0;
-  width: 70px;
+  width: fit-content;
   overflow: wrap;
 }
+
+/* Left header elements when moved to container level */
+.inline-header-layout .tumbler-chapter-label {
+  color: #3e3e3e; /* Dark Gray */
+  font-size: 26px; /* Adjust as needed, can also be controlled by font scaling */
+  font-weight: normal;
+  text-align: left;
+  margin-right: 10px;
+  margin-top: 0px;
+  width: 100%; /* Ensure it takes full width for left alignment */
+  display: none; /* Initially hidden, shown by JS when chapter exists */
+}
+  
 
 /* Content takes the middle flexible space */
 .inline-header-layout .tumbler-content {

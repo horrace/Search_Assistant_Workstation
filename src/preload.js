@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   
   // Settings
   setTransparency: (value) => ipcRenderer.send('set-transparency', value),
+  getTransparency: () => ipcRenderer.invoke('get-transparency'),
   
   // Shortcuts management
   registerShortcuts: () => ipcRenderer.send('register-shortcuts'),

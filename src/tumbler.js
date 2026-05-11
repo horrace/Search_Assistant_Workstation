@@ -144,6 +144,7 @@ function updateHeaderLayout() {
       tumblerContainer.appendChild(tumblerContent);
       tumblerContainer.appendChild(tumblerHeaderRight);
     }
+    scheduleInlineHeaderLeftVerticalAlign();
   } else {
     document.body.classList.remove('inline-header-layout');
     
@@ -155,7 +156,69 @@ function updateHeaderLayout() {
       // Ensure header is positioned before content
       tumblerContainer.insertBefore(tumblerHeader, tumblerContent);
     }
+    if (tumblerHeaderLeft) {
+      tumblerHeaderLeft.style.marginTop = '';
+      tumblerHeaderLeft.style.alignSelf = '';
+    }
   }
+}
+
+/**
+ * Inline layout: vertically center .tumbler-header-left on the midpoint of the main body —
+ * chunk box when chunk mode, else #unchunked-item-row when unchunked. Clears inline overrides
+ * when nothing to align (falls back to CSS align-self: center on .tumbler-header-left).
+ */
+function updateInlineHeaderLeftVerticalAlign() {
+  const headerLeft = document.querySelector('.tumbler-header-left');
+  const content = document.querySelector('.tumbler-content');
+  const chunk = document.getElementById('tumbler-chunk');
+  const unchunkedRow = document.getElementById('unchunked-item-row');
+  if (!headerLeft || !content) return;
+
+  if (!document.body.classList.contains('inline-header-layout')) {
+    headerLeft.style.marginTop = '';
+    headerLeft.style.alignSelf = '';
+    return;
+  }
+
+  const applyAlignToTargetCenter = (targetRect) => {
+    const contentRect = content.getBoundingClientRect();
+    const targetCenterY = targetRect.top + targetRect.height / 2;
+    const headerHeight = headerLeft.offsetHeight;
+    const marginTop = targetCenterY - contentRect.top - headerHeight / 2;
+    headerLeft.style.alignSelf = 'flex-start';
+    headerLeft.style.marginTop = `${Math.max(0, Math.round(marginTop))}px`;
+  };
+
+  const chunkVisible =
+    chunk &&
+    chunk.style.display !== 'none' &&
+    chunk.getClientRects().length > 0 &&
+    chunk.offsetHeight > 0;
+  if (chunkVisible) {
+    applyAlignToTargetCenter(chunk.getBoundingClientRect());
+    return;
+  }
+
+  const unchunkedVisible =
+    unchunkedRow &&
+    window.getComputedStyle(unchunkedRow).display !== 'none' &&
+    unchunkedRow.offsetHeight > 0;
+  if (unchunkedVisible) {
+    applyAlignToTargetCenter(unchunkedRow.getBoundingClientRect());
+    return;
+  }
+
+  headerLeft.style.marginTop = '';
+  headerLeft.style.alignSelf = '';
+}
+
+function scheduleInlineHeaderLeftVerticalAlign() {
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      updateInlineHeaderLeftVerticalAlign();
+    });
+  });
 }
 
 // Load settings from backend
@@ -290,6 +353,10 @@ function updateFontSizes() {
   document.querySelectorAll('.chunk-item-strategy').forEach(el => {
     el.style.fontSize = `${chunkItemStrategyBaseFontSize * fontScaleFactor}px`;
   });
+
+  if (inlineHeaderLayout) {
+    scheduleInlineHeaderLeftVerticalAlign();
+  }
 }
 
 function formatStrategyText(text) {
@@ -363,6 +430,7 @@ function displayCurrentItem() {
     const dynamicView = document.getElementById('tumbler-view-dynamic');
     if (dynamicView) dynamicView.style.display = 'none';
     if (tumblerChapterLabel) tumblerChapterLabel.style.display = 'none';
+    scheduleInlineHeaderLeftVerticalAlign();
     return;
   }
 
@@ -490,7 +558,7 @@ function displayCurrentItem() {
     // Removed the requestAnimationFrame block for wrapped-indented logic
   }
 
-  updateFontSizes(); // Call to update font sizes for all relevant elements
+  updateFontSizes(); // Call to update font sizes for all relevant elements (also schedules inline header align when inline)
   
   // Resize window to fit content after all updates
   resizeTumblerToContent();
@@ -585,6 +653,8 @@ function resizeTumblerToContent() {
           height: finalHeight 
         });
       }
+
+      scheduleInlineHeaderLeftVerticalAlign();
     } catch (error) {
       console.error('Error resizing tumbler:', error);
     }
