@@ -197,19 +197,6 @@
       "chapterID": "chapter_1750997448877_shhv3bass"
     },
     {
-      "abbr": "Verts, Basilar",
-      "strategy": "V4 Verts/PICA, AICA, SCA, bas+tip",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Verts, Basilar",
-      "groupID": 0,
-      "chunkID": 1,
-      "chapter": "MIP screen",
-      "view_plane": "cor",
-      "window": "MIP",
-      "chapterID": "chapter_1750997448877_shhv3bass"
-    },
-    {
       "abbr": "MCA",
       "strategy": "M1, M2sup  (VESSEL DENSITY)",
       "window_level": "",
@@ -259,6 +246,19 @@
       "chapter": "MPRact ser",
       "view_plane": "cor",
       "window": "Thin",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3"
+    },
+    {
+      "abbr": "Verts, Basilar",
+      "strategy": "V4 Verts/PICA, AICA, SCA, bas+tip",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Verts, Basilar",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser",
+      "view_plane": "cor",
+      "window": "MIP",
       "chapterID": "chapter_1750997448877_2ldqlj4v3"
     },
     {
@@ -522,7 +522,7 @@
       "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
-      "abbr": "Ant superfic ST",
+      "abbr": "Ant spfc ST",
       "strategy": "(qs🠋) Breast in F + subQ face",
       "window_level": "",
       "best_seen_on": "",

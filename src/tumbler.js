@@ -18,6 +18,8 @@ let patternItems = []; // Original full list of all items
 let displayableUnits = []; // New: Holds single items or one representative item per chunk
 let currentDisplayIndex = 0; // New: Index for displayableUnits
 let totalDisplayItems = 0; // New: Count of units in displayableUnits
+let totalCounterItems = 0; // Count shown in tumbler counter (excludes outro units)
+let displayIndexToCounterValue = []; // Maps display index to visible counter position
 let elapsedSeconds = 0;
 let timerInterval = null;
 let fontScaleFactor = 1.0;
@@ -95,6 +97,19 @@ function init() {
   }
 }
 
+function isOutroDisplayUnit(item) {
+  if (!item) {
+    return false;
+  }
+
+  if (item.isOutroItem) {
+    return true;
+  }
+
+  const chapter = (item.chapter || '').trim().toLowerCase();
+  return chapter === 'outro';
+}
+
 // Set up drag handling for the window
 function setupDragHandling() {
   // No custom logic needed here anymore.
@@ -109,7 +124,7 @@ function updateBackgroundVisibility() {
     tumblerContainer.classList.add('no-background');
     
     // Remove any inline background styles when hiding background
-    const contentElements = document.querySelectorAll('.tumbler-abbr, .tumbler-strategy, .tumbler-chunk, .chunk-item-abbr, .chunk-item-strategy');
+    const contentElements = document.querySelectorAll('.tumbler-abbr, .tumbler-strategy, .tumbler-chunk, .chunk-item-abbr, .chunk-item-strategy, .tumbler-window, .chunk-item-window');
     contentElements.forEach(el => {
       el.style.backgroundColor = 'transparent';
       el.style.boxShadow = 'none';
@@ -317,6 +332,16 @@ function loadPattern(patternName) {
       }
 
       totalDisplayItems = displayableUnits.length;
+      displayIndexToCounterValue = [];
+      totalCounterItems = 0;
+
+      for (let i = 0; i < totalDisplayItems; i++) {
+        if (!isOutroDisplayUnit(displayableUnits[i])) {
+          totalCounterItems++;
+        }
+        displayIndexToCounterValue[i] = totalCounterItems;
+      }
+
       currentDisplayIndex = 0;
       displayCurrentItem();
     } else if (data && data.responseFor === 'get_pattern_with_outro' && data.error) {
@@ -339,6 +364,12 @@ function updateFontSizes() {
   if (tumblerViewDynamic) {
       tumblerViewDynamic.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`; // Adjust base size as needed
   }
+
+  // Keep window text visually aligned with view text
+  const tumblerWindowDynamic = document.getElementById('tumbler-window-dynamic');
+  if (tumblerWindowDynamic) {
+      tumblerWindowDynamic.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`;
+  }
   
   // Update chapter label font size
   if (tumblerChapterLabel) {
@@ -348,6 +379,10 @@ function updateFontSizes() {
   // Update chunk item font sizes if visible
   document.querySelectorAll('.chunk-item-abbr').forEach(el => {
     el.style.fontSize = `${chunkItemAbbrBaseFontSize * fontScaleFactor}px`;
+  });
+
+  document.querySelectorAll('.chunk-item-view, .chunk-item-window').forEach(el => {
+    el.style.fontSize = `${(chunkItemAbbrBaseFontSize - 2) * fontScaleFactor}px`;
   });
   
   document.querySelectorAll('.chunk-item-strategy').forEach(el => {
@@ -437,19 +472,22 @@ function displayCurrentItem() {
   // Get references to the new elements for unchunked display
   const unchunkedItemRow = document.getElementById('unchunked-item-row');
   const tumblerViewDynamic = document.getElementById('tumbler-view-dynamic');
+  const tumblerWindowDynamic = document.getElementById('tumbler-window-dynamic');
   const abbrStrategyWrapper = document.getElementById('abbr-strategy-wrapper');
 
   // Get the representative item for the current display unit
   const representativeItem = displayableUnits[currentDisplayIndex];
 
-  // Update counter using display indices
-  tumblerCounter.textContent = `${currentDisplayIndex + 1}/${totalDisplayItems}`;
+  // Keep outro units out of the visible counter while preserving navigation order.
+  const currentCounterValue = displayIndexToCounterValue[currentDisplayIndex] || 0;
+  tumblerCounter.textContent = `${currentCounterValue}/${totalCounterItems}`;
 
   const chunkID = representativeItem.chunkID || 0;
   const virtualChapterChunk = representativeItem.virtualChapterChunk || null;
   const itemAbbr = representativeItem.abbr || '';
   const itemStrategy = representativeItem.strategy || '';
   const itemView = representativeItem.view_plane || ''; // Allow empty view_plane
+  const itemWindow = representativeItem.window || '';
   const itemChapter = representativeItem.chapter || '';
 
   // --- Update Chapter Display ---
@@ -501,10 +539,12 @@ function displayCurrentItem() {
     itemsToDisplay.forEach(item => {
       // Make sure to use item.view_plane for chunk item view, but hide if determined
       const chunkItemViewText = (item.view_plane && !hideViewPlane) ? `${item.view_plane} ` : '';
+      const chunkItemWindowText = item.window || '';
       const outroClass = item.isOutroItem ? ' outro-item' : '';
       chunkHTML += `
         <div class="chunk-item${outroClass}">
           <span class="chunk-item-view">${chunkItemViewText}</span>
+          <span class="chunk-item-window">${chunkItemWindowText}</span>
           <span class="chunk-item-abbr">${item.abbr}</span>
           <span class="chunk-item-strategy">${formatStrategyText(item.strategy)}</span>
         </div>
@@ -519,6 +559,9 @@ function displayCurrentItem() {
     // Parent unchunkedItemRow should contain tumblerViewDynamic and abbrStrategyWrapper
     if (tumblerViewDynamic.parentNode !== unchunkedItemRow) {
         unchunkedItemRow.appendChild(tumblerViewDynamic);
+    }
+    if (tumblerWindowDynamic.parentNode !== unchunkedItemRow) {
+      unchunkedItemRow.appendChild(tumblerWindowDynamic);
     }
     if (abbrStrategyWrapper.parentNode !== unchunkedItemRow) {
         unchunkedItemRow.appendChild(abbrStrategyWrapper);
@@ -538,6 +581,7 @@ function displayCurrentItem() {
 
     // Set content for unchunked items
     tumblerViewDynamic.textContent = itemView ? itemView : ''; // Display view or empty
+    tumblerWindowDynamic.textContent = itemWindow ? itemWindow : ''; // Display window or empty
     tumblerAbbr.textContent = itemAbbr;
     tumblerStrategy.innerHTML = formatStrategyText(itemStrategy);
 
@@ -549,7 +593,10 @@ function displayCurrentItem() {
     }
 
     // Set visibility of individual elements within the row
-    tumblerViewDynamic.style.display = (itemView && !hideViewPlane) ? 'block' : 'none'; // Show if itemView exists and not hidden
+    tumblerViewDynamic.style.display = 'block';
+    tumblerWindowDynamic.style.display = 'block';
+    tumblerViewDynamic.style.visibility = (itemView && !hideViewPlane) ? 'visible' : 'hidden'; // Preserve column alignment
+    tumblerWindowDynamic.style.visibility = itemWindow ? 'visible' : 'hidden'; // Preserve column alignment
     tumblerAbbr.style.display = itemAbbr ? 'block' : 'none'; // Show if itemAbbr exists
     tumblerStrategy.style.display = itemStrategy ? 'block' : 'none'; // Show if itemStrategy exists
 
