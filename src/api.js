@@ -310,8 +310,19 @@ class SearchPatternAPI {
     
     try {
       if (pattern_name in this.patterns) {
-        //console.log(`Pattern data for ${pattern_name}: Found ${this.patterns[pattern_name].length} items`);
-        return this.patterns[pattern_name];
+        const rawPattern = this.patterns[pattern_name] || [];
+
+        // `isOutroItem` is a display-only flag; if it is ever persisted,
+        // filter those rows out and strip the flag from remaining items.
+        const sanitizedPattern = rawPattern
+          .filter(item => item && item.isOutroItem !== true)
+          .map(item => {
+            const cleanItem = { ...item };
+            delete cleanItem.isOutroItem;
+            return cleanItem;
+          });
+
+        return sanitizedPattern;
       } else {
         console.log(`Pattern not found: ${pattern_name}`);
         // For consistency with get_available_patterns, return empty array if not found.
@@ -569,7 +580,17 @@ class SearchPatternAPI {
       this._saveStateToHistory(pattern_name); // Save state before modification
       // Deep clone to ensure we have plain objects and to avoid potential IPC proxy issues.
       const plain_pattern_data = JSON.parse(JSON.stringify(pattern_data));
-      this.patterns[pattern_name] = plain_pattern_data;
+
+      // Never persist display-only outro rows or flags.
+      const sanitizedPatternData = (plain_pattern_data || [])
+        .filter(item => item && item.isOutroItem !== true)
+        .map(item => {
+          const cleanItem = { ...item };
+          delete cleanItem.isOutroItem;
+          return cleanItem;
+        });
+
+      this.patterns[pattern_name] = sanitizedPatternData;
 
       console.log(`[API update_pattern] Assigned new data for ${pattern_name}. In-memory this.patterns[${pattern_name}] now has ${this.patterns[pattern_name]?.length} items.`);
       if (this.patterns[pattern_name] && this.patterns[pattern_name].length > 0) {

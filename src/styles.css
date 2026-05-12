@@ -569,6 +569,15 @@ footer {
   overflow: visible; /* Allow content to extend beyond container */
 }
 
+.chunk-item-view,
+.chunk-item-window {
+  color: #575757;
+  font-size: 16px;
+  white-space: nowrap;
+  overflow: visible;
+  flex-shrink: 0;
+}
+
 .chunk-item-abbr {
   color: #cacaca;
   font-size: 18px;
@@ -1004,10 +1013,11 @@ footer {
   height: calc(100%)+30; /* Fills the full height of pattern-editor */
   max-height: calc(100vh - 100px);
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 10px;
   padding-left: 100px;
-  scrollbar-width: thin; /* For Firefox */
-  scrollbar-color: rgba(79, 195, 247, 0.5) transparent; /* For Firefox */
+  /* scrollbar-width: thin; For Firefox */
+  /* scrollbar-color: rgba(79, 195, 247, 0.5) transparent; For Firefox */
 }
 
 /* Modern scrollbar styling */
@@ -1365,21 +1375,33 @@ footer {
 .unchunked-item-row > #tumbler-view-dynamic {
   /* Uses .tumbler-view class for base styling like color, font-size */
   width: auto; 
-  margin-left: 0;
-  margin-right: 0px; /* Space between view and the abbr-strategy group */
+  margin-left: 10px;
+  margin-right: 10px; /* Space between view and the abbr-strategy group */
   margin-bottom: 5px; /* Consistent bottom margin */
   order: 1; /* View comes first */
   flex-shrink: 0; /* Prevent view from shrinking if abbr-strategy is very long */
 }
 
+/* Window text between view and abbr in unchunked row */
+.unchunked-item-row > #tumbler-window-dynamic {
+  color: #575757;
+  margin-left: 0;
+  margin-right: 0.25em;
+  margin-bottom: 5px;
+  order: 2;
+  flex-shrink: 0;
+}
+
 /* New wrapper for abbr and strategy */
 .abbr-strategy-wrapper {
   display: flex;
-  flex-wrap: wrap; /* Allow strategy to wrap under abbr */
+  flex-wrap: nowrap;
   align-items: baseline; /* Align abbr and strategy on the same line */
   flex-grow: 1; /* Allow this group to take remaining space */
+  white-space: nowrap;
+  overflow: hidden;
   /* min-width: 0; /* Important for flex items that might shrink or grow and contain wrapping text */
-  order: 2;
+  order: 3;
 }
 
 /* Adjustments for #tumbler-abbr when moved inside .abbr-strategy-wrapper */

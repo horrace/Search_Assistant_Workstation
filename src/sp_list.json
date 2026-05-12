@@ -15,7 +15,7 @@
     },
     {
       "abbr": "excl hemorrhage",
-      "strategy": "(quadr, down middle)  dSAH (vertex, O/Pcortex, OccHorns, DepSylv, IPfoss, lat Qdrg Cist/folia, FMag)",
+      "strategy": "(quadr, 🠋middle)  dSAH (vertex, O/Pcortex, OccHorns, DepSylv, IPfoss, lat Qdrg Cist/folia, FMag)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ax  brainexcl hemorrhage+dSAHvertex, O/Pcortex, OccHorns, DepSylv, IPfoss, lat Qdrg Cist/folia, FMag",
@@ -41,7 +41,7 @@
     },
     {
       "abbr": "GWdiff",
-      "strategy": "(zoom out or sit back, A/P halves + Pfossa symmetry) basal ganglia; Cerebral, C’bellar hemis",
+      "strategy": "(zoom out or sit back, A/P halves) Pfossa (symmetry), basal ganglia; Cerebral, C’bellar hemis",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Ax  strokeIR-IC, caud, thal, lentiform;   Cerebral, C’bellar hemis’",
@@ -54,7 +54,7 @@
     },
     {
       "abbr": "Stroke Dbl Check",
-      "strategy": "c'bellar hemis/Bstem; Occipital lobes",
+      "strategy": "(✔) c'bellar hemis/Bstem; Occipital lobes",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Cor strokec'bellar hemis/Bstem;Occ, parietal, high frontal lobes,",
@@ -66,8 +66,8 @@
       "chapterID": "chapter_1750980250004_4x2s0h13n"
     },
     {
-      "abbr": "F+T poles, Falx/SSS, Tents/TransvSinuses, excl SDH",
-      "strategy": "(convexities x1)",
+      "abbr": "excl SDH",
+      "strategy": "(convexities x1) F+T poles, Falx/SSS, Tents/TransvSinuses,",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Cor brainF+T poles,Falx/SSS, Tents/Trans Sinsuses,excl SDH(convexitiesx1)",
@@ -159,7 +159,7 @@
     {
       "abbr": "NOP, f.Rosmuller, tonsils, RP/PP nodes",
       "full_name": "Naso/OroPharynx, F. Rosenmuller, Waldeyer Ring, Retro/Para-pharyngeal nodes",
-      "strategy": "quick look",
+      "strategy": "(quick look)",
       "window_level": "ST",
       "best_seen_on": "ax",
       "groupID": 0,
@@ -185,7 +185,7 @@
     },
     {
       "abbr": "MCA",
-      "strategy": "(optional/quick) M1, bifurc, M2PCA",
+      "strategy": "(optional/quick) M1/bifurc/M2, PCA",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "MCA",
@@ -193,19 +193,6 @@
       "chunkID": 1,
       "chapter": "MIP screen",
       "view_plane": "ax",
-      "window": "MIP",
-      "chapterID": "chapter_1750997448877_shhv3bass"
-    },
-    {
-      "abbr": "Verts, Basilar",
-      "strategy": "V4 Verts/PICA, AICA, SCA, bas+tip",
-      "window_level": "",
-      "best_seen_on": "",
-      "full_name": "Verts, Basilar",
-      "groupID": 0,
-      "chunkID": 1,
-      "chapter": "MIP screen",
-      "view_plane": "cor",
       "window": "MIP",
       "chapterID": "chapter_1750997448877_shhv3bass"
     },
@@ -262,7 +249,20 @@
       "chapterID": "chapter_1750997448877_2ldqlj4v3"
     },
     {
-      "abbr": "VertebroBas",
+      "abbr": "Verts, Basilar",
+      "strategy": "V4 Verts/PICA, AICA, SCA, bas+tip",
+      "window_level": "",
+      "best_seen_on": "",
+      "full_name": "Verts, Basilar",
+      "groupID": 0,
+      "chunkID": 0,
+      "chapter": "MPRact ser",
+      "view_plane": "cor",
+      "window": "MIP",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3"
+    },
+    {
+      "abbr": "VertebroBas, PCAs",
       "strategy": "V4/PICA, AICA, SCA, bas+tip",
       "window_level": "",
       "best_seen_on": "",
@@ -367,7 +367,7 @@
     },
     {
       "abbr": "Thin",
-      "strategy": "sag SSS (± ISS), VoG/Straight, Trans/sigm, JugB/IJVs (into mediast/SVC)",
+      "strategy": "sag SSS (±ISS), VoG/Straight, Trans/sigm, JugB/IJVs (into mediast/SVC)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV Ax  Thinsag SSS, VoG/straight, trans/sigm, JugB/IJVsinto mediast/SVC",
@@ -484,7 +484,7 @@
     },
     {
       "abbr": "Lung Apex/Hila mass",
-      "strategy": "(✔) ax blind spots",
+      "strategy": "(✔) (ax blind spots)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorLung Apex/Hila mass",
@@ -497,7 +497,7 @@
     },
     {
       "abbr": "Dens, vert bodies",
-      "strategy": "(✔) quick/optional",
+      "strategy": "(✔) (quick/optional)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorDens, vertebral bodies",
@@ -522,7 +522,7 @@
       "chapterID": "chapter_1750997448877_2hdilj4v7"
     },
     {
-      "abbr": "Ant superfic ST",
+      "abbr": "Ant spfc ST",
       "strategy": "(qs🠋) Breast in F + subQ face",
       "window_level": "",
       "best_seen_on": "",
@@ -713,7 +713,7 @@
       "full_name": "T1 sag",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "2",
+      "chapter": "T1 pre",
       "view_plane": "sag",
       "window": "",
       "chapterID": "chapter_1754364871737_enzcs446m"
@@ -726,7 +726,7 @@
       "full_name": "T1 sag+ post elements",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "2",
+      "chapter": "T1 pre",
       "view_plane": "sag",
       "window": "",
       "chapterID": "chapter_1754364871737_enzcs446m"
@@ -739,7 +739,7 @@
       "full_name": "T1+Cax, bstem,",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "3",
+      "chapter": "T1+C",
       "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1754364871737_no5dt4mnz"
@@ -752,7 +752,7 @@
       "full_name": "T1+Cax",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "3",
+      "chapter": "T1+C",
       "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1754364871737_no5dt4mnz"
@@ -765,7 +765,7 @@
       "full_name": "T1+CaxNOP/BOT",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "3",
+      "chapter": "T1+C",
       "view_plane": "ax",
       "window": "",
       "chapterID": "chapter_1754364871737_no5dt4mnz"
@@ -778,7 +778,7 @@
       "full_name": "T1+Ccor",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "3",
+      "chapter": "T1+C",
       "view_plane": "cor",
       "window": "",
       "chapterID": "chapter_1754364871737_no5dt4mnz"
@@ -791,7 +791,7 @@
       "full_name": "T1+Ccor",
       "groupID": 0,
       "chunkID": 0,
-      "chapter": "3",
+      "chapter": "T1+C",
       "view_plane": "cor",
       "window": "",
       "chapterID": "chapter_1754364871737_no5dt4mnz"
