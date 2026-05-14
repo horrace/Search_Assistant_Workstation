@@ -171,7 +171,8 @@ let contextMenuTargetChunkId = null;
 let chunkAssignmentContext = null; // For storing context for the chunk assignment dialog
 let isDragging = false; // Declare isDragging
 let currentPatternData = [];
-let mirrorReplacementContext = null; // For storing context for mirror replacement 
+let mirrorReplacementContext = null; // For storing context for mirror replacement
+let sacrificedItems = [];
 
 // Load available patterns
 async function loadPatterns() {
@@ -414,6 +415,7 @@ function loadPattern(patternName) {
         ensureChapterIDs();
         
         renderPatternItems();
+        loadSacrificedItems(patternName);
         unsubscribe();
       } else {
         patternItems.innerHTML = '<div class="loading-indicator error">Error loading pattern: Invalid data format</div>';
@@ -571,7 +573,7 @@ function renderPatternItems() {
                   </select>
                 </div>
                 <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
-                <div class="item-strategy" contenteditable="${editableAttr}" data-field="strategy" data-index="${chunkItemActualIndex}">${formatStrategyText(chunkItem.strategy || '')}</div>
+                ${renderStrategyField(chunkItem.strategy || '', chunkItemActualIndex, editableAttr)}
               </div>
             `;
           });
@@ -637,7 +639,7 @@ function renderPatternItems() {
                 </select>
             </div>
             <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${itemIndexCounter}">${item.abbr || ''}</div>
-            <div class="item-strategy" contenteditable="${editableAttr}" data-field="strategy" data-index="${itemIndexCounter}">${formatStrategyText(item.strategy || '')}</div>
+            ${renderStrategyField(item.strategy || '', itemIndexCounter, editableAttr)}
           </div>
         </div>
       `;
@@ -727,6 +729,47 @@ function renderPatternItems() {
     editableField.addEventListener('keydown', handleFieldKeydown); // Added for Enter/Escape
     // Removed mousedown/touchstart from generic contenteditable, will add specifically
   });
+
+  // Strategy chip view: click to enter edit mode
+  document.querySelectorAll('.strategy-chips-view').forEach(view => {
+    view.addEventListener('click', (e) => {
+      if (e.target.closest('.strategy-chip--subpart')) return; // handled by drag
+      const wrapper = view.closest('.item-strategy-wrapper');
+      if (!wrapper) return;
+      const editDiv = wrapper.querySelector('.strategy-text-edit');
+      if (!editDiv || editDiv.getAttribute('contenteditable') === 'false') return;
+      view.style.display = 'none';
+      editDiv.style.display = '';
+      editDiv.focus();
+      const range = document.createRange();
+      range.selectNodeContents(editDiv);
+      range.collapse(false);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    });
+  });
+
+  // Strategy text edit: blur → refresh chip view
+  document.querySelectorAll('.strategy-text-edit').forEach(editDiv => {
+    editDiv.addEventListener('blur', () => {
+      const wrapper = editDiv.closest('.item-strategy-wrapper');
+      if (!wrapper) return;
+      const view = wrapper.querySelector('.strategy-chips-view');
+      if (!view) return;
+      const newText = editDiv.textContent.trim();
+      const idx = editDiv.dataset.index;
+      view.innerHTML = buildChipHtml(newText, idx);
+      wireChipDrag(view);
+      editDiv.style.display = 'none';
+      view.style.display = '';
+    });
+    editDiv.addEventListener('mousedown', (e) => e.stopPropagation());
+    editDiv.addEventListener('touchstart', (e) => e.stopPropagation());
+  });
+
+  // Wire drag on all chip views
+  document.querySelectorAll('.strategy-chips-view').forEach(view => wireChipDrag(view));
 
   // Add listeners for editable chapter names
   document.querySelectorAll('.chapter-label[contenteditable="true"]').forEach(label => {
@@ -862,6 +905,7 @@ function handleContextMenu(e) {
       menuItems.push({ text: 'Add New Item Here', action: 'add_item_here', enabled: true }); // 'here' means after this specific item
       menuItems.push({ text: 'Delete Item', action: 'delete_item', enabled: true }); // Targets specificIndex
       menuItems.push({ text: 'Duplicate Part', action: 'duplicate_part', enabled: true, itemIndex: contextMenuTargetSpecificIndex }); // Added Duplicate Part
+      menuItems.push({ text: 'Move to Sacrificed', action: 'move_to_sacrificed', enabled: !specificItem.isOutroItem });
 
       // Assign/Change Chunk for this specific item
       menuItems.push({ text: 'Assign/Change Chunk', action: 'assign_change_chunk', enabled: true, itemIndex: contextMenuTargetSpecificIndex });
@@ -1120,6 +1164,14 @@ function handleContextMenuAction(e) {
         }
         break;
 
+
+     // --- Sacrificed Actions ---
+     case 'move_to_sacrificed':
+       {
+         const targetIdx = specificItemIdx !== -1 ? specificItemIdx : targetDataIdx;
+         if (targetIdx !== -1) moveItemToSacrificed(targetIdx);
+       }
+       break;
 
      // --- Item Actions ---
      case 'add_item_here':
@@ -2620,6 +2672,10 @@ function handleChunkItemReorder(evt) {
 function handleSortEnd(evt) {
     let { from: fromContainer, to: toContainer, oldIndex, newIndex, item: movedElement } = evt;
 
+    // Drop into sacrificed panel is handled by the onAdd callback there
+    const sacrificedContainer = document.getElementById('sacrificed-items');
+    if (toContainer === sacrificedContainer) return;
+
     // If the item was dropped back in the same place visually, do nothing.
     if (fromContainer === toContainer && oldIndex === newIndex) {
         console.log("SortEnd: No visual change detected. Aborting API call.");
@@ -3191,7 +3247,8 @@ function init() {
 
   loadPartsBank();
   setupPatternDropZone(); // Add drop zone setup
-  
+  initRightPanelTabs();
+
   // Initialize SP List Menu
   initializeSpListMenu();
 
@@ -4040,4 +4097,311 @@ function convertMirrorsInChapter(chapterName) {
       console.log(`No mirrored items found in chapter "${chapterName}" to convert.`);
     }
   }
+}
+
+// ─── Helpers ───────────────────────────────────────────────────────────────
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ─── Strategy chip parsing ──────────────────────────────────────────────────
+
+function parseStrategyIntoChips(text) {
+  const chips = [];
+  if (!text) return chips;
+  let current = '';
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === '(') {
+      if (depth === 0 && current.trim()) {
+        current.split(',').forEach(part => {
+          const t = part.trim();
+          if (t) chips.push({ type: 'subpart', text: t });
+        });
+        current = '';
+      }
+      depth++;
+      current += ch;
+    } else if (ch === ')') {
+      depth--;
+      current += ch;
+      if (depth === 0) {
+        chips.push({ type: 'strategy', text: current.trim() });
+        current = '';
+      }
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) {
+    current.split(',').forEach(part => {
+      const t = part.trim();
+      if (t) chips.push({ type: 'subpart', text: t });
+    });
+  }
+  return chips;
+}
+
+// ─── Right panel tab switching ──────────────────────────────────────────────
+
+function initRightPanelTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content--active'));
+      btn.classList.add('tab-btn--active');
+      const panel = document.querySelector(`.tab-content[data-tab="${tab}"]`);
+      if (panel) panel.classList.add('tab-content--active');
+    });
+  });
+}
+
+// ─── Sacrificed panel ──────────────────────────────────────────────────────
+
+function loadSacrificedItems(patternName) {
+  window.electronAPI.callAPI('get_sacrificed_items', { pattern_name: patternName });
+  const unsub = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_sacrificed_items') {
+      unsub();
+      sacrificedItems = (data.result && Array.isArray(data.result)) ? data.result : [];
+      renderSacrificedItems();
+    }
+  });
+}
+
+function saveSacrificedItems() {
+  window.electronAPI.callAPI('save_sacrificed_items', {
+    pattern_name: currentPattern,
+    items: sacrificedItems
+  });
+}
+
+function renderSacrificedItems() {
+  const container = document.getElementById('sacrificed-items');
+  if (!container) return;
+
+  if (!sacrificedItems || sacrificedItems.length === 0) {
+    container.innerHTML = '<div class="sacrificed-empty">No sacrificed items</div>';
+    initSacrificedSortable();
+    return;
+  }
+
+  container.innerHTML = sacrificedItems.map((item, i) => {
+    const chips = parseStrategyIntoChips(item.strategy || '');
+    const chipHtml = chips.map(c =>
+      `<span class="sacrificed-chip sacrificed-chip--${c.type}">${escapeHtml(c.text)}</span>`
+    ).join('');
+    return `
+      <div class="sacrificed-item" data-sacrificed-index="${i}">
+        <div class="drag-handle" data-handle="true"></div>
+        <div class="sacrificed-content">
+          <span class="sacrificed-abbr">${escapeHtml(item.abbr || '')}</span>
+          <div class="sacrificed-strategy">${chipHtml || escapeHtml(item.strategy || '')}</div>
+        </div>
+        <button class="restore-btn" data-sacrificed-index="${i}" title="Restore to pattern">&#x21A9;</button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.restore-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      restoreFromSacrificed(parseInt(btn.dataset.sacrificedIndex));
+    });
+  });
+
+  initSacrificedSortable();
+}
+
+function initSacrificedSortable() {
+  const container = document.getElementById('sacrificed-items');
+  if (!container) return;
+
+  if (container.sortableInstance) {
+    container.sortableInstance.destroy();
+    container.sortableInstance = null;
+  }
+
+  container.sortableInstance = new Sortable(container, {
+    group: { name: 'shared-items', put: true, pull: false },
+    animation: 150,
+    handle: '.drag-handle',
+    ghostClass: 'sortable-ghost',
+    draggable: '.sacrificed-item',
+    onAdd: handleItemDropToSacrificed,
+    onEnd: handleSacrificedReorder
+  });
+
+  // HTML5 drop for subpart chips (chip-level DnD, separate from SortableJS whole-item DnD)
+  container.removeEventListener('dragover', _sacrificedChipDragOver);
+  container.removeEventListener('dragleave', _sacrificedChipDragLeave);
+  container.removeEventListener('drop', handleChipDropToSacrificed);
+  container.addEventListener('dragover', _sacrificedChipDragOver);
+  container.addEventListener('dragleave', _sacrificedChipDragLeave);
+  container.addEventListener('drop', handleChipDropToSacrificed);
+}
+
+function _sacrificedChipDragOver(e) {
+  if (!e.dataTransfer.types.includes('application/json')) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.getElementById('sacrificed-items')?.classList.add('drag-over');
+}
+
+function _sacrificedChipDragLeave() {
+  document.getElementById('sacrificed-items')?.classList.remove('drag-over');
+}
+
+function handleItemDropToSacrificed(evt) {
+  const movedEl = evt.item;
+  const itemIndex = parseInt(movedEl.dataset.itemIndex);
+
+  if (isNaN(itemIndex) || itemIndex < 0 || itemIndex >= currentPatternItems.length) {
+    movedEl.remove();
+    renderSacrificedItems();
+    return;
+  }
+
+  const item = currentPatternItems[itemIndex];
+  if (!item) {
+    movedEl.remove();
+    renderSacrificedItems();
+    return;
+  }
+
+  sacrificedItems.push({ abbr: item.abbr || '', strategy: item.strategy || '' });
+  currentPatternItems.splice(itemIndex, 1);
+
+  saveCurrentPattern();
+  saveSacrificedItems();
+  renderPatternItems();
+  renderSacrificedItems();
+}
+
+function handleSacrificedReorder(evt) {
+  if (evt.from !== evt.to) return;
+  if (evt.oldIndex === evt.newIndex) return;
+  const moved = sacrificedItems.splice(evt.oldIndex, 1)[0];
+  sacrificedItems.splice(evt.newIndex, 0, moved);
+  saveSacrificedItems();
+}
+
+function restoreFromSacrificed(sacrificedIndex) {
+  if (sacrificedIndex < 0 || sacrificedIndex >= sacrificedItems.length) return;
+
+  const item = sacrificedItems.splice(sacrificedIndex, 1)[0];
+  currentPatternItems.push({
+    abbr: item.abbr || '',
+    strategy: item.strategy || '',
+    view_plane: '',
+    window: '',
+    chunkID: 0,
+    chapter: '',
+    chapterID: ''
+  });
+
+  saveCurrentPattern();
+  saveSacrificedItems();
+  renderPatternItems();
+  renderSacrificedItems();
+}
+
+function moveItemToSacrificed(itemIndex) {
+  if (itemIndex < 0 || itemIndex >= currentPatternItems.length) return;
+
+  const item = currentPatternItems[itemIndex];
+  sacrificedItems.push({ abbr: item.abbr || '', strategy: item.strategy || '' });
+  currentPatternItems.splice(itemIndex, 1);
+
+  saveCurrentPattern();
+  saveSacrificedItems();
+  renderPatternItems();
+  renderSacrificedItems();
+}
+
+// ─── Strategy chip rendering ────────────────────────────────────────────────
+
+function serializeChipsToStrategy(chips) {
+  const subparts = chips.filter(c => c.type === 'subpart').map(c => c.text);
+  const strategies = chips.filter(c => c.type === 'strategy').map(c => c.text);
+  let result = subparts.join(', ');
+  if (strategies.length) result += (result ? ' ' : '') + strategies.join(' ');
+  return result.trim();
+}
+
+function buildChipHtml(strategyText, itemIndex) {
+  const chips = parseStrategyIntoChips(strategyText || '');
+  if (!chips.length) return `<span class="strategy-placeholder">+ strategy</span>`;
+  return chips.map(c => {
+    if (c.type === 'subpart') {
+      return `<span class="strategy-chip strategy-chip--subpart" draggable="true" data-chip-type="subpart" data-chip-text="${escapeHtml(c.text)}" data-item-index="${itemIndex}">${escapeHtml(c.text)}</span>`;
+    }
+    return `<span class="strategy-chip strategy-chip--strategy">${escapeHtml(c.text)}</span>`;
+  }).join('');
+}
+
+function renderStrategyField(strategy, index, editableAttr) {
+  const chipHtml = buildChipHtml(strategy, index);
+  return `
+    <div class="item-strategy-wrapper">
+      <div class="strategy-chips-view" data-index="${index}">${chipHtml}</div>
+      <div class="item-strategy strategy-text-edit" contenteditable="${editableAttr}" data-field="strategy" data-index="${index}" style="display:none">${escapeHtml(strategy)}</div>
+    </div>
+  `;
+}
+
+// ─── Chip drag-and-drop ─────────────────────────────────────────────────────
+
+function wireChipDrag(container) {
+  container.querySelectorAll('.strategy-chip--subpart').forEach(chip => {
+    chip.addEventListener('dragstart', handleChipDragStart);
+    chip.addEventListener('dragend', () => { isDragging = false; });
+  });
+}
+
+function handleChipDragStart(e) {
+  isDragging = true;
+  e.stopPropagation(); // Don't trigger SortableJS on the parent item
+  e.dataTransfer.setData('application/json', JSON.stringify({
+    type: 'chip',
+    chipText: e.target.dataset.chipText,
+    itemIndex: parseInt(e.target.dataset.itemIndex)
+  }));
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function handleChipDropToSacrificed(e) {
+  const container = document.getElementById('sacrificed-items');
+  container?.classList.remove('drag-over');
+  e.preventDefault();
+  e.stopPropagation();
+
+  let data;
+  try { data = JSON.parse(e.dataTransfer.getData('application/json')); } catch { return; }
+  if (!data || data.type !== 'chip') return;
+
+  const { chipText, itemIndex } = data;
+  if (isNaN(itemIndex) || itemIndex < 0 || itemIndex >= currentPatternItems.length) return;
+
+  const item = currentPatternItems[itemIndex];
+  if (item.isOutroItem) return;
+
+  sacrificedItems.push({ abbr: item.abbr || '', strategy: chipText });
+
+  // Remove the chip from the item's strategy
+  const chips = parseStrategyIntoChips(item.strategy || '');
+  const remaining = chips.filter(c => !(c.type === 'subpart' && c.text === chipText));
+  currentPatternItems[itemIndex] = { ...item, strategy: serializeChipsToStrategy(remaining) };
+
+  saveCurrentPattern();
+  saveSacrificedItems();
+  renderPatternItems();
+  renderSacrificedItems();
 }

@@ -145,32 +145,78 @@ class SearchPatternAPI {
     return fs.existsSync(filePath) ? filePath : null;
   }
   
+  // Sanitize a pattern name for use as a filename
+  _patternFileName(patternName) {
+    return patternName.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
+  }
+
   /**
-   * Load patterns from sp_list.json
+   * Load patterns from patterns/ subdirectory (one file per pattern).
+   * On first run, silently migrates an existing sp_list.json into individual files.
    */
   load_patterns() {
     try {
-      // Always read sp_list.json from the executable directory
-      const sp_list_path = path.join(this.dataDir, 'sp_list.json');
-      
-      this.patternHistory = {}; // Reset history on load
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      this.patternHistory = {};
+      this.patternRedoHistory = {};
 
-      if (fs.existsSync(sp_list_path)) {
-        const data = fs.readFileSync(sp_list_path, 'utf8');
-        this.patterns = JSON.parse(data);
-        //console.log(`Loaded patterns for ${Object.keys(this.patterns).length} modality/parts`);
-        
-        // Remember this directory for future saves
-        this.dataDir = path.dirname(sp_list_path);
-      } else {
-        console.log('No existing sp_list.json found, patterns will be an empty object until saved');
+      if (fs.existsSync(patternsDir)) {
+        // New per-pattern format
+        const files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.json'));
         this.patterns = {};
+        for (const file of files) {
+          try {
+            const data = fs.readFileSync(path.join(patternsDir, file), 'utf8');
+            const parsed = JSON.parse(data);
+            const keys = Object.keys(parsed);
+            if (keys.length === 1) {
+              this.patterns[keys[0]] = parsed[keys[0]];
+            }
+          } catch (err) {
+            console.error(`[API load_patterns] Failed to load ${file}: ${err.message}`);
+          }
+        }
+        console.log(`[API load_patterns] Loaded ${Object.keys(this.patterns).length} patterns from patterns/ directory`);
+      } else {
+        // Legacy: load from sp_list.json, then migrate
+        const sp_list_path = path.join(this.dataDir, 'sp_list.json');
+        if (fs.existsSync(sp_list_path)) {
+          const data = fs.readFileSync(sp_list_path, 'utf8');
+          this.patterns = JSON.parse(data);
+          console.log(`[API load_patterns] Loaded ${Object.keys(this.patterns).length} patterns from sp_list.json — migrating to patterns/ directory`);
+          this._migrateToPatternFiles();
+        } else {
+          console.log('[API load_patterns] No patterns found, starting empty');
+          this.patterns = {};
+        }
       }
     } catch (error) {
-      console.error(`Error loading patterns: ${error.message}`);
+      console.error(`[API load_patterns] Error: ${error.message}`);
       console.error(error.stack);
-      // Fall back to empty patterns
       this.patterns = {};
+    }
+  }
+
+  // Migrate sp_list.json → individual files in patterns/ subdirectory
+  _migrateToPatternFiles() {
+    try {
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      if (!fs.existsSync(patternsDir)) {
+        fs.mkdirSync(patternsDir, { recursive: true });
+      }
+      for (const [name, items] of Object.entries(this.patterns)) {
+        const filePath = path.join(patternsDir, this._patternFileName(name));
+        fs.writeFileSync(filePath, JSON.stringify({ [name]: items }, null, 2));
+      }
+      // Keep sp_list.json as backup
+      const sp_list_path = path.join(this.dataDir, 'sp_list.json');
+      const bakPath = path.join(this.dataDir, 'sp_list.json.bak');
+      if (fs.existsSync(sp_list_path) && !fs.existsSync(bakPath)) {
+        fs.renameSync(sp_list_path, bakPath);
+      }
+      console.log(`[API _migrateToPatternFiles] Migrated ${Object.keys(this.patterns).length} patterns; sp_list.json renamed to .bak`);
+    } catch (error) {
+      console.error(`[API _migrateToPatternFiles] Error: ${error.message}`);
     }
   }
   
@@ -195,42 +241,22 @@ class SearchPatternAPI {
   }
   
   /**
-   * Save patterns to sp_list.json in executable directory
+   * Save all patterns to the patterns/ subdirectory (one file per pattern).
    */
   save_patterns() {
     try {
-      console.log(`[API save_patterns] Starting save process`);
-      console.log(`[API save_patterns] Number of pattern groups: ${Object.keys(this.patterns || {}).length}`);
-      
-      // Log a snippet of the data about to be saved for the first pattern found
-      if (this.patterns && Object.keys(this.patterns).length > 0) {
-        const firstPatternName = Object.keys(this.patterns)[0];
-        const firstPatternSample = this.patterns[firstPatternName];
-        if (firstPatternSample && firstPatternSample.length > 0) {
-          console.log(`[API save_patterns] Data for pattern '${firstPatternName}' before stringify - First item chapter: ${firstPatternSample[0]?.chapter}, chunkID: ${firstPatternSample[0]?.chunkID}`);
-        }
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      if (!fs.existsSync(patternsDir)) {
+        fs.mkdirSync(patternsDir, { recursive: true });
       }
-
-      const data_to_save = JSON.stringify(this.patterns, null, 2);
-      const location = this.dataDir; // Use current data directory
-      
-      console.log(`[API save_patterns] Saving to data directory: ${location}`);
-      
-      // Create the directory if it doesn't exist
-      if (!fs.existsSync(location)) {
-        console.log(`[API save_patterns] Directory doesn't exist, creating: ${location}`);
-        fs.mkdirSync(location, { recursive: true });
+      for (const [name, items] of Object.entries(this.patterns || {})) {
+        const filePath = path.join(patternsDir, this._patternFileName(name));
+        fs.writeFileSync(filePath, JSON.stringify({ [name]: items }, null, 2));
       }
-      
-      const sp_list_path = path.join(location, 'sp_list.json');
-      fs.writeFileSync(sp_list_path, data_to_save);
-      
-      console.log("[API save_patterns] Patterns saved successfully to:", sp_list_path);
+      console.log(`[API save_patterns] Saved ${Object.keys(this.patterns || {}).length} patterns to patterns/ directory`);
       return true;
-      
     } catch (error) {
-      console.error(`[API save_patterns] ERROR: Cannot write to executable directory: ${error.message}`);
-      console.error("[API save_patterns] The executable directory must be writable for the portable app to function");
+      console.error(`[API save_patterns] ERROR: ${error.message}`);
       console.error(error.stack);
       return false;
     }
@@ -1701,6 +1727,26 @@ class SearchPatternAPI {
     } catch (error) {
         console.error(`[API delete_from_parts_bank] Error deleting from parts bank: ${error.message}`);
         return { success: false, error: error.message };
+    }
+  }
+
+  // --- Sacrificed Items (per-pattern, stored in settings.patternSacrificed) ---
+
+  get_sacrificed_items(pattern_name) {
+    if (!this.settings?.patternSacrificed) return [];
+    return this.settings.patternSacrificed[pattern_name] || [];
+  }
+
+  save_sacrificed_items(pattern_name, items) {
+    try {
+      if (!this.settings) this.settings = {};
+      if (!this.settings.patternSacrificed) this.settings.patternSacrificed = {};
+      this.settings.patternSacrificed[pattern_name] = JSON.parse(JSON.stringify(items));
+      const saved = this.save_settings();
+      return { success: saved, error: saved ? null : 'Failed to save settings.' };
+    } catch (error) {
+      console.error(`[API save_sacrificed_items] Error: ${error.message}`);
+      return { success: false, error: error.message };
     }
   }
 

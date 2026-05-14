@@ -862,7 +862,15 @@ ipcMain.on('api-request', (event, data) => {
           case 'save_shortcuts':
             result = api[method](params);
             break;
-            
+
+          case 'get_sacrificed_items':
+            result = api[method](params.pattern_name);
+            break;
+
+          case 'save_sacrificed_items':
+            result = api[method](params.pattern_name, params.items);
+            break;
+
           case 'update_shortcut':
             result = api[method](params.shortcut_id, params.shortcut_data);
             break;

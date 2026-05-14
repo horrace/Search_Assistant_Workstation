@@ -69,16 +69,27 @@
         </div>
       </div>
       
-      <!-- Right side - Parts Bank -->
+      <!-- Right side - Parts Bank / Sacrificed tab panel -->
       <div id="parts-bank-container" class="parts-bank-container collapsed">
         <div class="parts-bank-header">
-          <h2 class="editor-section-header">Parts Bank</h2>
+          <div class="right-panel-tabs">
+            <button class="tab-btn tab-btn--active" data-tab="parts-bank">Parts Bank</button>
+            <button class="tab-btn" data-tab="sacrificed">Sacrificed</button>
+          </div>
           <button id="toggle-parts-bank-btn" class="btn-toggle-bank">▶</button>
         </div>
-        <div class="parts-bank">
-          <div id="parts-bank-items" class="parts-bank-items">
-            <!-- Parts bank items will be loaded here -->
-            <div class="loading-indicator">Loading parts bank...</div>
+        <div class="tab-content tab-content--active" data-tab="parts-bank">
+          <div class="parts-bank">
+            <div id="parts-bank-items" class="parts-bank-items">
+              <!-- Parts bank items will be loaded here -->
+              <div class="loading-indicator">Loading parts bank...</div>
+            </div>
+          </div>
+        </div>
+        <div class="tab-content" data-tab="sacrificed">
+          <div id="sacrificed-items" class="sacrificed-items">
+            <!-- Sacrificed items will be rendered here -->
+            <div class="sacrificed-empty">No sacrificed items</div>
           </div>
         </div>
       </div>
