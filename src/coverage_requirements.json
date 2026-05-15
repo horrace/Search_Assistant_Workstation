@@ -1,0 +1,119 @@
+{
+  "CTA H&N": [
+    {
+      "id": "mp5jtwnrg0of9",
+      "type": "task",
+      "label": "Aneurysm",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5ju0jjetgog",
+      "type": "task",
+      "label": "PE",
+      "preferredView": "",
+      "preferredWindow": "",
+      "excludedMatches": [
+        "Lung Apex/Hilar mass|cor|CTV",
+        "Ant spfc ST|ax|ST"
+      ]
+    },
+    {
+      "id": "mp5jzr1dss0uf",
+      "type": "task",
+      "label": "Lymph Nodes",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5qcpxd49z3f",
+      "type": "part",
+      "label": "ACA",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5qcffihdtr3",
+      "type": "part",
+      "label": "MCA",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5joo9wqi1wh",
+      "type": "part",
+      "label": "PCA",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp50g1yfqj9vs",
+      "type": "part",
+      "label": "Basilar Artery",
+      "preferredView": "cor",
+      "preferredWindow": "CTA"
+    },
+    {
+      "id": "mp5qd9suabonj",
+      "type": "part",
+      "label": "Dural Venous Sinuses",
+      "preferredView": "",
+      "preferredWindow": "",
+      "subRequirements": [
+        {
+          "id": "mp5rmbcvk4hhg",
+          "label": "Transverse Sinus",
+          "excludedMatches": []
+        }
+      ]
+    },
+    {
+      "id": "mp5jucxh8v46w",
+      "type": "part",
+      "label": "Aerodigestive Tract",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5jysv70pd0j",
+      "type": "part",
+      "label": "Aorta",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5jz0iznsbrt",
+      "type": "part",
+      "label": "Subclavian arteries",
+      "preferredView": "",
+      "preferredWindow": "",
+      "manualMatches": [
+        "Aorta, Subclav, CCA/ICA, Verts|ax|"
+      ],
+      "excludedMatches": []
+    },
+    {
+      "id": "mp5jznio4nud9",
+      "type": "part",
+      "label": "Aerodigestive Tract",
+      "preferredView": "",
+      "preferredWindow": ""
+    },
+    {
+      "id": "mp5qe52dbsrxw",
+      "type": "part",
+      "label": "Orbits",
+      "preferredView": "",
+      "preferredWindow": ""
+    }
+  ],
+  "CT AP": [
+    {
+      "id": "mp5ojum93fsc2",
+      "type": "part",
+      "label": "",
+      "preferredView": "",
+      "preferredWindow": ""
+    }
+  ]
+}

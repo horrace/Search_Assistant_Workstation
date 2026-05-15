@@ -173,6 +173,21 @@ let isDragging = false; // Declare isDragging
 let currentPatternData = [];
 let mirrorReplacementContext = null; // For storing context for mirror replacement
 let sacrificedItems = [];
+let automaticItems = [];   // Phase 3.3 — "Automatic" (formerly Mastered): per-pattern, same semantics as Sacrificed
+let abbrRegistry = {};
+let generalAbbrRegistry = {};
+
+// Phase 3 — Library (canonical Entry store)
+let libraryEntries = {};   // slug → Entry
+let aliasIndex = {};       // alias_lc → slug   (built from libraryEntries)
+let abbrActiveTab = 'specific';   // legacy — kept for back-compat with any stray references
+// Phase 3.4 — Library dialog state
+let libraryActiveTab = 'entries';
+let librarySortMode  = 'alias';   // 'alias' | 'fullName'
+let selectedLibrarySlug = null;
+let _libSaveTimeout = null;
+let coverageRequirements = [];
+let coverageEditMode = false;
 
 // Load available patterns
 async function loadPatterns() {
@@ -305,12 +320,14 @@ function renderPatternSelector() {
 
 // Load a specific pattern
 function loadPattern(patternName) {
+  // Preserve active tab when reloading the same pattern (undo/redo, etc.)
+  const tabToRestore = (patternName === currentPattern) ? getActiveTab() : 'parts-bank';
   currentPattern = patternName;
   selectedIndex = -1;
   selectedIndices = [];
   multiSelectionMode = false;
   chunkFirstItemIndex = -1; // Reset chunk first item when loading a new pattern
-  
+
   // Show loading indicator
   patternItems.innerHTML = '<div class="loading-indicator">Loading pattern...</div>';
   
@@ -415,7 +432,11 @@ function loadPattern(patternName) {
         ensureChapterIDs();
         
         renderPatternItems();
+        autoResizeToPattern();
+        setActiveTab(tabToRestore);
         loadSacrificedItems(patternName);
+        loadAutomaticItems(patternName);
+        loadCoverageRequirements(patternName);
         unsubscribe();
       } else {
         patternItems.innerHTML = '<div class="loading-indicator error">Error loading pattern: Invalid data format</div>';
@@ -439,6 +460,22 @@ function loadPattern(patternName) {
     console.log('No response received for pattern, retrying...');
     retryLoadPattern(1000);
   }, 5000);
+}
+
+// Auto-resize the editor window height to snugly fit the current pattern list.
+function autoResizeToPattern() {
+  const patternEl = document.getElementById('pattern-items');
+  const headerEl  = document.querySelector('.editor-header');
+  if (!patternEl) return;
+  const headerH  = headerEl ? headerEl.getBoundingClientRect().height : 60;
+  const itemsH   = patternEl.scrollHeight;  // actual content height regardless of CSS clip
+  const padding  = 30;
+  const minH     = 400;
+  const maxH     = (window.screen?.availHeight || 1080) - 40;
+  const targetH  = Math.min(Math.max(minH, Math.ceil(headerH) + itemsH + padding), maxH);
+  if (window.electronAPI?.invoke) {
+    window.electronAPI.invoke('resize-editor-height', targetH).catch(() => {});
+  }
 }
 
 // Render the pattern items
@@ -538,40 +575,18 @@ function renderPatternItems() {
             const chunkItemActualIndex = chunkIndices[chunkIdx];
             const chunkItemView = chunkItem.view_plane || '';
             const chunkItemWindow = chunkItem.window || '';
+            const chunkItemSlice = chunkItem.slice_thickness || '';
             const isOutroItem = chunkItem.isOutroItem || false;
             const outroClass = isOutroItem ? 'outro-item' : '';
             const editableAttr = isOutroItem ? 'false' : 'true';
             const selectDisabled = isOutroItem ? 'disabled' : '';
-            
+
             html += `
               <div class="chunk-item-part draggable-item ${chunkItem.isMirror ? 'mirror-item' : ''} ${outroClass}" data-chunk-index="${chunkItemActualIndex}" data-item-index="${chunkItemActualIndex}">
                 <div class="drag-handle" data-handle="true"></div>
-                <div class="item-view">
-                  <select class="item-view-select" data-index="${chunkItemActualIndex}" ${selectDisabled}>
-                    <option value="" ${!chunkItemView ? 'selected' : ''}>-</option>
-                    <option value="ax" ${chunkItemView === 'ax' ? 'selected' : ''}>ax</option>
-                    <option value="cor" ${chunkItemView === 'cor' ? 'selected' : ''}>cor</option>
-                    <option value="sag" ${chunkItemView === 'sag' ? 'selected' : ''}>sag</option>
-                  </select>
-                </div>
-                <div class="item-window">
-                  <select class="item-window-select" data-index="${chunkItemActualIndex}" ${selectDisabled}>
-                    <option value="" ${!chunkItemWindow ? 'selected' : ''}>-</option>
-                    <option value="ST" ${chunkItemWindow === 'ST' ? 'selected' : ''}>ST</option>
-                    <option value="bone" ${chunkItemWindow === 'bone' ? 'selected' : ''}>bone</option>
-                    <option value="brain" ${chunkItemWindow === 'brain' ? 'selected' : ''}>brain</option>
-                    <option value="lung" ${chunkItemWindow === 'lung' ? 'selected' : ''}>lung</option>
-                    <option value="stroke" ${chunkItemWindow === 'stroke' ? 'selected' : ''}>stroke</option>
-                    <option value="CTA" ${chunkItemWindow === 'CTA' ? 'selected' : ''}>CTA</option>
-                    <option value="CTV" ${chunkItemWindow === 'CTV' ? 'selected' : ''}>CTV</option>
-                    <option value="MIP" ${chunkItemWindow === 'MIP' ? 'selected' : ''}>MIP</option>
-                    <option value="MinIP" ${chunkItemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
-                    <option value="Thin" ${chunkItemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
-                    <option value="3D" ${chunkItemWindow === '3D' ? 'selected' : ''}>3D</option>
-					<option value="CPR" ${chunkItemWindow === 'CPR' ? 'selected' : ''}>CPR</option>
-					<option value="tMIP" ${chunkItemWindow === 'tMIP' ? 'selected' : ''}>tMIP</option>
-                  </select>
-                </div>
+                <div class="item-view">${renderViewSelect(chunkItemView, chunkItemActualIndex, selectDisabled)}</div>
+                <div class="item-window">${renderWindowSelect(chunkItemWindow, chunkItemActualIndex, selectDisabled)}</div>
+                <div class="item-slice">${renderSliceThicknessSelect(chunkItemSlice, chunkItemActualIndex, selectDisabled)}</div>
                 <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${chunkItemActualIndex}">${chunkItem.abbr || ''}</div>
                 ${renderStrategyField(chunkItem.strategy || '', chunkItemActualIndex, editableAttr)}
               </div>
@@ -593,14 +608,16 @@ function renderPatternItems() {
       }
     } else {
       // Regular single item
+      const itemView = item.view_plane || '';
       const itemWindow = item.window || '';
+      const itemSlice = item.slice_thickness || '';
       const isMirrorItem = item.isMirror || false;
       const isOutroItem = item.isOutroItem || false;
       const mirrorClass = isMirrorItem ? 'mirror-item' : '';
       const outroClass = isOutroItem ? 'outro-item' : '';
       const editableAttr = isOutroItem ? 'false' : 'true';
       const selectDisabled = isOutroItem ? 'disabled' : '';
-      
+
       html += `
         <div
           class="draggable-item ${isSelected ? 'selected' : ''} ${isChunkStart ? 'chunk-start' : ''} ${mirrorClass} ${outroClass}"
@@ -612,32 +629,9 @@ function renderPatternItems() {
           >
           <div class="item-content">
             <div class="drag-handle" data-handle="true"></div>
-            <div class="item-view">
-              <select class="item-view-select" data-index="${itemIndexCounter}" ${selectDisabled}>
-                <option value="" ${!item.view_plane ? 'selected' : ''}>-</option>
-                <option value="ax" ${item.view_plane === 'ax' ? 'selected' : ''}>ax</option>
-                <option value="cor" ${item.view_plane === 'cor' ? 'selected' : ''}>cor</option>
-                <option value="sag" ${item.view_plane === 'sag' ? 'selected' : ''}>sag</option>
-              </select>
-            </div>
-            <div class="item-window">
-                <select class="item-window-select" data-index="${itemIndexCounter}" ${selectDisabled}>
-                    <option value="" ${!itemWindow ? 'selected' : ''}>-</option>
-                    <option value="ST" ${itemWindow === 'ST' ? 'selected' : ''}>ST</option>
-                    <option value="bone" ${itemWindow === 'bone' ? 'selected' : ''}>bone</option>
-                    <option value="brain" ${itemWindow === 'brain' ? 'selected' : ''}>brain</option>
-                    <option value="lung" ${itemWindow === 'lung' ? 'selected' : ''}>lung</option>
-                    <option value="stroke" ${itemWindow === 'stroke' ? 'selected' : ''}>stroke</option>
-                    <option value="CTA" ${itemWindow === 'CTA' ? 'selected' : ''}>CTA</option>
-                    <option value="CTV" ${itemWindow === 'CTV' ? 'selected' : ''}>CTV</option>
-                    <option value="MIP" ${itemWindow === 'MIP' ? 'selected' : ''}>MIP</option>
-                    <option value="MinIP" ${itemWindow === 'MinIP' ? 'selected' : ''}>MinIP</option>
-                    <option value="Thin" ${itemWindow === 'Thin' ? 'selected' : ''}>Thin</option>
-                    <option value="3D" ${itemWindow === '3D' ? 'selected' : ''}>3D</option>
-					<option value="CPR" ${itemWindow === 'CPR' ? 'selected' : ''}>CPR</option>
-					<option value="tMIP" ${itemWindow === 'tMIP' ? 'selected' : ''}>tMIP</option>
-                </select>
-            </div>
+            <div class="item-view">${renderViewSelect(itemView, itemIndexCounter, selectDisabled)}</div>
+            <div class="item-window">${renderWindowSelect(itemWindow, itemIndexCounter, selectDisabled)}</div>
+            <div class="item-slice">${renderSliceThicknessSelect(itemSlice, itemIndexCounter, selectDisabled)}</div>
             <div class="item-abbr" contenteditable="${editableAttr}" data-field="abbr" data-index="${itemIndexCounter}">${item.abbr || ''}</div>
             ${renderStrategyField(item.strategy || '', itemIndexCounter, editableAttr)}
           </div>
@@ -761,6 +755,7 @@ function renderPatternItems() {
       const idx = editDiv.dataset.index;
       view.innerHTML = buildChipHtml(newText, idx);
       wireChipDrag(view);
+      wireChipDropTarget(view);
       editDiv.style.display = 'none';
       view.style.display = '';
     });
@@ -768,8 +763,11 @@ function renderPatternItems() {
     editDiv.addEventListener('touchstart', (e) => e.stopPropagation());
   });
 
-  // Wire drag on all chip views
-  document.querySelectorAll('.strategy-chips-view').forEach(view => wireChipDrag(view));
+  // Wire drag + drop on all chip views
+  document.querySelectorAll('.strategy-chips-view').forEach(view => {
+    wireChipDrag(view);
+    wireChipDropTarget(view);
+  });
 
   // Add listeners for editable chapter names
   document.querySelectorAll('.chapter-label[contenteditable="true"]').forEach(label => {
@@ -793,6 +791,12 @@ function renderPatternItems() {
 
   document.querySelectorAll('.item-window-select').forEach(selectElement => {
     selectElement.addEventListener('change', handleWindowChange);
+    selectElement.addEventListener('mousedown', (e) => { e.stopPropagation(); });
+    selectElement.addEventListener('touchstart', (e) => { e.stopPropagation(); });
+  });
+
+  document.querySelectorAll('.item-slice-select').forEach(selectElement => {
+    selectElement.addEventListener('change', handleSliceThicknessChange);
     selectElement.addEventListener('mousedown', (e) => { e.stopPropagation(); });
     selectElement.addEventListener('touchstart', (e) => { e.stopPropagation(); });
   });
@@ -906,6 +910,7 @@ function handleContextMenu(e) {
       menuItems.push({ text: 'Delete Item', action: 'delete_item', enabled: true }); // Targets specificIndex
       menuItems.push({ text: 'Duplicate Part', action: 'duplicate_part', enabled: true, itemIndex: contextMenuTargetSpecificIndex }); // Added Duplicate Part
       menuItems.push({ text: 'Move to Sacrificed', action: 'move_to_sacrificed', enabled: !specificItem.isOutroItem });
+      menuItems.push({ text: 'Move to Automatic',  action: 'move_to_automatic',  enabled: !specificItem.isOutroItem });
 
       // Assign/Change Chunk for this specific item
       menuItems.push({ text: 'Assign/Change Chunk', action: 'assign_change_chunk', enabled: true, itemIndex: contextMenuTargetSpecificIndex });
@@ -1170,6 +1175,14 @@ function handleContextMenuAction(e) {
        {
          const targetIdx = specificItemIdx !== -1 ? specificItemIdx : targetDataIdx;
          if (targetIdx !== -1) moveItemToSacrificed(targetIdx);
+       }
+       break;
+
+     // --- Automatic Actions ---
+     case 'move_to_automatic':
+       {
+         const targetIdx = specificItemIdx !== -1 ? specificItemIdx : targetDataIdx;
+         if (targetIdx !== -1) moveItemToAutomatic(targetIdx);
        }
        break;
 
@@ -1672,6 +1685,7 @@ function addNewItem(insertAtIndex, chapter = '') {
         chunkID: 0, // New items are not in chunks initially
         view_plane: "",
         window: "",
+        slice_thickness: "",
         chapter: chapter // Assign chapter context
     };
 
@@ -1706,6 +1720,7 @@ function addNewItemToChapter(insertAtIndex, chapterName, chapterID) {
         chunkID: 0, // New items are not in chunks initially
         view_plane: "",
         window: "",
+        slice_thickness: "",
         chapter: chapterName,
         chapterID: targetChapterID
     };
@@ -1890,6 +1905,7 @@ function addNewItemToChunk(chunkId) {
         chunkID: chunkId, // Assign to the target chunk
         view_plane: "",
         window: "",
+        slice_thickness: "",
         chapter: chapterOfChunk // Inherit chapter from chunk
     };
 
@@ -2074,16 +2090,26 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
             } else if (apiMethod === 'create_pattern') {
                 // Specific handling for create_pattern response
                 if (data.result && data.result.success && params.newPatternName) {
-                    const newPatternName = params.newPatternName; 
+                    const newPatternName = params.newPatternName;
                     console.log(`New pattern '${newPatternName}' created successfully. Adding 5 blank items and selecting.`);
 
+                    // Persist pattern metadata (Phase 2) if captured at creation time
+                    if (params.metadata && (params.metadata.modality || params.metadata.anatomy || params.metadata.indication)) {
+                      window.electronAPI.callAPI('save_pattern_metadata', {
+                        pattern_name: newPatternName,
+                        metadata: params.metadata
+                      });
+                    }
+
                     for (let i = 0; i < 5; i++) {
-                        const newItemData = { 
-                            view_plane: '', 
-                            abbr: `Part ${i+1}`, 
-                            strategy: '', 
-                            chapter: '', 
-                            chunkID: 0 
+                        const newItemData = {
+                            view_plane: '',
+                            window: '',
+                            slice_thickness: '',
+                            abbr: `Part ${i+1}`,
+                            strategy: '',
+                            chapter: '',
+                            chunkID: 0
                         };
                         window.electronAPI.callAPI('add_item', {
                             pattern_name: newPatternName,
@@ -2153,6 +2179,13 @@ function handleApiResponse(apiMethod, actionDescription, params = {}) {
 // --- New Pattern Dialog Functions ---
 function showNewPatternDialog() {
   newPatternNameInput.value = '';
+  // Reset metadata fields
+  const modEl = document.getElementById('new-pattern-modality');
+  const anatEl = document.getElementById('new-pattern-anatomy');
+  const indEl = document.getElementById('new-pattern-indication');
+  if (modEl) modEl.value = '';
+  if (anatEl) anatEl.value = '';
+  if (indEl) indEl.value = '';
   newPatternDialogOverlay.style.display = 'flex'; // Use flex to center content
   newPatternNameInput.focus();
 }
@@ -2170,13 +2203,21 @@ async function createNewPattern() {
       return;
     }
 
-    console.log(`Requesting creation of new pattern: ${patternName}`);
+    // Capture metadata from dialog
+    const metadata = {
+      modality:   (document.getElementById('new-pattern-modality')?.value   || '').trim(),
+      anatomy:    (document.getElementById('new-pattern-anatomy')?.value    || '').trim(),
+      indication: (document.getElementById('new-pattern-indication')?.value || '').trim(),
+      variant:    ''
+    };
+
+    console.log(`Requesting creation of new pattern: ${patternName}`, metadata);
     // Call API to create the pattern
     window.electronAPI.callAPI('create_pattern', { pattern_name: patternName });
-    
-    // Pass the new pattern name to handleApiResponse for post-creation steps
-    handleApiResponse('create_pattern', `creating new pattern '${patternName}'`, { newPatternName: patternName });
-    
+
+    // Pass the new pattern name + metadata to handleApiResponse for post-creation steps
+    handleApiResponse('create_pattern', `creating new pattern '${patternName}'`, { newPatternName: patternName, metadata });
+
     hideNewPatternDialog(); // Hide dialog immediately (optimistic)
   } else {
     alert('Pattern name cannot be empty.');
@@ -2334,6 +2375,22 @@ function handleWindowChange(e) {
   }
 }
 
+// Handler for slice-thickness dropdown change (schema v1)
+function handleSliceThicknessChange(e) {
+  const selectElement = e.target;
+  const newSlice = selectElement.value;
+  const itemIndex = parseInt(selectElement.dataset.index, 10);
+
+  if (!isNaN(itemIndex) && itemIndex >= 0 && itemIndex < currentPatternItems.length) {
+    currentPatternItems[itemIndex].slice_thickness = newSlice;
+    saveCurrentPattern();
+  } else {
+    console.error("Could not find valid item index for slice-thickness change:", itemIndex, selectElement);
+    alert("Error updating slice thickness. Reloading pattern to ensure data integrity.");
+    loadPattern(currentPattern);
+  }
+}
+
 // --- Save Function ---
 let saveTimeout; // For debouncing saves
 
@@ -2347,11 +2404,12 @@ async function saveCurrentPattern() {
   // Prepare the data for saving
   const saveData = {
     pattern_name: currentPattern,
-    // Ensure the items sent for saving have the view_plane property
+    // Ensure the items sent for saving have view_plane / window / slice_thickness fields
     items: patternDataToSave.map(item => ({
         ...item,
         view_plane: item.view_plane || '', // Allow empty view_plane
-        window: item.window || ''
+        window: item.window || '',
+        slice_thickness: item.slice_thickness || ''
       }))
   };
 
@@ -2391,10 +2449,8 @@ async function saveCurrentPattern() {
           if (!data.error) alert(errorMessage); // Show generic if no specific error was already alerted
       }
       
-      // ALWAYS reload the pattern from the source after a save attempt for consistency.
-      // This will ensure the UI reflects what is actually in the file.
-      console.log('Reloading pattern after save attempt to ensure UI consistency.');
-      loadPattern(currentPattern);
+      // Re-assess coverage with the updated in-memory items (no full reload needed).
+      renderCoveragePanel();
     }
   });
 }
@@ -2410,7 +2466,8 @@ function addItemFromBank(partData) {
         strategy: partData.strategy || '',
         chunkID: 0, // New items are not in chunks initially
         view_plane: '', // Allow empty view_plane for new items
-        window: partData.window || ''
+        window: partData.window || '',
+        slice_thickness: partData.slice_thickness || ''
     };
 
     // Add to the end of the current pattern list
@@ -2430,7 +2487,7 @@ async function loadPartsBank() {
         if (data && data.responseFor === 'get_parts_bank') {
             unsubscribe();
             if (data.result && Array.isArray(data.result)) {
-                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || '', window: item.window || '' })); // Allow empty view_plane
+                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || '', window: item.window || '', slice_thickness: item.slice_thickness || '' })); // Allow empty fields
                 renderPartsBank();
             } else if (data.error) {
                 console.error('Error loading parts bank:', data.error);
@@ -3201,6 +3258,7 @@ function init() {
   
   // Set up event listeners
   patternSelector.addEventListener('change', () => {
+    coverageEditMode = false;
     loadPattern(patternSelector.value);
     if (undoBtn) undoBtn.disabled = true; // Disable undo when user manually selects a new pattern
     if (redoBtn) redoBtn.disabled = true; // Disable redo when user manually selects a new pattern
@@ -3248,6 +3306,22 @@ function init() {
   loadPartsBank();
   setupPatternDropZone(); // Add drop zone setup
   initRightPanelTabs();
+  loadAbbrRegistry();
+  loadLibrary();
+
+  const abbrRegistryBtn = document.getElementById('abbr-registry-btn');
+  if (abbrRegistryBtn) abbrRegistryBtn.addEventListener('click', openAbbrRegistry);
+  const abbrRegistryCloseBtn = document.getElementById('abbr-registry-close-btn');
+  if (abbrRegistryCloseBtn) abbrRegistryCloseBtn.addEventListener('click', closeAbbrRegistry);
+  initAbbrRegistrySearch();
+
+  // Close registry on overlay click
+  const abbrOverlay = document.getElementById('abbr-registry-overlay');
+  if (abbrOverlay) {
+    abbrOverlay.addEventListener('click', (e) => {
+      if (e.target === abbrOverlay) closeAbbrRegistry();
+    });
+  }
 
   // Initialize SP List Menu
   initializeSpListMenu();
@@ -3257,6 +3331,7 @@ function init() {
 
   // Event listeners
   patternSelector.addEventListener('change', () => {
+    coverageEditMode = false;
     loadPattern(patternSelector.value);
   });
 
@@ -4014,7 +4089,8 @@ function createNewChapter(chapterName, targetIndex = -1) {
         view_plane: '',
         chapter: chapterName,
         chapterID: newChapterID,
-        window: ''
+        window: '',
+        slice_thickness: ''
     };
     
     if (targetIndex >= 0 && targetIndex < currentPatternItems.length) {
@@ -4163,6 +4239,20 @@ function initRightPanelTabs() {
   });
 }
 
+function getActiveTab() {
+  const btn = document.querySelector('.tab-btn--active');
+  return btn ? btn.dataset.tab : 'parts-bank';
+}
+
+function setActiveTab(tabName) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-btn--active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content--active'));
+  const btn = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
+  if (btn) btn.classList.add('tab-btn--active');
+  const content = document.querySelector(`.tab-content[data-tab="${tabName}"]`);
+  if (content) content.classList.add('tab-content--active');
+}
+
 // ─── Sacrificed panel ──────────────────────────────────────────────────────
 
 function loadSacrificedItems(patternName) {
@@ -4172,6 +4262,7 @@ function loadSacrificedItems(patternName) {
       unsub();
       sacrificedItems = (data.result && Array.isArray(data.result)) ? data.result : [];
       renderSacrificedItems();
+      renderCoveragePanel();
     }
   });
 }
@@ -4181,6 +4272,98 @@ function saveSacrificedItems() {
     pattern_name: currentPattern,
     items: sacrificedItems
   });
+}
+
+// Automatic items (Phase 3.3) — same shape and semantics as sacrificed; per-pattern.
+function loadAutomaticItems(patternName) {
+  window.electronAPI.callAPI('get_automatic_items', { pattern_name: patternName });
+  const unsub = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_automatic_items') {
+      unsub();
+      automaticItems = (data.result && Array.isArray(data.result)) ? data.result : [];
+      renderAutomaticItemsTab();
+      renderCoveragePanel(); // re-render the below-coverage strip
+    }
+  });
+}
+
+// Render the Automatic list inside the Sacrificed tab pane.
+function renderAutomaticItemsTab() {
+  const container = document.getElementById('automatic-items');
+  if (!container) return;
+
+  if (!automaticItems || automaticItems.length === 0) {
+    container.innerHTML = '<div class="sacrificed-empty">No automatic items</div>';
+    return;
+  }
+
+  container.innerHTML = automaticItems.map((item, i) => {
+    const chips = parseStrategyIntoChips(item.strategy || '');
+    const chipHtml = chips.map(c =>
+      `<span class="sacrificed-chip sacrificed-chip--${c.type}">${escapeHtml(c.text)}</span>`
+    ).join('');
+    return `
+      <div class="sacrificed-item" data-automatic-index="${i}">
+        <div class="drag-handle" data-handle="true"></div>
+        <div class="sacrificed-content">
+          <span class="sacrificed-abbr">${escapeHtml(item.abbr || '')}</span>
+          <div class="sacrificed-strategy">${chipHtml || escapeHtml(item.strategy || '')}</div>
+        </div>
+        <button class="restore-btn" data-automatic-index="${i}" title="Restore to pattern">&#x21A9;</button>
+      </div>
+    `;
+  }).join('');
+
+  container.querySelectorAll('.restore-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      restoreFromAutomatic(parseInt(btn.dataset.automaticIndex, 10));
+    });
+  });
+}
+
+function saveAutomaticItems() {
+  window.electronAPI.callAPI('save_automatic_items', {
+    pattern_name: currentPattern,
+    items: automaticItems
+  });
+}
+
+// Move a pattern item into the Automatic list. Mirrors the Sacrificed counterpart
+// but persists to a parallel collection.
+function moveItemToAutomatic(itemIndex) {
+  if (!Array.isArray(currentPatternItems)) return;
+  if (itemIndex < 0 || itemIndex >= currentPatternItems.length) return;
+  const item = currentPatternItems[itemIndex];
+  if (!item || item.isOutroItem) return;
+  automaticItems.push({ abbr: item.abbr || '', strategy: item.strategy || '' });
+  saveAutomaticItems();
+  // Remove from the active pattern
+  window.electronAPI.callAPI('delete_item', { pattern_name: currentPattern, item_index: itemIndex });
+  handleApiResponse('delete_item', `removing item moved to Automatic`);
+}
+
+// Restore an Automatic entry back into the active pattern (append at end).
+function restoreFromAutomatic(autoIndex) {
+  if (autoIndex < 0 || autoIndex >= automaticItems.length) return;
+  const item = automaticItems.splice(autoIndex, 1)[0];
+  saveAutomaticItems();
+  const newItem = {
+    abbr: item.abbr || '',
+    strategy: item.strategy || '',
+    view_plane: '',
+    window: '',
+    slice_thickness: '',
+    chapter: '',
+    chunkID: 0
+  };
+  window.electronAPI.callAPI('add_item', {
+    pattern_name: currentPattern,
+    item_data: newItem,
+    index: (currentPatternItems || []).length
+  });
+  handleApiResponse('add_item', `restoring item from Automatic`);
+  renderCoveragePanel();
 }
 
 function renderSacrificedItems() {
@@ -4218,6 +4401,7 @@ function renderSacrificedItems() {
   });
 
   initSacrificedSortable();
+  renderCoveragePanel();
 }
 
 function initSacrificedSortable() {
@@ -4302,6 +4486,7 @@ function restoreFromSacrificed(sacrificedIndex) {
     strategy: item.strategy || '',
     view_plane: '',
     window: '',
+    slice_thickness: '',
     chunkID: 0,
     chapter: '',
     chapterID: ''
@@ -4345,6 +4530,32 @@ function buildChipHtml(strategyText, itemIndex) {
     }
     return `<span class="strategy-chip strategy-chip--strategy">${escapeHtml(c.text)}</span>`;
   }).join('');
+}
+
+// ─── Canonical option lists (schema v1) ─────────────────────────────────────
+// One place; reused by pattern editor, coverage prefs, and Library editor.
+const VIEW_PLANE_OPTIONS      = ['ax', 'cor', 'sag', '3D', 'CPR'];
+const WINDOW_OPTIONS          = ['ST', 'bone', 'brain', 'lung', 'stroke', 'CTA', 'CTV'];
+const SLICE_THICKNESS_OPTIONS = ['thin', '3mm', 'MIP', 'tMIP', 'MinIP', 'thin + MIP'];
+
+function renderOptionList(options, selectedValue, blankLabel = '-') {
+  const blankOpt = `<option value="" ${!selectedValue ? 'selected' : ''}>${blankLabel}</option>`;
+  const opts = options.map(v =>
+    `<option value="${escapeHtml(v)}" ${selectedValue === v ? 'selected' : ''}>${escapeHtml(v)}</option>`
+  ).join('');
+  return blankOpt + opts;
+}
+
+function renderViewSelect(selectedValue, index, selectDisabled = '') {
+  return `<select class="item-view-select" data-index="${index}" ${selectDisabled}>${renderOptionList(VIEW_PLANE_OPTIONS, selectedValue || '')}</select>`;
+}
+
+function renderWindowSelect(selectedValue, index, selectDisabled = '') {
+  return `<select class="item-window-select" data-index="${index}" ${selectDisabled}>${renderOptionList(WINDOW_OPTIONS, selectedValue || '')}</select>`;
+}
+
+function renderSliceThicknessSelect(selectedValue, index, selectDisabled = '') {
+  return `<select class="item-slice-select" data-index="${index}" ${selectDisabled}>${renderOptionList(SLICE_THICKNESS_OPTIONS, selectedValue || '')}</select>`;
 }
 
 function renderStrategyField(strategy, index, editableAttr) {
@@ -4404,4 +4615,1752 @@ function handleChipDropToSacrificed(e) {
   saveSacrificedItems();
   renderPatternItems();
   renderSacrificedItems();
+}
+
+// ─── Chip-to-chip drag (within / between strategy fields) ───────────────────
+
+function wireChipDropTarget(view) {
+  view.removeEventListener('dragover', handleChipViewDragOver);
+  view.removeEventListener('dragleave', handleChipViewDragLeave);
+  view.removeEventListener('drop', handleChipViewDrop);
+  view.addEventListener('dragover', handleChipViewDragOver);
+  view.addEventListener('dragleave', handleChipViewDragLeave);
+  view.addEventListener('drop', handleChipViewDrop);
+}
+
+function getChipInsertionIndex(e, view) {
+  const chips = Array.from(view.querySelectorAll('.strategy-chip'));
+  if (!chips.length) return 0;
+  const mouseX = e.clientX;
+  for (let i = 0; i < chips.length; i++) {
+    const rect = chips[i].getBoundingClientRect();
+    if (mouseX < rect.left + rect.width / 2) return i;
+  }
+  return chips.length;
+}
+
+function handleChipViewDragOver(e) {
+  if (!e.dataTransfer.types.includes('application/json')) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const view = e.currentTarget;
+  view.classList.add('chip-drop-target');
+  const idx = getChipInsertionIndex(e, view);
+  view.dataset.dropInsertIndex = idx;
+  const chips = view.querySelectorAll('.strategy-chip');
+  chips.forEach((chip, i) => chip.classList.toggle('chip-insert-before', i === idx));
+  view.classList.toggle('chip-insert-at-end', idx >= chips.length);
+}
+
+function handleChipViewDragLeave(e) {
+  // Only clear if leaving the view itself (not entering a child chip)
+  if (e.currentTarget.contains(e.relatedTarget)) return;
+  const view = e.currentTarget;
+  view.classList.remove('chip-drop-target', 'chip-insert-at-end');
+  view.querySelectorAll('.strategy-chip').forEach(c => c.classList.remove('chip-insert-before'));
+}
+
+function handleChipViewDrop(e) {
+  e.preventDefault();
+  e.stopPropagation();
+  const view = e.currentTarget;
+  const insertIndex = parseInt(view.dataset.dropInsertIndex ?? '999');
+  view.classList.remove('chip-drop-target', 'chip-insert-at-end');
+  view.querySelectorAll('.strategy-chip').forEach(c => c.classList.remove('chip-insert-before'));
+
+  let data;
+  try { data = JSON.parse(e.dataTransfer.getData('application/json')); } catch { return; }
+  if (!data || data.type !== 'chip') return;
+
+  const targetItemIndex = parseInt(view.dataset.index);
+  const { chipText, itemIndex: sourceItemIndex } = data;
+
+  if (isNaN(targetItemIndex) || targetItemIndex < 0 || targetItemIndex >= currentPatternItems.length) return;
+  if (isNaN(sourceItemIndex) || sourceItemIndex < 0 || sourceItemIndex >= currentPatternItems.length) return;
+
+  const sourceItem = currentPatternItems[sourceItemIndex];
+  const targetItem = currentPatternItems[targetItemIndex];
+  if (sourceItem.isOutroItem || targetItem.isOutroItem) return;
+
+  // Remove chip from source item
+  const sourceChips = parseStrategyIntoChips(sourceItem.strategy || '');
+  const sourceRemaining = sourceChips.filter(c => !(c.type === 'subpart' && c.text === chipText));
+  currentPatternItems[sourceItemIndex] = { ...sourceItem, strategy: serializeChipsToStrategy(sourceRemaining) };
+
+  // Insert chip into target item at insertIndex (position among all chips in the view)
+  const targetChips = parseStrategyIntoChips(
+    sourceItemIndex === targetItemIndex
+      ? serializeChipsToStrategy(sourceRemaining)  // source already updated
+      : targetItem.strategy || ''
+  );
+  const targetSubparts = targetChips.filter(c => c.type === 'subpart');
+  const targetStrategies = targetChips.filter(c => c.type === 'strategy');
+  // insertIndex is among visible chips (subparts + strategies); clamp to subpart range
+  const subpartInsert = Math.min(insertIndex, targetSubparts.length);
+  targetSubparts.splice(subpartInsert, 0, { type: 'subpart', text: chipText });
+  currentPatternItems[targetItemIndex] = {
+    ...currentPatternItems[targetItemIndex],
+    strategy: serializeChipsToStrategy([...targetSubparts, ...targetStrategies])
+  };
+
+  saveCurrentPattern();
+  renderPatternItems();
+}
+
+// ─── Coverage panel ─────────────────────────────────────────────────────────
+
+// ─── Coverage requirements ───────────────────────────────────────────────────
+
+function generateId() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+function loadCoverageRequirements(patternName) {
+  window.electronAPI.callAPI('get_coverage_requirements', { pattern_name: patternName });
+  const unsub = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_coverage_requirements') {
+      unsub();
+      coverageRequirements = Array.isArray(data.result) ? data.result : [];
+      renderCoveragePanel();
+    }
+  });
+}
+
+function saveCoverageRequirements() {
+  window.electronAPI.callAPI('save_coverage_requirements', {
+    pattern_name: currentPattern,
+    requirements: coverageRequirements
+  });
+}
+
+// Expand a string's whitespace-delimited tokens using the general abbreviation registry
+function expandWithGeneralAbbrs(text) {
+  return text.split(/\s+/).map(token => {
+    const match = Object.entries(generalAbbrRegistry)
+      .find(([k]) => k.toLowerCase() === token.toLowerCase());
+    return match ? (match[1].fullName || token).toLowerCase() : token.toLowerCase();
+  }).join(' ');
+}
+
+// Hybrid match: pattern item satisfies requirement iff
+//   1. Library hierarchy says so (item's entry is an ancestor of, or equal to, the
+//      requirement's entry — e.g. `vertebrobas` satisfies `basilar_artery`); OR
+//   2. The classic fuzzy fallback matches (handles unregistered items/requirements).
+function matchesRequirement(req, item) {
+  if (item.isOutroItem) return false;
+  const needle = (req.label || '').toLowerCase();
+  if (!needle) return false;
+
+  // 1) Library-based match — fires only when both sides resolve to entries
+  const libHit = libraryAncestorMatch(req, item);
+  if (libHit === true) return true;
+  // libHit === false means both sides resolved but no ancestor relationship — still allow
+  // fuzzy fallback to catch sibling/synonym cases the user hasn't modeled yet.
+
+  // 2) Fuzzy fallback (legacy behavior, retained for unregistered data)
+  const abbr = (item.abbr || '').toLowerCase();
+  const fullName = (abbrRegistry[item.abbr]?.fullName || '').toLowerCase();
+  const subparts = parseStrategyIntoChips(item.strategy || '')
+    .filter(c => c.type === 'subpart')
+    .map(c => c.text.toLowerCase());
+
+  if (abbr && (abbr.includes(needle) || needle.includes(abbr))) return true;
+  if (fullName && (fullName.includes(needle) || needle.includes(fullName))) return true;
+  if (subparts.some(s => s.includes(needle) || needle.includes(s))) return true;
+
+  // Check registered subparts for this item's anatomy/task
+  const registryEntry = abbrRegistry[item.abbr];
+  if (registryEntry?.subparts?.length) {
+    const regSubs = registryEntry.subparts.map(s => s.toLowerCase());
+    if (regSubs.some(s => s.includes(needle) || needle.includes(s))) return true;
+  }
+
+  // Try again with general-abbr-expanded needle (e.g. "R Kidney" → "right kidney")
+  const expandedNeedle = expandWithGeneralAbbrs(needle);
+  if (expandedNeedle !== needle) {
+    if (abbr && (abbr.includes(expandedNeedle) || expandedNeedle.includes(abbr))) return true;
+    if (fullName && (fullName.includes(expandedNeedle) || expandedNeedle.includes(fullName))) return true;
+    if (subparts.some(s => s.includes(expandedNeedle) || expandedNeedle.includes(s))) return true;
+  }
+
+  return false;
+}
+
+function groupMatches(matches) {
+  const grouped = {};
+  matches.forEach(m => {
+    const key = `${m.abbr}|${m.view}|${m.window}`;
+    if (!grouped[key]) grouped[key] = { abbr: m.abbr, view: m.view, window: m.window, count: 0 };
+    grouped[key].count++;
+  });
+  return Object.values(grouped);
+}
+
+// Build a quick item-key index for manual-match lookup.
+// Key shape: `${abbr}|${view_plane}|${window}` — matches the keys stored in
+// excludedMatches/manualMatches.
+function buildPatternItemIndex(items) {
+  const map = new Map();
+  for (const it of items) {
+    const key = `${it.abbr}|${it.view_plane || ''}|${it.window || ''}`;
+    if (!map.has(key)) map.set(key, { abbr: it.abbr, view: it.view_plane || '', window: it.window || '', count: 0 });
+    map.get(key).count++;
+  }
+  return map;
+}
+
+function assessCoverage() {
+  const items = (currentPatternItems || []).filter(i => !i.isOutroItem);
+  const itemIndex = buildPatternItemIndex(items);
+
+  // Resolve manualMatches[] (array of keys) into the same shape as auto matches,
+  // dropping any keys that no longer exist in the pattern.
+  function resolveManualMatches(manualKeys) {
+    if (!Array.isArray(manualKeys)) return [];
+    const seen = new Set();
+    const out = [];
+    for (const key of manualKeys) {
+      if (seen.has(key)) continue;
+      const hit = itemIndex.get(key);
+      if (hit) {
+        out.push({ abbr: hit.abbr, view: hit.view, window: hit.window, count: hit.count, manual: true });
+        seen.add(key);
+      }
+    }
+    return out;
+  }
+
+  function assessOne(req) {
+    const excluded = req.excludedMatches || [];
+    const manual   = req.manualMatches   || [];
+    const candidates = items.filter(item => {
+      const key = `${item.abbr}|${item.view_plane || ''}|${item.window || ''}`;
+      return !excluded.includes(key);
+    });
+
+    const subs = req.subRequirements || [];
+    if (subs.length > 0) {
+      const subAssessed = subs.map(sub => {
+        const subExcluded = sub.excludedMatches || [];
+        const subManual   = sub.manualMatches   || [];
+        const subCandidates = items.filter(item => {
+          const key = `${item.abbr}|${item.view_plane || ''}|${item.window || ''}`;
+          return !subExcluded.includes(key);
+        });
+        const rawMatches = subCandidates
+          .filter(item => matchesRequirement(sub, item))
+          .map(item => ({ abbr: item.abbr, view: item.view_plane || '', window: item.window || '' }));
+        // Merge auto + manual (manual wins on dup key — keeps the `manual: true` tag)
+        const auto = groupMatches(rawMatches);
+        const manualResolved = resolveManualMatches(subManual);
+        const keyOf = m => `${m.abbr}|${m.view}|${m.window}`;
+        const manualKeys = new Set(manualResolved.map(keyOf));
+        const merged = [...manualResolved, ...auto.filter(m => !manualKeys.has(keyOf(m)))];
+        return { ...sub, satisfied: merged.length > 0, matches: merged };
+      });
+      return { ...req, satisfied: subAssessed.every(s => s.satisfied), subAssessed, matches: [] };
+    }
+
+    // No sub-requirements — auto + manual matches
+    const rawMatches = candidates
+      .filter(item => matchesRequirement(req, item))
+      .map(item => ({ abbr: item.abbr, view: item.view_plane || '', window: item.window || '' }));
+    const auto = groupMatches(rawMatches);
+    const manualResolved = resolveManualMatches(manual);
+    const keyOf = m => `${m.abbr}|${m.view}|${m.window}`;
+    const manualKeys = new Set(manualResolved.map(keyOf));
+    const merged = [...manualResolved, ...auto.filter(m => !manualKeys.has(keyOf(m)))];
+    return { ...req, satisfied: merged.length > 0, subAssessed: null, matches: merged };
+  }
+
+  return coverageRequirements.map(assessOne);
+}
+
+// Small inline indicator that shows which Library entry a requirement label
+// resolves to. Helps users debug why coverage matching isn't firing as expected.
+// Falls into one of three states:
+//   • exact resolution → "→ <entry display name>" (greenish)
+//   • no resolution    → "no library match" (amber; fuzzy fallback still runs)
+//   • empty label      → nothing
+function resolvedEntryIndicatorHtml(label) {
+  if (!label || !String(label).trim()) return '';
+  const slug = resolveToEntrySlug(label);
+  if (!slug || !libraryEntries[slug]) {
+    return `<span class="cov-resolved-entry cov-resolved-entry--none" title="No Library entry exactly matches this label. Coverage will fall back to fuzzy string matching.">no library match</span>`;
+  }
+  const e = libraryEntries[slug];
+  const display = (e.aliases && e.aliases[0]) || e.fullName || slug;
+  return `<span class="cov-resolved-entry" title="Resolves to Library entry: ${escapeHtml(slug)}">→ ${escapeHtml(display)}</span>`;
+}
+
+function renderCoveragePanel() {
+  const panel = document.getElementById('coverage-panel');
+  if (!panel) return;
+  panel.innerHTML = coverageEditMode
+    ? renderCoverageEditHtml()
+    : renderCoverageAssessmentHtml();
+  wireCoveragePanel(panel);
+}
+
+function renderCoverageAssessmentHtml() {
+  const assessed = assessCoverage();
+  const tasks = assessed.filter(r => r.type === 'task');
+  const parts = assessed.filter(r => r.type === 'part');
+  const totalSat = assessed.filter(r => r.satisfied).length;
+
+  let html = `<div class="cov-toolbar">`;
+  if (assessed.length) html += `<span class="cov-score">${totalSat}/${assessed.length}</span>`;
+  html += `<button class="btn btn-secondary cov-edit-btn">Edit ✏</button></div>`;
+
+  if (!assessed.length) {
+    html += `<div class="cov-empty">No requirements defined.<br>Click Edit to add tasks and parts.</div>`;
+    return html;
+  }
+
+  function matchTagHtml(m, reqId, subId) {
+    const parts = [m.abbr, m.view, m.window].filter(Boolean);
+    const countStr = m.count > 1 ? ` ×${m.count}` : '';
+    const matchKey = `${m.abbr}|${m.view}|${m.window}`;
+    const subAttr = subId ? `data-sub-id="${escapeHtml(subId)}"` : '';
+    const manualClass = m.manual ? ' cov-match-manual' : '';
+    const manualBadge = m.manual ? `<span class="cov-match-manual-badge" title="Manually linked">🔗</span>` : '';
+    return `<span class="cov-match-tag${manualClass}" data-req-id="${escapeHtml(reqId)}" ${subAttr} data-match-key="${escapeHtml(matchKey)}">${manualBadge}${escapeHtml(parts.join(' · '))}${countStr}<button class="cov-match-exclude-btn" title="Mark irrelevant">✕</button></span>`;
+  }
+
+  function excludedTagHtml(key, reqId, subId) {
+    const parts = key.split('|').filter(Boolean);
+    const subAttr = subId ? `data-sub-id="${escapeHtml(subId)}"` : '';
+    return `<span class="cov-excluded-tag" data-req-id="${escapeHtml(reqId)}" ${subAttr} data-match-key="${escapeHtml(key)}">${escapeHtml(parts.join(' · '))}<button class="cov-match-restore-btn" title="Restore match">↩</button></span>`;
+  }
+
+  function itemHtml(r) {
+    const cls = r.satisfied ? 'cov-satisfied' : 'cov-unsatisfied';
+    const icon = r.satisfied ? '✓' : '✗';
+    const excluded = r.excludedMatches || [];
+
+    let contentHtml = '';
+    if (r.subAssessed && r.subAssessed.length > 0) {
+      // Nested sub-requirements view
+      const subRows = r.subAssessed.map(sub => {
+        const subCls = sub.satisfied ? 'cov-satisfied' : 'cov-unsatisfied';
+        const subIcon = sub.satisfied ? '✓' : '✗';
+        const subExcluded = sub.excludedMatches || [];
+        const subMatches = sub.satisfied
+          ? sub.matches.map(m => matchTagHtml(m, r.id, sub.id)).join('')
+          : '';
+        const subExcludedHtml = subExcluded.length
+          ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
+          : '';
+        return `<div class="cov-sub-item ${subCls}">
+          <span class="cov-sub-icon">${subIcon}</span>
+          <span class="cov-sub-label">${escapeHtml(sub.label)}</span>
+          ${resolvedEntryIndicatorHtml(sub.label)}
+          ${subMatches}${subExcludedHtml}
+        </div>`;
+      }).join('');
+      contentHtml = `<div class="cov-sub-list">${subRows}</div>`;
+    } else {
+      // Standard single-level match tags inline with label
+      const matchTags = r.satisfied
+        ? r.matches.map(m => matchTagHtml(m, r.id, null)).join('')
+        : '';
+      const hintHtml = (!r.satisfied && r.type === 'part' && (r.preferredView || r.preferredWindow || r.preferredSliceThickness))
+        ? `<span class="cov-hint">expected: ${escapeHtml([r.preferredView, r.preferredWindow, r.preferredSliceThickness].filter(Boolean).join(' '))}</span>`
+        : '';
+      const excludedHtml = excluded.length
+        ? `<span class="cov-excluded-wrap">${excluded.map(k => excludedTagHtml(k, r.id, null)).join('')}</span>`
+        : '';
+      contentHtml = `${matchTags}${hintHtml}${excludedHtml}`;
+    }
+
+    const linkBtn = r.subAssessed
+      ? ''
+      : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+ link</button>`;
+
+    return `<div class="cov-item ${cls}">
+      <span class="cov-icon">${icon}</span>
+      <div class="cov-item-body">
+        <div class="cov-item-line">
+          <span class="cov-label">${escapeHtml(r.label)}</span>
+          ${resolvedEntryIndicatorHtml(r.label)}
+          ${r.subAssessed ? '' : contentHtml}
+          ${linkBtn}
+        </div>
+        ${r.subAssessed ? contentHtml : ''}
+      </div>
+    </div>`;
+  }
+
+  if (tasks.length) {
+    html += `<div class="cov-section-head">Tasks</div>`;
+    html += tasks.map(itemHtml).join('');
+  }
+  if (parts.length) {
+    html += `<div class="cov-section-head">Parts</div>`;
+    html += parts.map(itemHtml).join('');
+  }
+
+  // Sacrificed + Automatic below coverage (Phase 3.3)
+  html += renderBelowCoverageStripHtml();
+
+  return html;
+}
+
+function renderBelowCoverageStripHtml() {
+  function listHtml(items, kind) {
+    if (!items || items.length === 0) {
+      return `<div class="cov-strip-empty">none</div>`;
+    }
+    return items.map((it, i) => {
+      const chips = parseStrategyIntoChips(it.strategy || '');
+      const chipHtml = chips.map(c =>
+        `<span class="cov-strip-chip cov-strip-chip--${c.type}">${escapeHtml(c.text)}</span>`
+      ).join('');
+      return `<div class="cov-strip-item" data-kind="${kind}" data-strip-index="${i}">
+        <span class="cov-strip-abbr">${escapeHtml(it.abbr || '')}</span>
+        <span class="cov-strip-chips">${chipHtml}</span>
+        <button class="cov-strip-restore-btn" data-kind="${kind}" data-strip-index="${i}" title="Restore to pattern">↩</button>
+      </div>`;
+    }).join('');
+  }
+
+  return `
+    <div class="cov-strip-separator"></div>
+    <div class="cov-strip-container">
+      <div class="cov-strip-col">
+        <div class="cov-strip-head">Sacrificed</div>
+        ${listHtml(sacrificedItems, 'sacrificed')}
+      </div>
+      <div class="cov-strip-col">
+        <div class="cov-strip-head">Automatic</div>
+        ${listHtml(automaticItems, 'automatic')}
+      </div>
+    </div>
+  `;
+}
+
+function renderCoverageEditHtml() {
+  // Use canonical option lists (same as pattern editor)
+  const viewVals  = ['', ...VIEW_PLANE_OPTIONS];
+  const winVals   = ['', ...WINDOW_OPTIONS];
+  const sliceVals = ['', ...SLICE_THICKNESS_OPTIONS];
+
+  function makeViewSelect(id, selectedVal) {
+    const opts = viewVals.map(v =>
+      `<option value="${escapeHtml(v)}"${v === selectedVal ? ' selected' : ''}>${v || 'plane best seen on'}</option>`
+    ).join('');
+    const placeholder = !selectedVal ? ' cov-pref-placeholder-active' : '';
+    return `<select class="cov-pref-view${placeholder}" data-id="${id}" data-field="preferredView">${opts}</select>`;
+  }
+
+  function makeWinSelect(id, selectedVal) {
+    const opts = winVals.map(w =>
+      `<option value="${escapeHtml(w)}"${w === selectedVal ? ' selected' : ''}>${w || 'window best seen on'}</option>`
+    ).join('');
+    const placeholder = !selectedVal ? ' cov-pref-placeholder-active' : '';
+    return `<select class="cov-pref-window${placeholder}" data-id="${id}" data-field="preferredWindow">${opts}</select>`;
+  }
+
+  function makeSliceSelect(id, selectedVal) {
+    const opts = sliceVals.map(s =>
+      `<option value="${escapeHtml(s)}"${s === selectedVal ? ' selected' : ''}>${s || 'slice thickness best seen on'}</option>`
+    ).join('');
+    const placeholder = !selectedVal ? ' cov-pref-placeholder-active' : '';
+    return `<select class="cov-pref-slice${placeholder}" data-id="${id}" data-field="preferredSliceThickness">${opts}</select>`;
+  }
+
+  let html = `<div class="cov-toolbar">
+    <button class="btn cov-add-task-btn">+ Task</button>
+    <button class="btn cov-add-part-btn">+ Part</button>
+    <button class="btn cov-done-btn">✓ Done</button>
+  </div>`;
+
+  if (!coverageRequirements.length) {
+    html += `<div class="cov-empty">No requirements yet. Add tasks and parts above.</div>`;
+  }
+
+  const tasks = coverageRequirements.filter(r => r.type === 'task');
+  const parts = coverageRequirements.filter(r => r.type === 'part');
+
+  function editItemHtml(r) {
+    const subs = r.subRequirements || [];
+    const prefHtml = r.type === 'part' ? `
+      <div class="cov-prefs">
+        ${makeViewSelect(r.id, r.preferredView || '')}
+        ${makeWinSelect(r.id, r.preferredWindow || '')}
+        ${makeSliceSelect(r.id, r.preferredSliceThickness || '')}
+      </div>` : '';
+    const subListHtml = subs.length ? `
+      <div class="cov-sub-edit-list">
+        ${subs.map(sub => `
+          <div class="cov-sub-edit-item" data-sub-id="${escapeHtml(sub.id)}">
+            <span class="cov-sub-bullet">└</span>
+            <input class="cov-label-input cov-sub-label-input" data-parent-id="${escapeHtml(r.id)}" data-sub-id="${escapeHtml(sub.id)}" value="${escapeHtml(sub.label)}" placeholder="Sub-label...">
+            ${resolvedEntryIndicatorHtml(sub.label)}
+            <button class="cov-sub-del-btn" data-parent-id="${escapeHtml(r.id)}" data-sub-id="${escapeHtml(sub.id)}" title="Remove sub">✕</button>
+          </div>`).join('')}
+      </div>` : '';
+    // Library import — only offer when the label resolves to a Library entry that has children
+    const resolvedSlug = resolveToEntrySlug(r.label);
+    const resolvedChildren = resolvedSlug
+      ? Object.entries(libraryEntries).filter(([, e]) => (e.parents || []).includes(resolvedSlug))
+      : [];
+    const importBtnHtml = resolvedChildren.length
+      ? `<button class="cov-import-subs-btn" data-id="${escapeHtml(r.id)}" title="Import ${resolvedChildren.length} subpart(s) from Library">↓ Import ${resolvedChildren.length} from Library</button>`
+      : '';
+
+    return `<div class="cov-edit-item" data-id="${escapeHtml(r.id)}">
+      <div class="drag-handle" data-handle="true"></div>
+      <span class="cov-type-badge cov-type-${r.type}">${r.type === 'task' ? 'T' : 'P'}</span>
+      <div class="cov-edit-body">
+        <div class="cov-edit-label-row">
+          <input class="cov-label-input" data-id="${escapeHtml(r.id)}" value="${escapeHtml(r.label)}" placeholder="Label...">
+          ${resolvedEntryIndicatorHtml(r.label)}
+        </div>
+        ${prefHtml}
+        ${subListHtml}
+        <div class="cov-edit-actions">
+          <button class="cov-add-sub-btn" data-id="${escapeHtml(r.id)}">+ Sub</button>
+          ${importBtnHtml}
+        </div>
+      </div>
+      <button class="cov-del-btn" data-id="${escapeHtml(r.id)}" title="Remove">✕</button>
+    </div>`;
+  }
+
+  if (tasks.length) {
+    html += `<div class="cov-section-head">Tasks</div>`;
+    html += `<div id="cov-task-list" class="cov-sortable-list">${tasks.map(editItemHtml).join('')}</div>`;
+  } else {
+    html += `<div id="cov-task-list" class="cov-sortable-list cov-sortable-empty"></div>`;
+  }
+
+  if (parts.length) {
+    html += `<div class="cov-section-head">Parts <span class="cov-section-hint">(drag to order superior→inferior)</span></div>`;
+    html += `<div id="cov-part-list" class="cov-sortable-list">${parts.map(editItemHtml).join('')}</div>`;
+  } else {
+    html += `<div id="cov-part-list" class="cov-sortable-list cov-sortable-empty"></div>`;
+  }
+
+  return html;
+}
+
+function wireCoveragePanel(panel) {
+  // Assessment mode — edit button
+  const editBtn = panel.querySelector('.cov-edit-btn');
+  if (editBtn) editBtn.addEventListener('click', () => {
+    coverageEditMode = true;
+    renderCoveragePanel();
+  });
+
+  // Assessment mode — exclude match (mark irrelevant)
+  panel.querySelectorAll('.cov-match-exclude-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const tag = btn.closest('[data-req-id]');
+      if (!tag) return;
+      excludeMatch(tag.dataset.reqId, tag.dataset.matchKey, tag.dataset.subId || null);
+    });
+  });
+
+  // Assessment mode — restore excluded match
+  panel.querySelectorAll('.cov-match-restore-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const tag = btn.closest('[data-req-id]');
+      if (!tag) return;
+      restoreMatch(tag.dataset.reqId, tag.dataset.matchKey, tag.dataset.subId || null);
+    });
+  });
+
+  // Assessment mode — link match (opposite of exclude). Opens an in-place picker
+  // of pattern items that aren't already linked to this requirement.
+  panel.querySelectorAll('.cov-link-match-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showLinkMatchPopover(btn, btn.dataset.reqId);
+    });
+  });
+
+  // Below-coverage strip — restore items from Sacrificed / Automatic back into the pattern
+  panel.querySelectorAll('.cov-strip-restore-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const idx = parseInt(btn.dataset.stripIndex, 10);
+      if (isNaN(idx)) return;
+      if (btn.dataset.kind === 'automatic') restoreFromAutomatic(idx);
+      else if (btn.dataset.kind === 'sacrificed') restoreFromSacrificed(idx);
+    });
+  });
+
+  // Edit mode — done
+  const doneBtn = panel.querySelector('.cov-done-btn');
+  if (doneBtn) doneBtn.addEventListener('click', () => {
+    coverageEditMode = false;
+    renderCoveragePanel();
+  });
+
+  const addTaskBtn = panel.querySelector('.cov-add-task-btn');
+  if (addTaskBtn) addTaskBtn.addEventListener('click', () => addCoverageRequirement('task'));
+
+  const addPartBtn = panel.querySelector('.cov-add-part-btn');
+  if (addPartBtn) addPartBtn.addEventListener('click', () => addCoverageRequirement('part'));
+
+  // Edit mode — delete top-level requirement
+  panel.querySelectorAll('.cov-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteCoverageRequirement(btn.dataset.id));
+  });
+
+  // Edit mode — add sub-requirement
+  panel.querySelectorAll('.cov-add-sub-btn').forEach(btn => {
+    btn.addEventListener('click', () => addSubRequirement(btn.dataset.id));
+  });
+
+  // Edit mode — import subparts from Library (one-shot bulk-add of child entries)
+  panel.querySelectorAll('.cov-import-subs-btn').forEach(btn => {
+    btn.addEventListener('click', () => importSubpartsFromLibrary(btn.dataset.id));
+  });
+
+  // Edit mode — delete sub-requirement
+  panel.querySelectorAll('.cov-sub-del-btn').forEach(btn => {
+    btn.addEventListener('click', () => deleteSubRequirement(btn.dataset.parentId, btn.dataset.subId));
+  });
+
+  // Edit mode — label input for top-level requirements
+  panel.querySelectorAll('.cov-label-input:not(.cov-sub-label-input)').forEach(input => {
+    input.addEventListener('change', (e) => {
+      updateCoverageRequirement(e.target.dataset.id, 'label', e.target.value.trim());
+      // Re-render so the resolved-Entry indicator reflects the new label
+      renderCoveragePanel();
+    });
+  });
+
+  // Edit mode — label input for sub-requirements
+  panel.querySelectorAll('.cov-sub-label-input').forEach(input => {
+    input.addEventListener('change', (e) => {
+      updateSubRequirement(e.target.dataset.parentId, e.target.dataset.subId, 'label', e.target.value.trim());
+      renderCoveragePanel();
+    });
+  });
+
+  // Edit mode — view/window/slice preference selects
+  panel.querySelectorAll('.cov-pref-view, .cov-pref-window, .cov-pref-slice').forEach(sel => {
+    sel.addEventListener('change', (e) => {
+      updateCoverageRequirement(e.target.dataset.id, e.target.dataset.field, e.target.value);
+      // Toggle placeholder styling
+      if (e.target.value) e.target.classList.remove('cov-pref-placeholder-active');
+      else e.target.classList.add('cov-pref-placeholder-active');
+    });
+  });
+
+  initCoverageEditSortable('cov-task-list', 'task');
+  initCoverageEditSortable('cov-part-list', 'part');
+}
+
+function initCoverageEditSortable(listId, type) {
+  const el = document.getElementById(listId);
+  if (!el) return;
+  if (el.sortableInstance) { el.sortableInstance.destroy(); el.sortableInstance = null; }
+  el.sortableInstance = new Sortable(el, {
+    animation: 150,
+    handle: '.drag-handle',
+    ghostClass: 'sortable-ghost',
+    draggable: '.cov-edit-item',
+    onEnd(evt) {
+      if (evt.oldIndex === evt.newIndex) return;
+      // Reorder within the type-specific list, then re-merge into coverageRequirements
+      const typeItems = coverageRequirements.filter(r => r.type === type);
+      const [moved] = typeItems.splice(evt.oldIndex, 1);
+      typeItems.splice(evt.newIndex, 0, moved);
+      coverageRequirements = [
+        ...coverageRequirements.filter(r => r.type !== type),
+        ...typeItems
+      ];
+      saveCoverageRequirements();
+    }
+  });
+}
+
+function addCoverageRequirement(type) {
+  const newReq = { id: generateId(), type, label: '', preferredView: '', preferredWindow: '', preferredSliceThickness: '', subRequirements: [], excludedMatches: [] };
+  coverageRequirements.push(newReq);
+  saveCoverageRequirements();
+  renderCoveragePanel();
+  // Focus the new input
+  const panel = document.getElementById('coverage-panel');
+  const inputs = panel ? panel.querySelectorAll('.cov-label-input') : [];
+  if (inputs.length) inputs[inputs.length - 1].focus();
+}
+
+function deleteCoverageRequirement(id) {
+  coverageRequirements = coverageRequirements.filter(r => r.id !== id);
+  saveCoverageRequirements();
+  renderCoveragePanel();
+}
+
+function updateCoverageRequirement(id, field, value) {
+  const req = coverageRequirements.find(r => r.id === id);
+  if (req) { req[field] = value; saveCoverageRequirements(); }
+}
+
+function addSubRequirement(parentId) {
+  const req = coverageRequirements.find(r => r.id === parentId);
+  if (!req) return;
+  if (!req.subRequirements) req.subRequirements = [];
+  const newSub = { id: generateId(), label: '', excludedMatches: [] };
+  req.subRequirements.push(newSub);
+  saveCoverageRequirements();
+  renderCoveragePanel();
+  setTimeout(() => {
+    const panel = document.getElementById('coverage-panel');
+    const inputs = panel?.querySelectorAll(`.cov-sub-label-input[data-parent-id="${CSS.escape(parentId)}"]`);
+    if (inputs?.length) inputs[inputs.length - 1].focus();
+  }, 20);
+}
+
+// Pull child entries from the Library and add them as sub-requirements (Phase 3.3).
+// Skips children whose label is already present in the existing sub-requirement list.
+function importSubpartsFromLibrary(parentId) {
+  const req = coverageRequirements.find(r => r.id === parentId);
+  if (!req) return;
+  const parentSlug = resolveToEntrySlug(req.label);
+  if (!parentSlug) return;
+
+  if (!req.subRequirements) req.subRequirements = [];
+  const existingLabelsLc = new Set(req.subRequirements.map(s => (s.label || '').trim().toLowerCase()));
+
+  const childSlugs = Object.entries(libraryEntries)
+    .filter(([, e]) => (e.parents || []).includes(parentSlug))
+    .map(([slug]) => slug);
+
+  let added = 0;
+  for (const slug of childSlugs) {
+    const e = libraryEntries[slug];
+    const label = (e && e.aliases && e.aliases[0]) || (e && e.fullName) || slug;
+    if (!label) continue;
+    if (existingLabelsLc.has(label.toLowerCase())) continue;
+    req.subRequirements.push({ id: generateId(), label, excludedMatches: [] });
+    existingLabelsLc.add(label.toLowerCase());
+    added++;
+  }
+
+  if (added > 0) {
+    saveCoverageRequirements();
+    renderCoveragePanel();
+  }
+}
+
+function deleteSubRequirement(parentId, subId) {
+  const req = coverageRequirements.find(r => r.id === parentId);
+  if (!req || !req.subRequirements) return;
+  req.subRequirements = req.subRequirements.filter(s => s.id !== subId);
+  saveCoverageRequirements();
+  renderCoveragePanel();
+}
+
+function updateSubRequirement(parentId, subId, field, value) {
+  const req = coverageRequirements.find(r => r.id === parentId);
+  if (!req || !req.subRequirements) return;
+  const sub = req.subRequirements.find(s => s.id === subId);
+  if (sub) { sub[field] = value; saveCoverageRequirements(); }
+}
+
+function excludeMatch(reqId, matchKey, subId) {
+  const req = coverageRequirements.find(r => r.id === reqId);
+  if (!req) return;
+  if (subId) {
+    const sub = (req.subRequirements || []).find(s => s.id === subId);
+    if (!sub) return;
+    if (!sub.excludedMatches) sub.excludedMatches = [];
+    if (!sub.excludedMatches.includes(matchKey)) sub.excludedMatches.push(matchKey);
+    // If user excludes a previously-manually-linked match, also drop it from manualMatches
+    sub.manualMatches = (sub.manualMatches || []).filter(k => k !== matchKey);
+  } else {
+    if (!req.excludedMatches) req.excludedMatches = [];
+    if (!req.excludedMatches.includes(matchKey)) req.excludedMatches.push(matchKey);
+    req.manualMatches = (req.manualMatches || []).filter(k => k !== matchKey);
+  }
+  saveCoverageRequirements();
+  renderCoveragePanel();
+}
+
+// Add a manual match (positive feedback — claim coverage that the matcher missed)
+function addManualMatch(reqId, matchKey, subId) {
+  const req = coverageRequirements.find(r => r.id === reqId);
+  if (!req) return;
+  if (subId) {
+    const sub = (req.subRequirements || []).find(s => s.id === subId);
+    if (!sub) return;
+    if (!sub.manualMatches) sub.manualMatches = [];
+    if (!sub.manualMatches.includes(matchKey)) sub.manualMatches.push(matchKey);
+    // If the user manually links a match they previously excluded, restore it
+    sub.excludedMatches = (sub.excludedMatches || []).filter(k => k !== matchKey);
+  } else {
+    if (!req.manualMatches) req.manualMatches = [];
+    if (!req.manualMatches.includes(matchKey)) req.manualMatches.push(matchKey);
+    req.excludedMatches = (req.excludedMatches || []).filter(k => k !== matchKey);
+  }
+  saveCoverageRequirements();
+  renderCoveragePanel();
+}
+
+function removeManualMatch(reqId, matchKey, subId) {
+  const req = coverageRequirements.find(r => r.id === reqId);
+  if (!req) return;
+  if (subId) {
+    const sub = (req.subRequirements || []).find(s => s.id === subId);
+    if (sub) sub.manualMatches = (sub.manualMatches || []).filter(k => k !== matchKey);
+  } else {
+    req.manualMatches = (req.manualMatches || []).filter(k => k !== matchKey);
+  }
+  saveCoverageRequirements();
+  renderCoveragePanel();
+}
+
+// Build a list of in-pattern items not yet linked to this requirement (or sub).
+// Returns array of { key, label } where key = `abbr|view|window`.
+function getLinkableMatchesFor(reqId, subId) {
+  const req = coverageRequirements.find(r => r.id === reqId);
+  if (!req) return [];
+  const target = subId ? (req.subRequirements || []).find(s => s.id === subId) : req;
+  if (!target) return [];
+  const already = new Set([
+    ...((target.manualMatches || [])),
+    // Don't include items already auto-matched (assessment will show them anyway)
+    ...((currentPatternItems || [])
+        .filter(it => !it.isOutroItem && matchesRequirement(target, it))
+        .map(it => `${it.abbr}|${it.view_plane || ''}|${it.window || ''}`))
+  ]);
+  const seen = new Set();
+  const out = [];
+  for (const it of (currentPatternItems || [])) {
+    if (it.isOutroItem) continue;
+    const key = `${it.abbr}|${it.view_plane || ''}|${it.window || ''}`;
+    if (already.has(key) || seen.has(key)) continue;
+    seen.add(key);
+    const labelParts = [it.abbr, it.view_plane, it.window].filter(Boolean);
+    out.push({ key, label: labelParts.join(' · ') });
+  }
+  return out;
+}
+
+// Lightweight, inline popover for picking a pattern item to manually link.
+function showLinkMatchPopover(anchorBtn, reqId, subId) {
+  // Close any existing popover first
+  document.querySelectorAll('.cov-link-popover').forEach(el => el.remove());
+
+  const items = getLinkableMatchesFor(reqId, subId || null);
+  const pop = document.createElement('div');
+  pop.className = 'cov-link-popover';
+  if (!items.length) {
+    pop.innerHTML = `<div class="cov-link-popover-empty">No unlinked pattern items.</div>`;
+  } else {
+    pop.innerHTML = `
+      <div class="cov-link-popover-title">Link a pattern item to this requirement:</div>
+      <div class="cov-link-popover-list">
+        ${items.map(it => `
+          <button class="cov-link-popover-item" data-match-key="${escapeHtml(it.key)}">${escapeHtml(it.label)}</button>
+        `).join('')}
+      </div>
+    `;
+  }
+  document.body.appendChild(pop);
+
+  // Position next to the anchor button
+  const rect = anchorBtn.getBoundingClientRect();
+  pop.style.left = `${Math.min(window.innerWidth - 240, rect.left)}px`;
+  pop.style.top  = `${rect.bottom + 4}px`;
+
+  // Wire item clicks
+  pop.querySelectorAll('.cov-link-popover-item').forEach(b => {
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addManualMatch(reqId, b.dataset.matchKey, subId || null);
+      pop.remove();
+    });
+  });
+
+  // Dismiss on outside click
+  setTimeout(() => {
+    const onDoc = (ev) => {
+      if (!pop.contains(ev.target)) {
+        pop.remove();
+        document.removeEventListener('mousedown', onDoc);
+      }
+    };
+    document.addEventListener('mousedown', onDoc);
+  }, 0);
+}
+
+function restoreMatch(reqId, matchKey, subId) {
+  const req = coverageRequirements.find(r => r.id === reqId);
+  if (!req) return;
+  if (subId) {
+    const sub = (req.subRequirements || []).find(s => s.id === subId);
+    if (sub) sub.excludedMatches = (sub.excludedMatches || []).filter(k => k !== matchKey);
+  } else {
+    req.excludedMatches = (req.excludedMatches || []).filter(k => k !== matchKey);
+  }
+  saveCoverageRequirements();
+  renderCoveragePanel();
+}
+
+// ─── Abbreviation registry ───────────────────────────────────────────────────
+
+const DEFAULT_GENERAL_ABBRS = {
+  // Orthopedic / extremity
+  "fx":      { fullName: "fracture", note: "" },
+  "displac": { fullName: "displacement", note: "" },
+  "disloc":  { fullName: "dislocation", note: "" },
+  "CMC":     { fullName: "carpometacarpal", note: "" },
+  "MCP":     { fullName: "metacarpophalangeal", note: "" },
+  "TMT":     { fullName: "tarsometatarsal", note: "" },
+  "MTP":     { fullName: "metatarsophalangeal", note: "" },
+  "IP":      { fullName: "proximal interphalangeal", note: "" },
+  "DIP":     { fullName: "distal interphalangeal", note: "" },
+  "RUE":     { fullName: "right upper extremity", note: "" },
+  "LUE":     { fullName: "left upper extremity", note: "" },
+  "RLE":     { fullName: "right lower extremity", note: "" },
+  "LLE":     { fullName: "left lower extremity", note: "" },
+  "BUE":     { fullName: "bilateral upper extremities", note: "" },
+  "BLE":     { fullName: "bilateral lower extremities", note: "" },
+  "UE":      { fullName: "upper extremity", note: "" },
+  "LE":      { fullName: "lower extremity", note: "" },
+  "DJD":     { fullName: "degenerative joint disease", note: "" },
+  "CTD":     { fullName: "connective tissue disease", note: "" },
+  // Abdomen / lobes / cardiac
+  "RUQ":     { fullName: "right upper quadrant", note: "" },
+  "RLQ":     { fullName: "right lower quadrant", note: "" },
+  "LUQ":     { fullName: "left upper quadrant", note: "" },
+  "LLQ":     { fullName: "left lower quadrant", note: "" },
+  "RUL":     { fullName: "right upper lobe", note: "" },
+  "RML":     { fullName: "right middle lobe", note: "" },
+  "RLL":     { fullName: "right lower lobe", note: "" },
+  "LUL":     { fullName: "left upper lobe", note: "" },
+  "LLL":     { fullName: "left lower lobe", note: "" },
+  "RA":      { fullName: "right atrium", note: "" },
+  "RV":      { fullName: "right ventricle", note: "" },
+  "LA":      { fullName: "left atrium", note: "" },
+  "LV":      { fullName: "left ventricle", note: "" },
+  // Arteries
+  "aort":       { fullName: "aorta", note: "" },
+  "PCA":        { fullName: "posterior cerebral artery", note: "" },
+  "ACA":        { fullName: "anterior cerebral artery", note: "" },
+  "MCA":        { fullName: "middle cerebral artery", note: "" },
+  "vertebrobas":{ fullName: "V4 vertebral arteries and basilar artery", note: "" },
+  "CCA":        { fullName: "common carotid artery", note: "" },
+  "ICA":        { fullName: "internal carotid artery", note: "" },
+  "ECA":        { fullName: "external carotid artery", note: "" },
+  "CFA":        { fullName: "common femoral artery", note: "" },
+  "SFA":        { fullName: "superficial femoral artery", note: "" },
+  "ATA":        { fullName: "anterior tibial artery", note: "" },
+  "PTA":        { fullName: "posterior tibial artery", note: "" },
+  "SUBCLVA":    { fullName: "subclavian artery", note: "" },
+  // Veins / AV
+  "IJV":   { fullName: "internal jugular vein", note: "" },
+  "SVC":   { fullName: "superior vena cava", note: "" },
+  "IVC":   { fullName: "inferior vena cava", note: "" },
+  "CIV":   { fullName: "common iliac vein", note: "" },
+  "EIV":   { fullName: "external iliac vein", note: "" },
+  "CFV":   { fullName: "common femoral vein", note: "" },
+  "SFV":   { fullName: "superficial femoral vein", note: "" },
+  "AV":    { fullName: "arteriovenous", note: "" },
+  "AVM":   { fullName: "arteriovenous malformation", note: "" },
+  "dAVF":  { fullName: "dural arteriovenous fistula", note: "" },
+  // Neuro
+  "pfossa": { fullName: "posterior fossa", note: "" },
+  "HN":     { fullName: "head and neck", note: "" },
+  "WM":     { fullName: "white matter", note: "" },
+  "GM":     { fullName: "gray matter", note: "" },
+  "CC":     { fullName: "corpus callosum", note: "" },
+  "BG":     { fullName: "basal ganglia", note: "" },
+  "LM":     { fullName: "leptomeningeal", note: "" },
+  "bstem":  { fullName: "brainstem", note: "" },
+  "CSF":    { fullName: "cerebrospinal fluid", note: "" },
+  "SVID":   { fullName: "chronic small vessel ischemic disease", note: "" },
+  "CNS":    { fullName: "central nervous system", note: "" },
+  "PNS":    { fullName: "peripheral nervous system", note: "" },
+  // ENT / temporal bone
+  "PORP":  { fullName: "partial ossicular replacement prosthesis", note: "" },
+  "TORP":  { fullName: "total ossicular replacement prosthesis", note: "" },
+  "TM":    { fullName: "tympanic membrane", note: "" },
+  "IAC":   { fullName: "internal auditory canal", note: "" },
+  "EAC":   { fullName: "external auditory canal", note: "" },
+  "Tbone": { fullName: "temporal bone", note: "" },
+  "TMJ":   { fullName: "temporomandibular joint", note: "" },
+  // Spine
+  "TL":     { fullName: "thoracolumbar", note: "" },
+  "Cspine": { fullName: "cervical spine", note: "" },
+  "Tspine": { fullName: "thoracic spine", note: "" },
+  "Lspine": { fullName: "lumbar spine", note: "" },
+  "ID/EM":  { fullName: "intradural/extramedullary", note: "" },
+  // Chest / pathology
+  "PTX":      { fullName: "pneumothorax", note: "" },
+  "mets":     { fullName: "metastases", note: "" },
+  "ST":       { fullName: "soft tissues", note: "" },
+  "athero":   { fullName: "atherosclerosis", note: "" },
+  "calc":     { fullName: "calcification", note: "" },
+  "adenoCa":  { fullName: "adenocarcinoma", note: "" },
+  "infxn":    { fullName: "infection", note: "" },
+  "dz":       { fullName: "disease", note: "" },
+  "enhanc":   { fullName: "enhancement", note: "" },
+  "subq":     { fullName: "subcutaneous", note: "" },
+  "periph":   { fullName: "peripheral", note: "" },
+  // OB
+  "IUP":     { fullName: "intrauterine pregnancy", note: "" },
+  "ectopic":  { fullName: "ectopic pregnancy", note: "" },
+  "PUL":     { fullName: "pregnancy of unknown location", note: "" },
+  "GS":      { fullName: "gestational sac", note: "" },
+  "GA":      { fullName: "gestational age", note: "" },
+  "CRL":     { fullName: "crown-rump length", note: "" },
+  "LMP":     { fullName: "last menstrual period", note: "" },
+  "RPOC":    { fullName: "retained products of conception", note: "" },
+  // GI
+  "IBD": { fullName: "inflammatory bowel disease", note: "" },
+  "IBS": { fullName: "irritable bowel disease", note: "" },
+  "SBO": { fullName: "small bowel obstruction", note: "" },
+  // General modifiers
+  "adj":   { fullName: "adjacent", note: "" },
+  "incl":  { fullName: "including", note: "" },
+  "dx":    { fullName: "diagnosis", note: "" },
+  "assoc": { fullName: "associated", note: "" },
+  "w/in":  { fullName: "within", note: "" },
+  "w/":    { fullName: "with", note: "" },
+  "w/o":   { fullName: "without", note: "" },
+  // Anatomical directions / planes
+  "prox":  { fullName: "proximal", note: "" },
+  "dist":  { fullName: "distal", note: "" },
+  "ant":   { fullName: "anterior", note: "" },
+  "post":  { fullName: "posterior", note: "" },
+  "sup":   { fullName: "superior", note: "" },
+  "inf":   { fullName: "inferior", note: "" },
+  "med":   { fullName: "medial", note: "" },
+  "lat":   { fullName: "lateral", note: "" },
+  "L":     { fullName: "left", note: "" },
+  "R":     { fullName: "right", note: "" },
+  "ax":    { fullName: "axial", note: "" },
+  "cor":   { fullName: "coronal", note: "" },
+  "sag":   { fullName: "sagittal", note: "" },
+  "recon": { fullName: "reconstruction", note: "" },
+};
+
+function loadAbbrRegistry() {
+  window.electronAPI.callAPI('get_abbr_registry', {});
+  const unsub = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_abbr_registry') {
+      unsub();
+      const raw = (data.result && typeof data.result === 'object') ? data.result : {};
+      // Migrate: old flat format → specific section
+      if ('specific' in raw || 'general' in raw) {
+        abbrRegistry = raw.specific || {};
+        generalAbbrRegistry = raw.general || {};
+      } else {
+        abbrRegistry = raw;
+        generalAbbrRegistry = {};
+      }
+      // Seed defaults if general section has never been populated
+      if (Object.keys(generalAbbrRegistry).length === 0) {
+        generalAbbrRegistry = { ...DEFAULT_GENERAL_ABBRS };
+        saveAbbrRegistry();
+      }
+    }
+  });
+}
+
+function saveAbbrRegistry() {
+  window.electronAPI.callAPI('save_abbr_registry', {
+    registry: { specific: abbrRegistry, general: generalAbbrRegistry }
+  });
+  // Adapter writes through to the Library — refresh in-memory Library so the
+  // hybrid matcher and any new UI see the change immediately.
+  loadLibrary();
+  renderCoveragePanel();
+}
+
+// ─── Phase 3 — Library (canonical Entry store) ──────────────────────────────
+function loadLibrary() {
+  window.electronAPI.callAPI('get_library', {});
+  const unsub = window.electronAPI.onAPIResponse((data) => {
+    if (data && data.responseFor === 'get_library') {
+      unsub();
+      const result = (data.result && typeof data.result === 'object') ? data.result : {};
+      libraryEntries = (result.entries && typeof result.entries === 'object') ? result.entries : {};
+      rebuildAliasIndex();
+      // Coverage may re-assess now that Library is available
+      try { renderCoveragePanel(); } catch (_) {}
+      // If the Library dialog happens to be open, refresh it with the new data
+      const overlay = document.getElementById('abbr-registry-overlay');
+      if (overlay && overlay.style.display !== 'none') {
+        try { renderLibrary(currentLibraryFilter()); } catch (_) {}
+      }
+    }
+  });
+}
+
+function rebuildAliasIndex() {
+  aliasIndex = {};
+  for (const [slug, entry] of Object.entries(libraryEntries || {})) {
+    if (!entry) continue;
+    // Slug itself is a lookup key
+    aliasIndex[slug.toLowerCase()] = slug;
+    // Aliases
+    for (const a of (entry.aliases || [])) {
+      if (!a) continue;
+      const k = String(a).trim().toLowerCase();
+      if (k && !aliasIndex[k]) aliasIndex[k] = slug;
+    }
+    // Full name — requirements labeled with the human-readable name should resolve
+    if (entry.fullName) {
+      const fn = String(entry.fullName).trim().toLowerCase();
+      if (fn && !aliasIndex[fn]) aliasIndex[fn] = slug;
+    }
+  }
+}
+
+// Resolve a free-form abbreviation/name to a Library slug, if any.
+function resolveToEntrySlug(s) {
+  if (!s) return null;
+  const k = String(s).trim().toLowerCase();
+  return aliasIndex[k] || null;
+}
+
+// Compute children of a slug at render time.
+// `parents` is the single source of truth — children are derived by scanning
+// for any entry that lists this slug in its parents array.
+function childrenSlugsOf(slug) {
+  if (!slug) return [];
+  return Object.entries(libraryEntries)
+    .filter(([, e]) => Array.isArray(e.parents) && e.parents.includes(slug))
+    .map(([s]) => s);
+}
+
+// Walk ancestors (self → parents → grandparents …) breadth-first.
+// Returns a Set of slugs including the starting slug.
+function getAncestorSlugs(slug, maxDepth = 16) {
+  const out = new Set();
+  if (!slug) return out;
+  const queue = [{ s: slug, d: 0 }];
+  while (queue.length) {
+    const { s, d } = queue.shift();
+    if (out.has(s) || d > maxDepth) continue;
+    out.add(s);
+    const e = libraryEntries[s];
+    if (!e || !Array.isArray(e.parents)) continue;
+    for (const p of e.parents) queue.push({ s: p, d: d + 1 });
+  }
+  return out;
+}
+
+// Library-based match: does the pattern item's entry sit at-or-above the
+// requirement's entry in the hierarchy? Direction is "broader satisfies
+// narrower" — e.g. a pattern item `vertebrobas` satisfies a requirement
+// labeled `basilar artery` because `basilar artery` lists `vertebrobas` as
+// a parent (vertebrobas is anatomically broader).
+// Returns true/false/null (null = could not determine; caller falls back to fuzzy).
+function libraryAncestorMatch(req, item) {
+  const itemSlug = resolveToEntrySlug(item.abbr);
+  if (!itemSlug) return null;                       // unregistered pattern item — fall back
+  const reqSlug  = resolveToEntrySlug(req.label);
+  if (!reqSlug) return null;                        // unregistered requirement label — fall back
+  // Walk ancestors of the REQUIREMENT (the narrower side); if the item entry
+  // is among them (or equal), the item is broader and satisfies the requirement.
+  const reqAncestors = getAncestorSlugs(reqSlug);
+  return reqAncestors.has(itemSlug);
+}
+
+// ─── Library dialog (Phase 3.4) ─────────────────────────────────────────────
+// Master-detail UI over libraryEntries; the General tab keeps a simple table.
+
+function openAbbrRegistry() {
+  // Discard any sentinel rows left from cancelled add operations
+  delete generalAbbrRegistry['__new_general__'];
+
+  // Refresh from backend in case data changed externally (e.g. via another window)
+  loadLibrary();
+
+  document.getElementById('abbr-registry-overlay').style.display = 'flex';
+  const search = document.getElementById('abbr-registry-search');
+  if (search) { search.value = ''; search.focus(); }
+
+  libraryActiveTab = 'entries';
+  applyLibraryTabVisibility();
+  renderLibrary('');
+}
+
+function closeAbbrRegistry() {
+  document.getElementById('abbr-registry-overlay').style.display = 'none';
+  document.querySelectorAll('.library-ac-dropdown').forEach(d => d.style.display = 'none');
+}
+
+function currentLibraryFilter() {
+  return document.getElementById('abbr-registry-search')?.value || '';
+}
+
+function applyLibraryTabVisibility() {
+  document.querySelectorAll('.library-tab-btn').forEach(btn => {
+    btn.classList.toggle('library-tab-btn--active', btn.dataset.libraryTab === libraryActiveTab);
+  });
+  document.querySelectorAll('.library-tab-content').forEach(c => {
+    c.classList.toggle('library-tab-content--active', c.dataset.libraryTab === libraryActiveTab);
+  });
+}
+
+function renderLibrary(filter) {
+  renderLibraryList(filter);
+  // Auto-select first entry if nothing selected and entries exist
+  if ((!selectedLibrarySlug || !libraryEntries[selectedLibrarySlug])) {
+    const first = Object.keys(libraryEntries).sort()[0];
+    selectedLibrarySlug = first || null;
+  }
+  renderLibraryEditPane();
+  renderGeneralAbbrsTable(filter);
+}
+
+function renderLibraryList(filter) {
+  const list = document.getElementById('library-list');
+  if (!list) return;
+  const filterLc = (filter || '').toLowerCase();
+
+  let entries = Object.entries(libraryEntries).filter(([slug, e]) => {
+    if (!filterLc) return true;
+    if (slug.toLowerCase().includes(filterLc)) return true;
+    if ((e.fullName || '').toLowerCase().includes(filterLc)) return true;
+    return (e.aliases || []).some(a => a.toLowerCase().includes(filterLc));
+  });
+
+  if (librarySortMode === 'fullName') {
+    entries.sort(([, a], [, b]) => (a.fullName || '').localeCompare(b.fullName || ''));
+  } else {
+    entries.sort(([, a], [, b]) => {
+      const aa = (a.aliases && a.aliases[0]) || '';
+      const bb = (b.aliases && b.aliases[0]) || '';
+      return aa.localeCompare(bb);
+    });
+  }
+
+  const countEl = document.getElementById('library-entry-count');
+  if (countEl) countEl.textContent = `${entries.length} ${entries.length === 1 ? 'entry' : 'entries'}`;
+
+  if (entries.length === 0) {
+    list.innerHTML = '<div class="library-list-empty">No entries match.</div>';
+    return;
+  }
+
+  list.innerHTML = entries.map(([slug, e]) => {
+    const alias = (e.aliases && e.aliases[0]) || slug;
+    const isSel = slug === selectedLibrarySlug ? ' library-list-item--selected' : '';
+    const typeBadge = e.type === 'task'
+      ? '<span class="library-type-tag library-type-tag--task">T</span>'
+      : '<span class="library-type-tag library-type-tag--anatomy">A</span>';
+    const hasChildren = Object.values(libraryEntries).some(other => (other.parents || []).includes(slug));
+    const hasParents = (e.parents || []).length > 0;
+    const hierIcon = hasChildren && hasParents ? '↕' : (hasChildren ? '↧' : (hasParents ? '↥' : ''));
+    return `<div class="library-list-item${isSel}" data-slug="${escapeHtml(slug)}">
+      ${typeBadge}
+      <span class="library-list-alias">${escapeHtml(alias)}</span>
+      <span class="library-list-fullname">${escapeHtml(e.fullName || '')}</span>
+      ${hierIcon ? `<span class="library-list-hier" title="hierarchy">${hierIcon}</span>` : ''}
+    </div>`;
+  }).join('');
+
+  list.querySelectorAll('.library-list-item').forEach(row => {
+    row.addEventListener('click', () => {
+      selectedLibrarySlug = row.dataset.slug;
+      renderLibraryList(currentLibraryFilter());
+      renderLibraryEditPane();
+    });
+  });
+}
+
+function renderLibraryEditPane() {
+  const pane = document.getElementById('library-edit-pane');
+  if (!pane) return;
+  const slug = selectedLibrarySlug;
+  if (!slug || !libraryEntries[slug]) {
+    pane.innerHTML = '<div class="library-edit-empty">Select an entry to edit, or click <strong>+ Add Entry</strong>.</div>';
+    return;
+  }
+  const e = libraryEntries[slug];
+
+  function defaultSelectHtml(kind, val) {
+    const options = kind === 'view' ? VIEW_PLANE_OPTIONS :
+                    kind === 'window' ? WINDOW_OPTIONS :
+                    SLICE_THICKNESS_OPTIONS;
+    const id = `library-default-${kind}`;
+    return `<select id="${id}" class="library-input library-input--small">
+      <option value="">—</option>
+      ${options.map(o => `<option value="${escapeHtml(o)}"${o === val ? ' selected' : ''}>${escapeHtml(o)}</option>`).join('')}
+    </select>`;
+  }
+
+  function chipHtml(text, idx, kind) {
+    return `<span class="library-chip" data-chip-kind="${kind}" data-chip-index="${idx}">${escapeHtml(text)}<button class="library-chip-x" data-chip-index="${idx}" title="Remove">×</button></span>`;
+  }
+
+  function refChipHtml(refSlug, idx, kind) {
+    const r = libraryEntries[refSlug];
+    const label = r ? ((r.aliases && r.aliases[0]) || r.fullName || refSlug) : `${refSlug} (missing)`;
+    const missing = r ? '' : ' library-chip--missing';
+    return `<span class="library-chip library-chip--ref${missing}" data-chip-kind="${kind}" data-chip-index="${idx}" data-slug="${escapeHtml(refSlug)}">${escapeHtml(label)}<button class="library-chip-x" data-chip-index="${idx}" title="Remove">×</button></span>`;
+  }
+
+  pane.innerHTML = `
+    <div class="library-edit-form">
+      <div class="library-edit-header-row">
+        <span class="library-slug" title="Entry ID">${escapeHtml(slug)}</span>
+        <div class="library-edit-type-toggle">
+          <button class="library-type-btn${e.type === 'anatomy' ? ' library-type-btn--active' : ''}" data-type="anatomy">Anatomy</button>
+          <button class="library-type-btn${e.type === 'task' ? ' library-type-btn--active' : ''}" data-type="task">Task</button>
+        </div>
+        <button id="library-delete-entry-btn" class="library-delete-btn" title="Delete entry">✕</button>
+      </div>
+
+      <label class="library-edit-row">
+        <span class="library-label">Full Name</span>
+        <input type="text" class="library-input" id="library-fullname" value="${escapeHtml(e.fullName || '')}" placeholder="e.g. basilar artery">
+      </label>
+
+      <div class="library-edit-row">
+        <span class="library-label">Aliases <em>(abbreviations &amp; synonyms)</em></span>
+        <div class="library-chips" id="library-aliases-chips">${(e.aliases || []).map((a, i) => chipHtml(a, i, 'alias')).join('')}</div>
+        <input type="text" class="library-chip-input" id="library-alias-input" placeholder="Add alias and press Enter…">
+      </div>
+
+      <div class="library-edit-row">
+        <span class="library-label">Parents <em>(this is a part of…)</em></span>
+        <div class="library-chips" id="library-parents-chips">${(e.parents || []).map((p, i) => refChipHtml(p, i, 'parents')).join('')}</div>
+        <div class="library-autocomplete-wrap">
+          <input type="text" class="library-chip-input" id="library-parent-input" placeholder="Add parent entry…">
+          <div class="library-ac-dropdown" id="library-parent-ac" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="library-edit-row">
+        <span class="library-label">Children <em>(constituent parts/tasks — computed from each child's Parents)</em></span>
+        <div class="library-chips" id="library-children-chips">${childrenSlugsOf(slug).map((c, i) => refChipHtml(c, i, 'children')).join('')}</div>
+        <div class="library-autocomplete-wrap">
+          <input type="text" class="library-chip-input" id="library-child-input" placeholder="Add child entry…">
+          <div class="library-ac-dropdown" id="library-child-ac" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="library-edit-row">
+        <span class="library-label">Flows To <em>(naturally followed by…)</em></span>
+        <div class="library-chips" id="library-flowsto-chips">${(e.flowsTo || []).map((f, i) => refChipHtml(f, i, 'flowsTo')).join('')}</div>
+        <div class="library-autocomplete-wrap">
+          <input type="text" class="library-chip-input" id="library-flowsto-input" placeholder="Add follow-on entry…">
+          <div class="library-ac-dropdown" id="library-flowsto-ac" style="display:none;"></div>
+        </div>
+      </div>
+
+      <div class="library-edit-row library-defaults-row">
+        <span class="library-label">Defaults</span>
+        <div class="library-defaults-grid">
+          <label class="library-default-field">
+            <span>view</span>
+            ${defaultSelectHtml('view', e.defaultView || '')}
+          </label>
+          <label class="library-default-field">
+            <span>window</span>
+            ${defaultSelectHtml('window', e.defaultWindow || '')}
+          </label>
+          <label class="library-default-field">
+            <span>slice</span>
+            ${defaultSelectHtml('slice', e.defaultSliceThickness || '')}
+          </label>
+          <label class="library-default-field library-default-field--strategy">
+            <span>strategy</span>
+            <input type="text" class="library-input library-input--small" id="library-default-strategy" value="${escapeHtml(e.defaultStrategy || '')}" placeholder="default strategy">
+          </label>
+        </div>
+      </div>
+
+      <label class="library-edit-row">
+        <span class="library-label">Image <em>(relative path under data/library/images/)</em></span>
+        <input type="text" class="library-input" id="library-image" value="${escapeHtml(e.image || '')}" placeholder="e.g. images/basilar.png">
+      </label>
+
+      <label class="library-edit-row">
+        <span class="library-label">Note</span>
+        <textarea class="library-input library-textarea" id="library-note" placeholder="Clinical context, mnemonics, etc.">${escapeHtml(e.note || '')}</textarea>
+      </label>
+    </div>
+  `;
+
+  wireLibraryEditPane(slug);
+}
+
+function wireLibraryEditPane(slug) {
+  // Type toggle
+  document.querySelectorAll('#library-edit-pane .library-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      libraryEntries[slug].type = btn.dataset.type;
+      scheduleLibrarySave();
+      renderLibraryEditPane();
+      renderLibraryList(currentLibraryFilter());
+    });
+  });
+
+  // Delete
+  document.getElementById('library-delete-entry-btn')?.addEventListener('click', () => deleteLibraryEntry(slug));
+
+  // Simple text/textarea/select fields
+  const wireField = (id, field) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('change', () => {
+      libraryEntries[slug][field] = el.value;
+      scheduleLibrarySave();
+      if (field === 'fullName') renderLibraryList(currentLibraryFilter());
+    });
+  };
+  wireField('library-fullname',         'fullName');
+  wireField('library-image',            'image');
+  wireField('library-default-strategy', 'defaultStrategy');
+  wireField('library-note',             'note');
+  wireField('library-default-view',     'defaultView');
+  wireField('library-default-window',   'defaultWindow');
+  wireField('library-default-slice',    'defaultSliceThickness');
+
+  // Aliases — free-text chips
+  wireAliasChips(slug);
+
+  // Parents / flowsTo — slug-reference chips with autocomplete (stored on the entry)
+  wireRefChips(slug, 'parents',  'library-parents-chips',  'library-parent-input',   'library-parent-ac');
+  wireRefChips(slug, 'flowsTo',  'library-flowsto-chips',  'library-flowsto-input',  'library-flowsto-ac');
+
+  // Children — virtual field: mutations are applied to the OTHER entry's `parents`,
+  // keeping `parents` as the single source of truth for the hierarchy.
+  wireChildrenChips(slug, 'library-children-chips', 'library-child-input', 'library-child-ac');
+}
+
+function wireChildrenChips(parentSlug, chipsId, inputId, acId) {
+  const container = document.getElementById(chipsId);
+  const input = document.getElementById(inputId);
+  const ac = document.getElementById(acId);
+  if (!container || !input || !ac) return;
+
+  // Remove chip → unparent the child
+  container.querySelectorAll('.library-chip-x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const childSlug = btn.parentElement?.dataset.slug;
+      if (!childSlug || !libraryEntries[childSlug]) return;
+      libraryEntries[childSlug].parents = (libraryEntries[childSlug].parents || [])
+        .filter(p => p !== parentSlug);
+      scheduleLibrarySave();
+      renderLibraryEditPane();
+      renderLibraryList(currentLibraryFilter());
+    });
+  });
+
+  const updateAC = () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { ac.innerHTML = ''; ac.style.display = 'none'; return; }
+    // Exclude self and current children
+    const exclude = new Set([parentSlug, ...childrenSlugsOf(parentSlug)]);
+    const matches = Object.entries(libraryEntries)
+      .filter(([s]) => !exclude.has(s))
+      .filter(([s, ee]) => {
+        if (s.toLowerCase().includes(q)) return true;
+        if ((ee.fullName || '').toLowerCase().includes(q)) return true;
+        return (ee.aliases || []).some(a => a.toLowerCase().includes(q));
+      })
+      .slice(0, 8);
+    if (matches.length === 0) { ac.style.display = 'none'; return; }
+    ac.innerHTML = matches.map(([s, ee]) => {
+      const label = (ee.aliases && ee.aliases[0]) || ee.fullName || s;
+      const sub = (ee.fullName && ee.fullName !== label) ? `<span class="library-ac-sub">${escapeHtml(ee.fullName)}</span>` : '';
+      return `<button class="library-ac-item" data-slug="${escapeHtml(s)}">${escapeHtml(label)}${sub}</button>`;
+    }).join('');
+    ac.style.display = 'block';
+    ac.querySelectorAll('.library-ac-item').forEach(b => {
+      b.addEventListener('mousedown', (ev) => {
+        ev.preventDefault();
+        const childSlug = b.dataset.slug;
+        if (!libraryEntries[childSlug]) return;
+        if (!Array.isArray(libraryEntries[childSlug].parents)) libraryEntries[childSlug].parents = [];
+        if (!libraryEntries[childSlug].parents.includes(parentSlug)) {
+          libraryEntries[childSlug].parents.push(parentSlug);
+        }
+        scheduleLibrarySave();
+        ac.style.display = 'none';
+        renderLibraryEditPane();
+        renderLibraryList(currentLibraryFilter());
+      });
+    });
+  };
+
+  input.addEventListener('input', updateAC);
+  input.addEventListener('focus', updateAC);
+  input.addEventListener('blur', () => setTimeout(() => { ac.style.display = 'none'; }, 150));
+}
+
+function wireAliasChips(slug) {
+  const container = document.getElementById('library-aliases-chips');
+  const input = document.getElementById('library-alias-input');
+  if (!container || !input) return;
+
+  container.querySelectorAll('.library-chip-x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.chipIndex, 10);
+      if (!libraryEntries[slug].aliases) libraryEntries[slug].aliases = [];
+      libraryEntries[slug].aliases.splice(i, 1);
+      scheduleLibrarySave();
+      renderLibraryEditPane();
+      renderLibraryList(currentLibraryFilter());
+    });
+  });
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const v = input.value.trim();
+    if (!v) return;
+    if (!libraryEntries[slug].aliases) libraryEntries[slug].aliases = [];
+    if (libraryEntries[slug].aliases.includes(v)) { input.value = ''; return; }
+    libraryEntries[slug].aliases.push(v);
+    scheduleLibrarySave();
+    renderLibraryEditPane();
+    renderLibraryList(currentLibraryFilter());
+    setTimeout(() => document.getElementById('library-alias-input')?.focus(), 0);
+  });
+}
+
+function wireRefChips(slug, field, chipsId, inputId, acId) {
+  const container = document.getElementById(chipsId);
+  const input = document.getElementById(inputId);
+  const ac = document.getElementById(acId);
+  if (!container || !input || !ac) return;
+
+  container.querySelectorAll('.library-chip-x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.chipIndex, 10);
+      if (!libraryEntries[slug][field]) libraryEntries[slug][field] = [];
+      libraryEntries[slug][field].splice(i, 1);
+      scheduleLibrarySave();
+      renderLibraryEditPane();
+    });
+  });
+
+  const updateAC = () => {
+    const q = input.value.trim().toLowerCase();
+    if (!q) { ac.innerHTML = ''; ac.style.display = 'none'; return; }
+    const current = new Set([slug, ...(libraryEntries[slug][field] || [])]);
+    const matches = Object.entries(libraryEntries)
+      .filter(([s]) => !current.has(s))
+      .filter(([s, ee]) => {
+        if (s.toLowerCase().includes(q)) return true;
+        if ((ee.fullName || '').toLowerCase().includes(q)) return true;
+        return (ee.aliases || []).some(a => a.toLowerCase().includes(q));
+      })
+      .slice(0, 8);
+    if (matches.length === 0) { ac.style.display = 'none'; return; }
+    ac.innerHTML = matches.map(([s, ee]) => {
+      const label = (ee.aliases && ee.aliases[0]) || ee.fullName || s;
+      const sub = (ee.fullName && ee.fullName !== label) ? `<span class="library-ac-sub">${escapeHtml(ee.fullName)}</span>` : '';
+      return `<button class="library-ac-item" data-slug="${escapeHtml(s)}">${escapeHtml(label)}${sub}</button>`;
+    }).join('');
+    ac.style.display = 'block';
+    ac.querySelectorAll('.library-ac-item').forEach(b => {
+      b.addEventListener('mousedown', (ev) => {  // mousedown so it fires before blur
+        ev.preventDefault();
+        const ref = b.dataset.slug;
+        if (!libraryEntries[slug][field]) libraryEntries[slug][field] = [];
+        if (!libraryEntries[slug][field].includes(ref)) {
+          libraryEntries[slug][field].push(ref);
+        }
+        scheduleLibrarySave();
+        ac.style.display = 'none';
+        renderLibraryEditPane();
+      });
+    });
+  };
+
+  input.addEventListener('input', updateAC);
+  input.addEventListener('focus', updateAC);
+  input.addEventListener('blur', () => setTimeout(() => { ac.style.display = 'none'; }, 150));
+}
+
+function scheduleLibrarySave() {
+  if (_libSaveTimeout) clearTimeout(_libSaveTimeout);
+  _libSaveTimeout = setTimeout(() => {
+    _libSaveTimeout = null;
+    saveLibraryToBackend();
+  }, 250);
+}
+
+function saveLibraryToBackend() {
+  window.electronAPI.callAPI('save_library', {
+    entries: libraryEntries,
+    generalAbbrs: generalAbbrRegistry
+  });
+  // Keep the alias index and the legacy `abbrRegistry` adapter view in sync
+  rebuildAliasIndex();
+  loadAbbrRegistry();
+  renderCoveragePanel();
+}
+
+function addLibraryEntry() {
+  let base = 'new_entry';
+  let slug = base;
+  let n = 1;
+  while (libraryEntries[slug]) { n++; slug = `${base}_${n}`; }
+  libraryEntries[slug] = {
+    type: 'anatomy',
+    fullName: '',
+    aliases: [],
+    parents: [],
+    flowsTo: [],
+    defaultView: '',
+    defaultWindow: '',
+    defaultSliceThickness: '',
+    defaultStrategy: '',
+    image: '',
+    note: ''
+  };
+  selectedLibrarySlug = slug;
+  saveLibraryToBackend();
+  renderLibraryList(currentLibraryFilter());
+  renderLibraryEditPane();
+  setTimeout(() => document.getElementById('library-fullname')?.focus(), 30);
+}
+
+function deleteLibraryEntry(slug) {
+  if (!libraryEntries[slug]) return;
+  const label = (libraryEntries[slug].aliases && libraryEntries[slug].aliases[0]) || libraryEntries[slug].fullName || slug;
+  if (!confirm(`Delete Library entry "${label}"?`)) return;
+  // Remove from any other entry's parents/flowsTo references
+  for (const [s, e] of Object.entries(libraryEntries)) {
+    if (s === slug) continue;
+    if (Array.isArray(e.parents) && e.parents.includes(slug)) {
+      e.parents = e.parents.filter(p => p !== slug);
+    }
+    if (Array.isArray(e.flowsTo) && e.flowsTo.includes(slug)) {
+      e.flowsTo = e.flowsTo.filter(f => f !== slug);
+    }
+  }
+  delete libraryEntries[slug];
+  if (selectedLibrarySlug === slug) selectedLibrarySlug = null;
+  saveLibraryToBackend();
+  renderLibraryList(currentLibraryFilter());
+  renderLibraryEditPane();
+}
+
+// ─── General Abbreviations tab (Phase 3.4) ─────────────────────────────────
+function renderGeneralAbbrsTable(filter) {
+  const tbody = document.getElementById('abbr-registry-tbody-general');
+  if (!tbody) return;
+  const filterLc = (filter || '').toLowerCase();
+
+  const entries = Object.entries(generalAbbrRegistry)
+    .filter(([k, v]) => {
+      if (!filterLc) return true;
+      if (k.toLowerCase().includes(filterLc)) return true;
+      return (v && (v.fullName || '').toLowerCase().includes(filterLc));
+    })
+    .sort(([a], [b]) => a.localeCompare(b));
+
+  tbody.innerHTML = entries.map(([abbr, val]) => `
+    <tr data-abbr="${escapeHtml(abbr)}">
+      <td><input class="library-general-key" type="text" value="${escapeHtml(abbr)}" placeholder="ABBR"></td>
+      <td><input class="library-general-fullname" type="text" value="${escapeHtml(val.fullName || '')}" placeholder="Full name"></td>
+      <td><input class="library-general-note" type="text" value="${escapeHtml(val.note || '')}" placeholder="Note"></td>
+      <td><button class="library-general-del" title="Remove">✕</button></td>
+    </tr>`
+  ).join('');
+
+  // Per-row wiring — same closure pattern used elsewhere
+  tbody.querySelectorAll('tr').forEach(tr => {
+    const rowAbbr = tr.dataset.abbr;
+
+    tr.querySelector('.library-general-key')?.addEventListener('change', (e) => {
+      const newAbbr = e.target.value.trim();
+      const f = currentLibraryFilter();
+      if (!newAbbr) {
+        delete generalAbbrRegistry[rowAbbr];
+        saveLibraryToBackend();
+        renderGeneralAbbrsTable(f);
+        return;
+      }
+      if (newAbbr === rowAbbr) return;
+      generalAbbrRegistry[newAbbr] = generalAbbrRegistry[rowAbbr] || { fullName: '', note: '' };
+      delete generalAbbrRegistry[rowAbbr];
+      saveLibraryToBackend();
+      renderGeneralAbbrsTable(f);
+    });
+
+    tr.querySelector('.library-general-fullname')?.addEventListener('change', (e) => {
+      if (!generalAbbrRegistry[rowAbbr]) generalAbbrRegistry[rowAbbr] = { fullName: '', note: '' };
+      generalAbbrRegistry[rowAbbr].fullName = e.target.value.trim();
+      saveLibraryToBackend();
+    });
+
+    tr.querySelector('.library-general-note')?.addEventListener('change', (e) => {
+      if (!generalAbbrRegistry[rowAbbr]) generalAbbrRegistry[rowAbbr] = { fullName: '', note: '' };
+      generalAbbrRegistry[rowAbbr].note = e.target.value.trim();
+      saveLibraryToBackend();
+    });
+
+    tr.querySelector('.library-general-del')?.addEventListener('click', () => {
+      delete generalAbbrRegistry[rowAbbr];
+      saveLibraryToBackend();
+      renderGeneralAbbrsTable(currentLibraryFilter());
+    });
+  });
+}
+
+function addGeneralAbbreviation() {
+  const sentinel = '__new_general__';
+  delete generalAbbrRegistry[sentinel];
+  generalAbbrRegistry[sentinel] = { fullName: '', note: '' };
+  const search = document.getElementById('abbr-registry-search');
+  if (search) search.value = '';
+  renderGeneralAbbrsTable('');
+  setTimeout(() => {
+    const row = document.querySelector(`#abbr-registry-tbody-general tr[data-abbr="${CSS.escape(sentinel)}"]`);
+    const input = row?.querySelector('.library-general-key');
+    if (input) { input.value = ''; input.focus(); input.select(); }
+  }, 20);
+}
+
+// Stub kept so any stale references don't crash; new code uses renderLibrary().
+function renderAbbrRegistryDialog(filter) {
+  renderLibrary(filter);
+}
+
+// ─── Library dialog wiring (Phase 3.4) ─────────────────────────────────────
+function initAbbrRegistrySearch() {
+  // Search input — filters both the Library list and the General table
+  const search = document.getElementById('abbr-registry-search');
+  if (search) {
+    search.addEventListener('input', (e) => {
+      const f = e.target.value;
+      renderLibraryList(f);
+      renderGeneralAbbrsTable(f);
+    });
+  }
+
+  // Tab switching (entries ⇄ general)
+  document.querySelectorAll('.library-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      libraryActiveTab = btn.dataset.libraryTab;
+      applyLibraryTabVisibility();
+    });
+  });
+
+  // Sort toggle (Alias ⇄ Full Name)
+  const sortBtn = document.getElementById('library-sort-toggle');
+  if (sortBtn) {
+    sortBtn.addEventListener('click', () => {
+      librarySortMode = librarySortMode === 'alias' ? 'fullName' : 'alias';
+      sortBtn.textContent = `Sort: ${librarySortMode === 'alias' ? 'Alias' : 'Full Name'}`;
+      renderLibraryList(currentLibraryFilter());
+    });
+  }
+
+  // + Add Entry (Library)
+  document.getElementById('library-add-entry-btn')?.addEventListener('click', addLibraryEntry);
+
+  // + Add General Abbreviation
+  document.getElementById('library-general-add-btn')?.addEventListener('click', addGeneralAbbreviation);
 }

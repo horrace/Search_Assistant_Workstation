@@ -18,7 +18,8 @@
         "type": "chapter",
         "identifier": "Vessels",
         "originalIndex": 0
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Pulm arteries",
@@ -38,7 +39,8 @@
         "type": "chapter",
         "identifier": "Vessels",
         "originalIndex": 1
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta, arch vessels➔subclav, celiac, SMA, renals",
@@ -58,7 +60,8 @@
         "type": "chapter",
         "identifier": "Vessels",
         "originalIndex": 2
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Trachea, central bronchi / hilar nodes",
@@ -78,7 +81,8 @@
         "type": "chapter",
         "identifier": "Lungs",
         "originalIndex": 3
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Lung MIP",
@@ -98,7 +102,8 @@
         "type": "chapter",
         "identifier": "Lungs",
         "originalIndex": 4
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Lung thins",
@@ -118,7 +123,8 @@
         "type": "chapter",
         "identifier": "Lungs",
         "originalIndex": 5
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "LN",
@@ -138,7 +144,8 @@
         "type": "chunk",
         "identifier": 1,
         "originalIndex": 6
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Thyroid",
@@ -158,7 +165,8 @@
         "type": "chunk",
         "identifier": 1,
         "originalIndex": 7
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Esoph",
@@ -178,7 +186,8 @@
         "type": "chunk",
         "identifier": 1,
         "originalIndex": 8
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "PE",
@@ -198,7 +207,8 @@
         "type": "chunk",
         "identifier": 2,
         "originalIndex": 10
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Heart",
@@ -218,7 +228,8 @@
         "type": "chunk",
         "identifier": 2,
         "originalIndex": 11
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta",
@@ -238,7 +249,8 @@
         "type": "chunk",
         "identifier": 2,
         "originalIndex": 12
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "ST / chest wall",
@@ -258,7 +270,8 @@
         "type": "chapter",
         "identifier": "Bone/ST ax",
         "originalIndex": 15
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Humerus, scap, Clav, Sternum",
@@ -278,7 +291,8 @@
         "type": "chapter",
         "identifier": "Bone/ST ax",
         "originalIndex": 16
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Ribs",
@@ -298,7 +312,8 @@
         "type": "chapter",
         "identifier": "Bone/ST ax",
         "originalIndex": 17
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Scapula fxs",
@@ -318,7 +333,8 @@
         "type": "chapter",
         "identifier": "Bone/ST",
         "originalIndex": 18
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Vertebral bodies",
@@ -338,7 +354,8 @@
         "type": "chapter",
         "identifier": "Bone/ST",
         "originalIndex": 19
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Chostochondral fxs",
@@ -358,7 +375,8 @@
         "type": "chapter",
         "identifier": "Bone/ST",
         "originalIndex": 20
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Sternum",
@@ -378,7 +396,8 @@
         "type": "chapter",
         "identifier": "Bone/ST",
         "originalIndex": 21
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "VB",
@@ -398,7 +417,8 @@
         "type": "chapter",
         "identifier": "Bone/ST",
         "originalIndex": 22
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Spinal canal",
@@ -418,11 +438,12 @@
         "type": "chapter",
         "identifier": "Bone/ST",
         "originalIndex": 23
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Pneumoperitoneum / free fluid",
-      "strategy": "safety check point",
+      "strategy": "(safety check point)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxPneumoperitoneum / Free fluid",
@@ -431,7 +452,8 @@
       "chapter": "",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1753243740294_kao9b8wzp"
+      "chapterID": "chapter_1753243740294_kao9b8wzp",
+      "slice_thickness": ""
     },
     {
       "abbr": "Liver",
@@ -451,7 +473,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 11
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Gallbladder",
@@ -471,11 +494,12 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 12
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Panc",
-      "strategy": "tail -> uncinate",
+      "strategy": "(tail -> uncinate)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxPanc",
@@ -491,7 +515,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 13
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Spleen",
@@ -511,7 +536,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 14
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Adrenals",
@@ -531,7 +557,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 15
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "KUB",
@@ -551,7 +578,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 16
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Pelvic Organs",
@@ -571,7 +599,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 17
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Esoph, Stomach, duod, SB",
@@ -591,7 +620,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 18
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Rect->cecum, appe",
@@ -611,7 +641,8 @@
         "type": "chapter",
         "identifier": "Ax abd",
         "originalIndex": 19
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Heart, PE",
@@ -631,7 +662,8 @@
         "type": "chunk",
         "identifier": 9,
         "originalIndex": 27
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Lung bases",
@@ -651,7 +683,8 @@
         "type": "chunk",
         "identifier": 9,
         "originalIndex": 28
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Free air / Free fluid",
@@ -671,7 +704,8 @@
         "type": "chunk",
         "identifier": 9,
         "originalIndex": 29
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "VB",
@@ -691,7 +725,8 @@
         "type": "chunk",
         "identifier": 9,
         "originalIndex": 30
-      }
+      },
+      "slice_thickness": ""
     },
     {
       "abbr": "Sacr",
@@ -711,7 +746,8 @@
         "type": "chunk",
         "identifier": 9,
         "originalIndex": 31
-      }
+      },
+      "slice_thickness": ""
     }
   ]
 }

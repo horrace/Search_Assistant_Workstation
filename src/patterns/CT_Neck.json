@@ -10,7 +10,8 @@
       "chunkID": 0,
       "chapter": "",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     },
     {
       "abbr": "OC",
@@ -23,7 +24,8 @@
       "chapter": "ADT",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_mbuybzf1g"
+      "chapterID": "chapter_1751086857135_mbuybzf1g",
+      "slice_thickness": ""
     },
     {
       "abbr": "NP",
@@ -36,7 +38,8 @@
       "chapter": "ADT",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_mbuybzf1g"
+      "chapterID": "chapter_1751086857135_mbuybzf1g",
+      "slice_thickness": ""
     },
     {
       "abbr": "OP",
@@ -49,7 +52,8 @@
       "chapter": "ADT",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_mbuybzf1g"
+      "chapterID": "chapter_1751086857135_mbuybzf1g",
+      "slice_thickness": ""
     },
     {
       "abbr": "HP",
@@ -62,7 +66,8 @@
       "chapter": "ADT",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_mbuybzf1g"
+      "chapterID": "chapter_1751086857135_mbuybzf1g",
+      "slice_thickness": ""
     },
     {
       "abbr": "Larynx",
@@ -75,7 +80,8 @@
       "chapter": "ADT",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_mbuybzf1g"
+      "chapterID": "chapter_1751086857135_mbuybzf1g",
+      "slice_thickness": ""
     },
     {
       "abbr": "Trachea",
@@ -88,7 +94,8 @@
       "chapter": "ADT",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_mbuybzf1g"
+      "chapterID": "chapter_1751086857135_mbuybzf1g",
+      "slice_thickness": ""
     },
     {
       "abbr": "Nodes / Breast nodes",
@@ -101,7 +108,8 @@
       "chapter": "Nodes",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_ni8davyci"
+      "chapterID": "chapter_1751086857135_ni8davyci",
+      "slice_thickness": ""
     },
     {
       "abbr": "Breast, RP nodes",
@@ -114,7 +122,8 @@
       "chapter": "Nodes",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_ni8davyci"
+      "chapterID": "chapter_1751086857135_ni8davyci",
+      "slice_thickness": ""
     },
     {
       "abbr": "OC, Level 4 LN + Breast/ Axillary, Aorta",
@@ -127,7 +136,8 @@
       "chapter": "Nodes",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_ni8davyci"
+      "chapterID": "chapter_1751086857135_ni8davyci",
+      "slice_thickness": ""
     },
     {
       "abbr": "Glands",
@@ -139,7 +149,8 @@
       "chunkID": 2,
       "chapter": "",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     },
     {
       "abbr": "Deep face",
@@ -151,7 +162,8 @@
       "chunkID": 2,
       "chapter": "",
       "view_plane": "ax",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     },
     {
       "abbr": "Thyroid, Esoph, Lung apices",
@@ -164,7 +176,8 @@
       "chapter": "Other ST",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_64m3hpgxf"
+      "chapterID": "chapter_1751086857135_64m3hpgxf",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta, neck + intracranial arteries",
@@ -177,7 +190,8 @@
       "chapter": "Other ST",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_64m3hpgxf"
+      "chapterID": "chapter_1751086857135_64m3hpgxf",
+      "slice_thickness": ""
     },
     {
       "abbr": "IJVs, dural sinuses",
@@ -190,7 +204,8 @@
       "chapter": "Other ST",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_64m3hpgxf"
+      "chapterID": "chapter_1751086857135_64m3hpgxf",
+      "slice_thickness": ""
     },
     {
       "abbr": "Brain",
@@ -203,7 +218,8 @@
       "chapter": "Other ST",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_64m3hpgxf"
+      "chapterID": "chapter_1751086857135_64m3hpgxf",
+      "slice_thickness": ""
     },
     {
       "abbr": "Orbits",
@@ -216,7 +232,8 @@
       "chapter": "Other ST",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_64m3hpgxf"
+      "chapterID": "chapter_1751086857135_64m3hpgxf",
+      "slice_thickness": ""
     },
     {
       "abbr": "spfc ST / Canal",
@@ -229,7 +246,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Sinuses, mastoids/Tbone",
@@ -242,7 +260,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Maxilla/palate",
@@ -255,7 +274,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Mandible/Teeth",
@@ -268,7 +288,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     },
     {
       "abbr": "TMJ",
@@ -281,7 +302,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Cspine,  Ribs, clavicles",
@@ -294,7 +316,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Cspine",
@@ -307,7 +330,8 @@
       "chapter": "Bone/MSK",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1751086857135_duf0xqvcz"
+      "chapterID": "chapter_1751086857135_duf0xqvcz",
+      "slice_thickness": ""
     }
   ]
 }

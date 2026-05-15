@@ -1,0 +1,1250 @@
+{
+  "mca": {
+    "type": "anatomy",
+    "fullName": "Middle Cerebral Artery",
+    "aliases": [
+      "MCA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "carotids": {
+    "type": "anatomy",
+    "fullName": "Carotid Arteries",
+    "aliases": [
+      "Carotids"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "mca_furcation": {
+    "type": "anatomy",
+    "fullName": "bifurcation",
+    "aliases": [
+      "MCA-furcation"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "aneurysm": {
+    "type": "anatomy",
+    "fullName": "Aneurysm Review",
+    "aliases": [
+      "Aneurysm"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "global": {
+    "type": "anatomy",
+    "fullName": "",
+    "aliases": [
+      "Global"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "salivary": {
+    "type": "anatomy",
+    "fullName": "Salivary Glands",
+    "aliases": [
+      "Salivary"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "adt": {
+    "type": "anatomy",
+    "fullName": "Aerodigestive Tract",
+    "aliases": [
+      "ADT"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "fat_pads": {
+    "type": "anatomy",
+    "fullName": "",
+    "aliases": [
+      "Fat pads"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": "Face"
+  },
+  "nodes": {
+    "type": "anatomy",
+    "fullName": "Lymph Nodes",
+    "aliases": [
+      "Nodes"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "pe": {
+    "type": "anatomy",
+    "fullName": "Pulmonary Embolism",
+    "aliases": [
+      "PE"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "face_st": {
+    "type": "anatomy",
+    "fullName": "",
+    "aliases": [
+      "Face ST"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ant_spfc_st": {
+    "type": "anatomy",
+    "fullName": "Anterior Superficial Soft Tissues",
+    "aliases": [
+      "Ant spfc ST"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "mandible_maxilla": {
+    "type": "anatomy",
+    "fullName": "",
+    "aliases": [
+      "Mandible, maxilla"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cca": {
+    "type": "anatomy",
+    "fullName": "Common Carotid Artery",
+    "aliases": [
+      "CCA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ica": {
+    "type": "anatomy",
+    "fullName": "Internal Carotid Artery",
+    "aliases": [
+      "ICA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "vertebrobas": {
+    "type": "anatomy",
+    "fullName": "Vertebrobasilar System",
+    "aliases": [
+      "VertebroBas"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ln": {
+    "type": "anatomy",
+    "fullName": "Lymph Nodes",
+    "aliases": [
+      "LN"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "thyr": {
+    "type": "anatomy",
+    "fullName": "Thyroid",
+    "aliases": [
+      "Thyr"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "esoph": {
+    "type": "anatomy",
+    "fullName": "Esophagus",
+    "aliases": [
+      "Esoph"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "verts": {
+    "type": "anatomy",
+    "fullName": "Vertebral Arteries",
+    "aliases": [
+      "Verts"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "vbs": {
+    "type": "anatomy",
+    "fullName": "Vertebral Body",
+    "aliases": [
+      "VBs"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "basilar": {
+    "type": "anatomy",
+    "fullName": "Basilar Artery",
+    "aliases": [
+      "Basilar",
+      "Bas"
+    ],
+    "parents": [
+      "vertebrobas"
+    ],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "sfa": {
+    "type": "anatomy",
+    "fullName": "Superficial Femoral Artery",
+    "aliases": [
+      "SFA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ivc": {
+    "type": "anatomy",
+    "fullName": "Inferior Vena Cava",
+    "aliases": [
+      "IVC"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "svc": {
+    "type": "anatomy",
+    "fullName": "Superior Vena Cava",
+    "aliases": [
+      "SVC"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "acom": {
+    "type": "anatomy",
+    "fullName": "Anterior Communicating Artery",
+    "aliases": [
+      "ACOM"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "pcom": {
+    "type": "anatomy",
+    "fullName": "Posterior Communicating Artery",
+    "aliases": [
+      "PCOM"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cia": {
+    "type": "anatomy",
+    "fullName": "Common Iliac Artery",
+    "aliases": [
+      "CIA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "eia": {
+    "type": "anatomy",
+    "fullName": "External Iliac Artery",
+    "aliases": [
+      "EIA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "panc": {
+    "type": "anatomy",
+    "fullName": "Pancreas",
+    "aliases": [
+      "Panc"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "iliac_ivc": {
+    "type": "anatomy",
+    "fullName": "Iliac Veins Through IVC",
+    "aliases": [
+      "Iliac → IVC"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "free_air_free_fluid": {
+    "type": "anatomy",
+    "fullName": "",
+    "aliases": [
+      "Free air / Free fluid"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "adrenals": {
+    "type": "anatomy",
+    "fullName": "Adrenal Glands",
+    "aliases": [
+      "Adrenals"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "kub": {
+    "type": "anatomy",
+    "fullName": "Kidneys, Ureters, Bladder",
+    "aliases": [
+      "KUB"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ven_vasc": {
+    "type": "anatomy",
+    "fullName": "Venous Vasculature",
+    "aliases": [
+      "Ven Vasc"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ant_abd_wall_omentum_peri_neum_rectal_post_abd_wall": {
+    "type": "anatomy",
+    "fullName": "",
+    "aliases": [
+      "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "canal": {
+    "type": "anatomy",
+    "fullName": "Spinal Canal",
+    "aliases": [
+      "Canal"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "sacr": {
+    "type": "anatomy",
+    "fullName": "Sacrum",
+    "aliases": [
+      "Sacr"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "bstem": {
+    "type": "anatomy",
+    "fullName": "brainstem",
+    "aliases": [
+      "bstem"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "bg": {
+    "type": "anatomy",
+    "fullName": "basal ganglia",
+    "aliases": [
+      "BG"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "subclav": {
+    "type": "anatomy",
+    "fullName": "Subclavian Artery",
+    "aliases": [
+      "Subclav"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "sma": {
+    "type": "anatomy",
+    "fullName": "Superior Mesenteric Artery",
+    "aliases": [
+      "SMA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "sb": {
+    "type": "anatomy",
+    "fullName": "Small Bowel",
+    "aliases": [
+      "SB"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "mes": {
+    "type": "anatomy",
+    "fullName": "Mesentery",
+    "aliases": [
+      "Mes"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "duod": {
+    "type": "anatomy",
+    "fullName": "duodenum",
+    "aliases": [
+      "Duod"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "gb": {
+    "type": "anatomy",
+    "fullName": "Gallbladder",
+    "aliases": [
+      "GB"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "scap": {
+    "type": "anatomy",
+    "fullName": "Scapula",
+    "aliases": [
+      "Scap"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "clav": {
+    "type": "anatomy",
+    "fullName": "Clavicle",
+    "aliases": [
+      "Clav"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "aca": {
+    "type": "anatomy",
+    "fullName": "Anterior Cerebral Artery",
+    "aliases": [
+      "ACA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "la": {
+    "type": "anatomy",
+    "fullName": "Left Atrium",
+    "aliases": [
+      "LA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": "Heart"
+  },
+  "rect": {
+    "type": "anatomy",
+    "fullName": "Rectum",
+    "aliases": [
+      "Rect"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "appe": {
+    "type": "anatomy",
+    "fullName": "appendix",
+    "aliases": [
+      "Appe"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "bronch": {
+    "type": "anatomy",
+    "fullName": "Bronchi",
+    "aliases": [
+      "Bronch"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "scapclav": {
+    "type": "anatomy",
+    "fullName": "Scapula and Clavicle",
+    "aliases": [
+      "ScapClav"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "grtroch": {
+    "type": "anatomy",
+    "fullName": "Greater Trochanter",
+    "aliases": [
+      "grTroch"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "transproc": {
+    "type": "anatomy",
+    "fullName": "Transverse Process",
+    "aliases": [
+      "TransProc"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "aort": {
+    "type": "anatomy",
+    "fullName": "aorta",
+    "aliases": [
+      "aort"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ata": {
+    "type": "anatomy",
+    "fullName": "anterior tibial artery",
+    "aliases": [
+      "ATA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "pta": {
+    "type": "anatomy",
+    "fullName": "Posterior tibial artery",
+    "aliases": [
+      "PTA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "pca": {
+    "type": "anatomy",
+    "fullName": "Posterior Cerebral Artery",
+    "aliases": [
+      "PCA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "rv": {
+    "type": "anatomy",
+    "fullName": "Right Ventricle",
+    "aliases": [
+      "RV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": "Heart"
+  },
+  "lv": {
+    "type": "anatomy",
+    "fullName": "Left Ventricle",
+    "aliases": [
+      "LV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": "Heart"
+  },
+  "ra": {
+    "type": "anatomy",
+    "fullName": "Right Atrium",
+    "aliases": [
+      "RA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": "Heart"
+  },
+  "apex": {
+    "type": "anatomy",
+    "fullName": "Lung Apex",
+    "aliases": [
+      "Apex"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cbd": {
+    "type": "anatomy",
+    "fullName": "Common Bile Duct",
+    "aliases": [
+      "CBD"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "tbone": {
+    "type": "anatomy",
+    "fullName": "Temporal Bone",
+    "aliases": [
+      "Tbone"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "iac": {
+    "type": "anatomy",
+    "fullName": "Internal Auditory Canal",
+    "aliases": [
+      "IAC"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "eac": {
+    "type": "anatomy",
+    "fullName": "External Auditory Canal",
+    "aliases": [
+      "EAC"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cfa": {
+    "type": "anatomy",
+    "fullName": "Common Femoral Artery",
+    "aliases": [
+      "CFA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "civ": {
+    "type": "anatomy",
+    "fullName": "Common Iliac Vein",
+    "aliases": [
+      "CIV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cfv": {
+    "type": "anatomy",
+    "fullName": "Common Femoral Vein",
+    "aliases": [
+      "CFV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "pfossa": {
+    "type": "anatomy",
+    "fullName": "Posterior Fossa",
+    "aliases": [
+      "Pfossa"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": "Infratentorial"
+  },
+  "sfv": {
+    "type": "anatomy",
+    "fullName": "Superficial Femoral Vein",
+    "aliases": [
+      "SFV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "smv": {
+    "type": "anatomy",
+    "fullName": "Superior Mesenteric Vein",
+    "aliases": [
+      "SMV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "tspine": {
+    "type": "anatomy",
+    "fullName": "Thoracic Spine",
+    "aliases": [
+      "Tspine"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cspine": {
+    "type": "anatomy",
+    "fullName": "Cervical Spine",
+    "aliases": [
+      "Cspine"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "lspine": {
+    "type": "anatomy",
+    "fullName": "Lumbar Spine",
+    "aliases": [
+      "Lspine"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "cc": {
+    "type": "anatomy",
+    "fullName": "corpus callosum",
+    "aliases": [
+      "CC"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "eiv": {
+    "type": "anatomy",
+    "fullName": "External Iliac Vein",
+    "aliases": [
+      "EIV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "eca": {
+    "type": "anatomy",
+    "fullName": "external carotid artery",
+    "aliases": [
+      "ECA"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "ijv": {
+    "type": "anatomy",
+    "fullName": "internal jugular vein",
+    "aliases": [
+      "IJV"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "tm": {
+    "type": "anatomy",
+    "fullName": "tympanic membrane",
+    "aliases": [
+      "TM"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "tmj": {
+    "type": "anatomy",
+    "fullName": "temporomandibular joint",
+    "aliases": [
+      "TMJ"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  }
+}

@@ -11,7 +11,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Panc",
@@ -24,11 +25,12 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Kidneys",
-      "strategy": "upper/lower poles, pyelo",
+      "strategy": "(upper/lower poles), pyelo",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "Kidneys",
@@ -37,7 +39,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Rect -> Cecum, appe",
@@ -50,7 +53,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "SB + Mes",
@@ -63,7 +67,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Stomach, esoph",
@@ -76,7 +81,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta, Celiac, SMA",
@@ -89,7 +95,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Iliac → IVC",
@@ -102,7 +109,8 @@
       "chapter": "Cor quick",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_m9bu7y364"
+      "chapterID": "chapter_1750997108450_m9bu7y364",
+      "slice_thickness": ""
     },
     {
       "abbr": "Heart, PE",
@@ -115,7 +123,8 @@
       "chapter": "Lower chest",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_4tuf52b86"
+      "chapterID": "chapter_1750997108450_4tuf52b86",
+      "slice_thickness": ""
     },
     {
       "abbr": "Lung bases",
@@ -128,7 +137,8 @@
       "chapter": "Lower chest",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_4tuf52b86"
+      "chapterID": "chapter_1750997108450_4tuf52b86",
+      "slice_thickness": ""
     },
     {
       "abbr": "Free air / Free fluid",
@@ -141,7 +151,8 @@
       "chapter": "Lower chest",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_4tuf52b86"
+      "chapterID": "chapter_1750997108450_4tuf52b86",
+      "slice_thickness": ""
     },
     {
       "abbr": "Liver",
@@ -154,7 +165,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Gallbladder",
@@ -167,11 +179,12 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Panc",
-      "strategy": "tail -> uncinate",
+      "strategy": "(tail -> uncinate)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxPanc",
@@ -180,7 +193,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Spleen",
@@ -193,7 +207,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Adrenals",
@@ -206,7 +221,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "KUB",
@@ -219,7 +235,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Pelvic Organs",
@@ -232,7 +249,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Esoph, Stomach, duod, SB",
@@ -245,7 +263,8 @@
       "view_plane": "ax",
       "chapter": "Ax abd",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Rect->cecum, appe",
@@ -258,7 +277,8 @@
       "chapter": "Ax abd",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_etm560kyz"
+      "chapterID": "chapter_1750997108450_etm560kyz",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta, Celiac, SMA, Renals, IMA",
@@ -271,7 +291,8 @@
       "chapter": "Vessels, Nodes",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_9h64pdg4i"
+      "chapterID": "chapter_1750997108450_9h64pdg4i",
+      "slice_thickness": ""
     },
     {
       "abbr": "Ven Vasc",
@@ -284,7 +305,8 @@
       "chapter": "Vessels, Nodes",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_9h64pdg4i"
+      "chapterID": "chapter_1750997108450_9h64pdg4i",
+      "slice_thickness": ""
     },
     {
       "abbr": "LN",
@@ -297,7 +319,8 @@
       "chapter": "Vessels, Nodes",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_9h64pdg4i"
+      "chapterID": "chapter_1750997108450_9h64pdg4i",
+      "slice_thickness": ""
     },
     {
       "abbr": "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall",
@@ -310,7 +333,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_wkmqfgiwk"
+      "chapterID": "chapter_1750997108450_wkmqfgiwk",
+      "slice_thickness": ""
     },
     {
       "abbr": "Ribs",
@@ -323,7 +347,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_wkmqfgiwk"
+      "chapterID": "chapter_1750997108450_wkmqfgiwk",
+      "slice_thickness": ""
     },
     {
       "abbr": "VB",
@@ -336,7 +361,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_wkmqfgiwk"
+      "chapterID": "chapter_1750997108450_wkmqfgiwk",
+      "slice_thickness": ""
     },
     {
       "abbr": "Pubic Rami, Hip, grTroch avuls, iliac bone, sacrum, TransProc",
@@ -349,7 +375,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750997108450_wkmqfgiwk"
+      "chapterID": "chapter_1750997108450_wkmqfgiwk",
+      "slice_thickness": ""
     },
     {
       "abbr": "Hips",
@@ -362,11 +389,12 @@
       "chapter": "Bone/ST",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_san49i9n4"
+      "chapterID": "chapter_1750997108450_san49i9n4",
+      "slice_thickness": ""
     },
     {
       "abbr": "Spine",
-      "strategy": "quick look at VB in cor for fxs",
+      "strategy": "(quick look at VB for fxs)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CorSpine",
@@ -375,7 +403,8 @@
       "chapter": "Bone/ST",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750997108450_san49i9n4"
+      "chapterID": "chapter_1750997108450_san49i9n4",
+      "slice_thickness": ""
     },
     {
       "abbr": "Canal",
@@ -388,7 +417,8 @@
       "chapter": "Bone/ST",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1750997108450_san49i9n4"
+      "chapterID": "chapter_1750997108450_san49i9n4",
+      "slice_thickness": ""
     },
     {
       "abbr": "VB",
@@ -401,7 +431,8 @@
       "chapter": "Bone/ST",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1750997108450_san49i9n4"
+      "chapterID": "chapter_1750997108450_san49i9n4",
+      "slice_thickness": ""
     },
     {
       "abbr": "Sacr",
@@ -414,7 +445,8 @@
       "view_plane": "sag",
       "window": "",
       "chapter": "Bone/ST",
-      "chapterID": "chapter_1750997108450_san49i9n4"
+      "chapterID": "chapter_1750997108450_san49i9n4",
+      "slice_thickness": ""
     }
   ]
 }

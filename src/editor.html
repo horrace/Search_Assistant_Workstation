@@ -53,6 +53,7 @@
 	</div>
 	<div class="editor-header-right">
 	  <button id="new-pattern-btn" class="btn">New Pattern</button>
+	  <button id="abbr-registry-btn" class="btn btn-secondary">Library</button>
 	  <button id="undo-btn" class="btn" disabled>Undo</button>
 	  <button id="redo-btn" class="btn" disabled>Redo</button>
 	  <button id="back-btn" class="btn">Back to Main</button>
@@ -75,6 +76,7 @@
           <div class="right-panel-tabs">
             <button class="tab-btn tab-btn--active" data-tab="parts-bank">Parts Bank</button>
             <button class="tab-btn" data-tab="sacrificed">Sacrificed</button>
+            <button class="tab-btn" data-tab="coverage">Coverage</button>
           </div>
           <button id="toggle-parts-bank-btn" class="btn-toggle-bank">▶</button>
         </div>
@@ -87,9 +89,20 @@
           </div>
         </div>
         <div class="tab-content" data-tab="sacrificed">
+          <div class="sacrificed-section-head">Sacrificed</div>
           <div id="sacrificed-items" class="sacrificed-items">
             <!-- Sacrificed items will be rendered here -->
             <div class="sacrificed-empty">No sacrificed items</div>
+          </div>
+          <div class="sacrificed-section-head sacrificed-section-head--automatic">Automatic</div>
+          <div id="automatic-items" class="sacrificed-items">
+            <!-- Automatic items are rendered by renderAutomaticItemsTab() -->
+            <div class="sacrificed-empty">No automatic items</div>
+          </div>
+        </div>
+        <div class="tab-content" data-tab="coverage">
+          <div id="coverage-panel" class="coverage-panel">
+            <div class="sacrificed-empty">Load a pattern to see coverage</div>
           </div>
         </div>
       </div>
@@ -104,6 +117,32 @@
     <div id="new-pattern-dialog-content" class="dialog-content">
       <h2>Create New Pattern</h2>
       <input type="text" id="new-pattern-name" placeholder="Pattern Name">
+      <div class="new-pattern-metadata">
+        <label class="new-pattern-meta-label">
+          <span>Modality</span>
+          <select id="new-pattern-modality">
+            <option value="">— select —</option>
+            <option value="CT">CT</option>
+            <option value="MR">MR</option>
+            <option value="US">US</option>
+            <option value="XR">XR</option>
+            <option value="Fluoro">Fluoro</option>
+            <option value="Mammo">Mammo</option>
+            <option value="NM">NM</option>
+            <option value="PET">PET</option>
+            <option value="Angio">Angio</option>
+            <option value="Other">Other</option>
+          </select>
+        </label>
+        <label class="new-pattern-meta-label">
+          <span>Anatomy</span>
+          <input type="text" id="new-pattern-anatomy" placeholder="e.g. Brain, AP, Neck">
+        </label>
+        <label class="new-pattern-meta-label">
+          <span>Indication <em>(optional)</em></span>
+          <input type="text" id="new-pattern-indication" placeholder="e.g. Memory loss, Tumor follow-up">
+        </label>
+      </div>
       <div class="dialog-buttons">
         <button id="dialog-cancel-btn" class="btn">Cancel</button>
         <button id="dialog-ok-btn" class="btn">OK</button>
@@ -165,6 +204,57 @@
     </div>
   </div>
   
+  <!-- Library Dialog (Phase 3.4) -->
+  <div id="abbr-registry-overlay" class="dialog-overlay" style="display:none;">
+    <div class="dialog-content library-dialog">
+      <div class="library-header">
+        <h3>Library</h3>
+        <input type="text" id="abbr-registry-search" placeholder="Filter..." class="abbr-registry-search">
+      </div>
+
+      <div class="library-tabs">
+        <button class="library-tab-btn library-tab-btn--active" data-library-tab="entries">Anatomy / Task</button>
+        <button class="library-tab-btn" data-library-tab="general">General Abbreviations</button>
+      </div>
+
+      <!-- Anatomy/Task tab — master-detail layout -->
+      <div class="library-tab-content library-tab-content--active" data-library-tab="entries">
+        <div class="library-master">
+          <div class="library-list-toolbar">
+            <button id="library-sort-toggle" class="btn-tiny" title="Toggle sort">Sort: Alias</button>
+            <span id="library-entry-count" class="library-count"></span>
+          </div>
+          <div id="library-list" class="library-list">
+            <!-- Library entry rows rendered here -->
+          </div>
+          <button id="library-add-entry-btn" class="btn library-add-btn">+ Add Entry</button>
+        </div>
+        <div id="library-edit-pane" class="library-edit-pane">
+          <div class="library-edit-empty">Select an entry to edit, or click <strong>+ Add Entry</strong>.</div>
+        </div>
+      </div>
+
+      <!-- General Abbreviations tab — simple table preserved -->
+      <div class="library-tab-content" data-library-tab="general">
+        <div class="library-general-toolbar">
+          <button id="library-general-add-btn" class="btn-tiny">+ Add General Abbreviation</button>
+        </div>
+        <div class="abbr-registry-table-wrap library-general-wrap">
+          <table class="abbr-registry-table" data-abbr-tab="general">
+            <thead>
+              <tr><th>Abbr</th><th>Full Name</th><th>Note</th><th></th></tr>
+            </thead>
+            <tbody id="abbr-registry-tbody-general"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="dialog-buttons">
+        <button id="abbr-registry-close-btn" class="btn">Close</button>
+      </div>
+    </div>
+  </div>
+
   <script src="vendor/Sortable.min.js"></script>
   <script src="editor.js"></script>
 </body>

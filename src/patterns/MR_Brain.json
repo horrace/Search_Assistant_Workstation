@@ -11,7 +11,8 @@
       "chapter": "1",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8m5z2t4so"
+      "chapterID": "chapter_1754364871737_8m5z2t4so",
+      "slice_thickness": ""
     },
     {
       "abbr": "ADC",
@@ -24,7 +25,8 @@
       "chapter": "1",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8m5z2t4so"
+      "chapterID": "chapter_1754364871737_8m5z2t4so",
+      "slice_thickness": ""
     },
     {
       "abbr": "FLAIR",
@@ -37,7 +39,8 @@
       "chapter": "1",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8m5z2t4so"
+      "chapterID": "chapter_1754364871737_8m5z2t4so",
+      "slice_thickness": ""
     },
     {
       "abbr": "SWI/GRE",
@@ -50,7 +53,8 @@
       "chapter": "1",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8m5z2t4so"
+      "chapterID": "chapter_1754364871737_8m5z2t4so",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1 sag",
@@ -63,7 +67,8 @@
       "chapter": "T1 pre",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1754364871737_enzcs446m"
+      "chapterID": "chapter_1754364871737_enzcs446m",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1 sag",
@@ -76,7 +81,8 @@
       "chapter": "T1 pre",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1754364871737_enzcs446m"
+      "chapterID": "chapter_1754364871737_enzcs446m",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1+C",
@@ -89,7 +95,8 @@
       "chapter": "T1+C",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_no5dt4mnz"
+      "chapterID": "chapter_1754364871737_no5dt4mnz",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1+C",
@@ -102,7 +109,8 @@
       "chapter": "T1+C",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_no5dt4mnz"
+      "chapterID": "chapter_1754364871737_no5dt4mnz",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1+C",
@@ -115,7 +123,8 @@
       "chapter": "T1+C",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_no5dt4mnz"
+      "chapterID": "chapter_1754364871737_no5dt4mnz",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1+C",
@@ -128,7 +137,8 @@
       "chapter": "T1+C",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1754364871737_no5dt4mnz"
+      "chapterID": "chapter_1754364871737_no5dt4mnz",
+      "slice_thickness": ""
     },
     {
       "abbr": "T1+C",
@@ -141,7 +151,8 @@
       "chapter": "T1+C",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1754364871737_no5dt4mnz"
+      "chapterID": "chapter_1754364871737_no5dt4mnz",
+      "slice_thickness": ""
     },
     {
       "abbr": "T2",
@@ -154,7 +165,8 @@
       "chapter": "4",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8kyl0ik0k"
+      "chapterID": "chapter_1754364871737_8kyl0ik0k",
+      "slice_thickness": ""
     },
     {
       "abbr": "T2",
@@ -167,7 +179,8 @@
       "chapter": "4",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8kyl0ik0k"
+      "chapterID": "chapter_1754364871737_8kyl0ik0k",
+      "slice_thickness": ""
     },
     {
       "abbr": "T2",
@@ -180,7 +193,8 @@
       "chapter": "4",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8kyl0ik0k"
+      "chapterID": "chapter_1754364871737_8kyl0ik0k",
+      "slice_thickness": ""
     },
     {
       "abbr": "T2",
@@ -193,7 +207,8 @@
       "chapter": "4",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_8kyl0ik0k"
+      "chapterID": "chapter_1754364871737_8kyl0ik0k",
+      "slice_thickness": ""
     },
     {
       "abbr": "Localizers",
@@ -206,7 +221,8 @@
       "chapter": "5",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1754364871737_h714uc5xc"
+      "chapterID": "chapter_1754364871737_h714uc5xc",
+      "slice_thickness": ""
     }
   ]
 }

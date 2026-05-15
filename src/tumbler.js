@@ -370,6 +370,12 @@ function updateFontSizes() {
   if (tumblerWindowDynamic) {
       tumblerWindowDynamic.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`;
   }
+
+  // Slice thickness aligned with view/window
+  const tumblerSliceDynamic = document.getElementById('tumbler-slice-dynamic');
+  if (tumblerSliceDynamic) {
+      tumblerSliceDynamic.style.fontSize = `${(abbrBaseFontSize - 4) * fontScaleFactor}px`;
+  }
   
   // Update chapter label font size
   if (tumblerChapterLabel) {
@@ -473,6 +479,7 @@ function displayCurrentItem() {
   const unchunkedItemRow = document.getElementById('unchunked-item-row');
   const tumblerViewDynamic = document.getElementById('tumbler-view-dynamic');
   const tumblerWindowDynamic = document.getElementById('tumbler-window-dynamic');
+  const tumblerSliceDynamic = document.getElementById('tumbler-slice-dynamic');
   const abbrStrategyWrapper = document.getElementById('abbr-strategy-wrapper');
 
   // Get the representative item for the current display unit
@@ -488,6 +495,7 @@ function displayCurrentItem() {
   const itemStrategy = representativeItem.strategy || '';
   const itemView = representativeItem.view_plane || ''; // Allow empty view_plane
   const itemWindow = representativeItem.window || '';
+  const itemSlice = representativeItem.slice_thickness || ''; // schema v1+
   const itemChapter = representativeItem.chapter || '';
 
   // --- Update Chapter Display ---
@@ -540,11 +548,13 @@ function displayCurrentItem() {
       // Make sure to use item.view_plane for chunk item view, but hide if determined
       const chunkItemViewText = (item.view_plane && !hideViewPlane) ? `${item.view_plane} ` : '';
       const chunkItemWindowText = item.window || '';
+      const chunkItemSliceText  = item.slice_thickness || '';
       const outroClass = item.isOutroItem ? ' outro-item' : '';
       chunkHTML += `
         <div class="chunk-item${outroClass}">
           <span class="chunk-item-view">${chunkItemViewText}</span>
           <span class="chunk-item-window">${chunkItemWindowText}</span>
+          <span class="chunk-item-slice">${chunkItemSliceText}</span>
           <span class="chunk-item-abbr">${item.abbr}</span>
           <span class="chunk-item-strategy">${formatStrategyText(item.strategy)}</span>
         </div>
@@ -562,6 +572,9 @@ function displayCurrentItem() {
     }
     if (tumblerWindowDynamic.parentNode !== unchunkedItemRow) {
       unchunkedItemRow.appendChild(tumblerWindowDynamic);
+    }
+    if (tumblerSliceDynamic && tumblerSliceDynamic.parentNode !== unchunkedItemRow) {
+        unchunkedItemRow.appendChild(tumblerSliceDynamic);
     }
     if (abbrStrategyWrapper.parentNode !== unchunkedItemRow) {
         unchunkedItemRow.appendChild(abbrStrategyWrapper);
@@ -582,6 +595,7 @@ function displayCurrentItem() {
     // Set content for unchunked items
     tumblerViewDynamic.textContent = itemView ? itemView : ''; // Display view or empty
     tumblerWindowDynamic.textContent = itemWindow ? itemWindow : ''; // Display window or empty
+    if (tumblerSliceDynamic) tumblerSliceDynamic.textContent = itemSlice ? itemSlice : '';
     tumblerAbbr.textContent = itemAbbr;
     tumblerStrategy.innerHTML = formatStrategyText(itemStrategy);
 
@@ -597,6 +611,10 @@ function displayCurrentItem() {
     tumblerWindowDynamic.style.display = 'block';
     tumblerViewDynamic.style.visibility = (itemView && !hideViewPlane) ? 'visible' : 'hidden'; // Preserve column alignment
     tumblerWindowDynamic.style.visibility = itemWindow ? 'visible' : 'hidden'; // Preserve column alignment
+    if (tumblerSliceDynamic) {
+      tumblerSliceDynamic.style.display = 'block';
+      tumblerSliceDynamic.style.visibility = itemSlice ? 'visible' : 'hidden';
+    }
     tumblerAbbr.style.display = itemAbbr ? 'block' : 'none'; // Show if itemAbbr exists
     tumblerStrategy.style.display = itemStrategy ? 'block' : 'none'; // Show if itemStrategy exists
 

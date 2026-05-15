@@ -1,75 +1,42 @@
 {
-  "dataDirectory": "D:\\PythonProjects\\SearchAssistant_Electron\\src",
-  "transparency": 0.85,
+  "dataDirectory": "C:\\Users\\Jeff\\OneDrive\\Source\\PythonProjects\\SearchAssistant_Electron\\src",
+  "mainWindowPosition": {
+    "x": 3116,
+    "y": 498
+  },
+  "editorWindowPosition": {
+    "x": 2724,
+    "y": 68
+  },
+  "settingsWindowPosition": {
+    "x": 930,
+    "y": 396
+  },
+  "editor": {
+    "hideOutroInEditor": true
+  },
   "tumbler": {
     "hideBackground": true,
     "showChapterAsChunk": true,
     "inlineHeaderLayout": true,
     "hideViewPlaneInChapter": true
   },
-  "mainWindowPosition": {
-    "x": 2137,
-    "y": 969
-  },
-  "editorWindowPosition": {
-    "x": 1998,
-    "y": 724
-  },
   "tumblerWindowPosition": {
-    "x": 3216,
-    "y": 1684
+    "x": 3180,
+    "y": 628
   },
   "tumblerWindowSize": {
-    "width": 678,
-    "height": 300
+    "width": 550,
+    "height": 301
   },
-  "settingsWindowPosition": {
-    "x": 2221,
-    "y": 813
+  "patternSacrificed": {
+    "CTA H&N": [
+      {
+        "abbr": "Ant spfc ST",
+        "strategy": "subQ face"
+      }
+    ]
   },
-  "shortcuts": [
-    {
-      "id": "toggle-main",
-      "name": "Toggle Main Window",
-      "accelerator": "Alt+Q",
-      "action": "toggle-main",
-      "enabled": false,
-      "description": ""
-    },
-    {
-      "id": "show-main",
-      "name": "Show Main Window",
-      "accelerator": "Alt+S",
-      "action": "show-main",
-      "enabled": false,
-      "description": "Show and focus main window"
-    },
-    {
-      "id": "open-editor",
-      "name": "Open Editor",
-      "accelerator": "Alt+E",
-      "action": "open-editor",
-      "enabled": false,
-      "description": ""
-    },
-    {
-      "id": "advance-tumbler",
-      "name": "Advance Tumbler",
-      "accelerator": "Alt+A",
-      "action": "advance-tumbler",
-      "enabled": true,
-      "description": ""
-    },
-    {
-      "id": "close-all",
-      "name": "Close All Windows",
-      "accelerator": "Alt+X",
-      "action": "close-all",
-      "enabled": false,
-      "description": "Close all secondary windows (editor and tumbler)"
-    }
-  ],
-  "editor": {
-    "hideOutroInEditor": true
-  }
+  "schema_version": 2,
+  "transparency": 0.8
 }

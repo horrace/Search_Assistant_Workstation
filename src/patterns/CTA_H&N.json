@@ -10,8 +10,9 @@
       "chunkID": 1,
       "chapter": "MIP screen",
       "view_plane": "sag",
-      "window": "MIP",
-      "chapterID": "chapter_1750997448877_shhv3bass"
+      "window": "",
+      "chapterID": "chapter_1750997448877_shhv3bass",
+      "slice_thickness": "MIP"
     },
     {
       "abbr": "MCA",
@@ -23,8 +24,9 @@
       "chunkID": 1,
       "chapter": "MIP screen",
       "view_plane": "ax",
-      "window": "MIP",
-      "chapterID": "chapter_1750997448877_shhv3bass"
+      "window": "",
+      "chapterID": "chapter_1750997448877_shhv3bass",
+      "slice_thickness": "MIP"
     },
     {
       "abbr": "MCA",
@@ -36,8 +38,9 @@
       "chunkID": 1,
       "chapter": "MIP screen",
       "view_plane": "cor",
-      "window": "MIP",
-      "chapterID": "chapter_1750997448877_shhv3bass"
+      "window": "",
+      "chapterID": "chapter_1750997448877_shhv3bass",
+      "slice_thickness": "MIP"
     },
     {
       "abbr": "Carotids",
@@ -48,9 +51,10 @@
       "groupID": 0,
       "chunkID": 0,
       "chapter": "MIP screen",
-      "view_plane": "ax",
-      "window": "CPR",
-      "chapterID": "chapter_1750997448877_shhv3bass"
+      "view_plane": "CPR",
+      "window": "",
+      "chapterID": "chapter_1750997448877_shhv3bass",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta, Subclav, CCA/ICA, Verts",
@@ -62,8 +66,9 @@
       "chunkID": 0,
       "chapter": "MPRact ser",
       "view_plane": "ax",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_2ldqlj4v3"
+      "window": "",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "Aorta, subclav;  CCA/ICAs;  verts",
@@ -75,8 +80,9 @@
       "chunkID": 0,
       "chapter": "MPRact ser",
       "view_plane": "cor",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_2ldqlj4v3"
+      "window": "",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "Verts, Basilar",
@@ -88,8 +94,9 @@
       "chunkID": 0,
       "chapter": "MPRact ser",
       "view_plane": "cor",
-      "window": "MIP",
-      "chapterID": "chapter_1750997448877_2ldqlj4v3"
+      "window": "",
+      "chapterID": "chapter_1750997448877_2ldqlj4v3",
+      "slice_thickness": "MIP"
     },
     {
       "abbr": "VertebroBas, PCAs",
@@ -101,8 +108,9 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "cor",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "A1, ACOM, A2-3",
@@ -114,8 +122,9 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "cor",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "MCA-furcation",
@@ -127,8 +136,9 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "cor",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "MCA-furcation",
@@ -140,8 +150,9 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "Aneurysm",
@@ -153,8 +164,9 @@
       "chunkID": 0,
       "chapter": "MPR + VRT",
       "view_plane": "ax",
-      "window": "Thin",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": "thin"
     },
     {
       "abbr": "Global",
@@ -165,9 +177,10 @@
       "groupID": 0,
       "chunkID": 3,
       "chapter": "MPR + VRT",
-      "view_plane": "ax",
-      "window": "3D",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "view_plane": "3D",
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aneurysm",
@@ -178,9 +191,10 @@
       "groupID": 0,
       "chunkID": 3,
       "chapter": "MPR + VRT",
-      "view_plane": "ax",
-      "window": "3D",
-      "chapterID": "chapter_1750997448877_uhisvnz0x"
+      "view_plane": "3D",
+      "window": "",
+      "chapterID": "chapter_1750997448877_uhisvnz0x",
+      "slice_thickness": ""
     },
     {
       "abbr": "3mm",
@@ -193,7 +207,8 @@
       "chapter": "CTV",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_pexyp3n3g"
+      "chapterID": "chapter_1750997448877_pexyp3n3g",
+      "slice_thickness": ""
     },
     {
       "abbr": "Thin",
@@ -206,7 +221,8 @@
       "chapter": "CTV",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_pexyp3n3g"
+      "chapterID": "chapter_1750997448877_pexyp3n3g",
+      "slice_thickness": ""
     },
     {
       "abbr": "Salivary",
@@ -219,10 +235,11 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
-      "abbr": "Thyroid, Esophagus",
+      "abbr": "Thyroid, Esoph",
       "strategy": "(qs🠋)",
       "window_level": "",
       "best_seen_on": "",
@@ -232,7 +249,8 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
       "abbr": "ADT",
@@ -245,7 +263,8 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
       "abbr": "Fat pads",
@@ -258,7 +277,8 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
       "abbr": "Nodes",
@@ -271,7 +291,8 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
       "abbr": "PE",
@@ -284,11 +305,12 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTA",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
       "abbr": "Bronch/Hilar Nodes, Lungs",
-      "strategy": "MIP/Thin (already did trach on ADT)",
+      "strategy": "(MIP/Thin) (already did trach on ADT)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTA  AxBronch/Hilar Nodes, Lungs",
@@ -297,7 +319,8 @@
       "chapter": "ST",
       "view_plane": "ax",
       "window": "CTA",
-      "chapterID": "chapter_1750997448877_2qditj4r5"
+      "chapterID": "chapter_1750997448877_2qditj4r5",
+      "slice_thickness": ""
     },
     {
       "abbr": "Nodes",
@@ -310,11 +333,12 @@
       "chapter": "Cor ST",
       "view_plane": "cor",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2hdilj4v7"
+      "chapterID": "chapter_1750997448877_2hdilj4v7",
+      "slice_thickness": ""
     },
     {
-      "abbr": "Lung Apex/Hila mass",
-      "strategy": "(✔) (ax blind spots)",
+      "abbr": "Lungs",
+      "strategy": "(✔) (Apical + hilar mass) (ax blind spots)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "CTV CorLung Apex/Hila mass",
@@ -323,10 +347,11 @@
       "chapter": "Cor ST",
       "view_plane": "cor",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2hdilj4v7"
+      "chapterID": "chapter_1750997448877_2hdilj4v7",
+      "slice_thickness": ""
     },
     {
-      "abbr": "Dens, vert bodies",
+      "abbr": "Dens, VBs",
       "strategy": "(✔) (quick/optional)",
       "window_level": "",
       "best_seen_on": "",
@@ -336,7 +361,8 @@
       "chapter": "Cor ST",
       "view_plane": "cor",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2hdilj4v7"
+      "chapterID": "chapter_1750997448877_2hdilj4v7",
+      "slice_thickness": ""
     },
     {
       "abbr": "Face ST",
@@ -349,11 +375,12 @@
       "chapter": "Cor ST",
       "view_plane": "cor",
       "window": "CTV",
-      "chapterID": "chapter_1750997448877_2hdilj4v7"
+      "chapterID": "chapter_1750997448877_2hdilj4v7",
+      "slice_thickness": ""
     },
     {
       "abbr": "Ant spfc ST",
-      "strategy": "(qs🠋) Breast in F, subQ face",
+      "strategy": "Breast in F (qs🠋)",
       "window_level": "",
       "best_seen_on": "",
       "full_name": "AxAnt superfic ST",
@@ -362,7 +389,8 @@
       "chapter": "Bones ST",
       "view_plane": "ax",
       "window": "ST",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Canal run + post ST",
@@ -375,7 +403,8 @@
       "chapter": "Bones ST",
       "view_plane": "ax",
       "window": "ST",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Spine",
@@ -388,7 +417,8 @@
       "chapter": "Bones ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Mandible, maxilla",
@@ -401,7 +431,8 @@
       "chapter": "Bones ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "R Scap/Clav, Sternum, L Scap/Clav",
@@ -414,7 +445,8 @@
       "chapter": "Bones ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Ribs",
@@ -427,7 +459,8 @@
       "chapter": "Bones ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Mandible, maxilla",
@@ -440,7 +473,8 @@
       "chapter": "Bones ST",
       "view_plane": "cor",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "R ScapClav, Sternum, L ScapClav",
@@ -453,7 +487,8 @@
       "chapter": "Bones ST",
       "view_plane": "cor",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Dens, VBs",
@@ -466,7 +501,8 @@
       "chapter": "Bones ST",
       "view_plane": "cor",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     },
     {
       "abbr": "Spine",
@@ -479,7 +515,8 @@
       "chapter": "Bones ST",
       "view_plane": "sag",
       "window": "bone",
-      "chapterID": "chapter_1750997448877_2qentj6r2"
+      "chapterID": "chapter_1750997448877_2qentj6r2",
+      "slice_thickness": ""
     }
   ]
 }

@@ -11,7 +11,8 @@
       "chapter": "Intro",
       "view_plane": "",
       "window": "",
-      "chapterID": "chapter_1750980250003_o6xg04s6v"
+      "chapterID": "chapter_1750980250003_o6xg04s6v",
+      "slice_thickness": ""
     },
     {
       "abbr": "excl hemorrhage",
@@ -24,7 +25,8 @@
       "chapter": "_",
       "view_plane": "ax",
       "window": "brain",
-      "chapterID": "chapter_1750980250004_bi3r0x9cw"
+      "chapterID": "chapter_1750980250004_bi3r0x9cw",
+      "slice_thickness": ""
     },
     {
       "abbr": "ventricles/MidShift",
@@ -37,7 +39,8 @@
       "chapter": "_",
       "view_plane": "ax",
       "window": "brain",
-      "chapterID": "chapter_1750980250004_bi3r0x9cw"
+      "chapterID": "chapter_1750980250004_bi3r0x9cw",
+      "slice_thickness": ""
     },
     {
       "abbr": "GWdiff",
@@ -50,7 +53,8 @@
       "chapter": "_",
       "view_plane": "ax",
       "window": "Stroke",
-      "chapterID": "chapter_1750980250004_bi3r0x9cw"
+      "chapterID": "chapter_1750980250004_bi3r0x9cw",
+      "slice_thickness": ""
     },
     {
       "abbr": "Stroke Dbl Check",
@@ -63,7 +67,8 @@
       "chapter": ".",
       "view_plane": "cor",
       "window": "Stroke",
-      "chapterID": "chapter_1750980250004_4x2s0h13n"
+      "chapterID": "chapter_1750980250004_4x2s0h13n",
+      "slice_thickness": ""
     },
     {
       "abbr": "excl SDH",
@@ -76,7 +81,8 @@
       "chapter": ".",
       "view_plane": "cor",
       "window": "brain",
-      "chapterID": "chapter_1750980250004_4x2s0h13n"
+      "chapterID": "chapter_1750980250004_4x2s0h13n",
+      "slice_thickness": ""
     },
     {
       "abbr": "Back to front",
@@ -89,7 +95,8 @@
       "chapter": ".",
       "view_plane": "cor",
       "window": "brain",
-      "chapterID": "chapter_1750980250004_4x2s0h13n"
+      "chapterID": "chapter_1750980250004_4x2s0h13n",
+      "slice_thickness": ""
     },
     {
       "abbr": "Scalp/skull, Periorb.ST, Orbits, PNS, mandib condyles",
@@ -102,7 +109,8 @@
       "chapter": "Bones/ST",
       "view_plane": "cor",
       "window": "bone",
-      "chapterID": "chapter_1750980250004_fkbf1ytbj"
+      "chapterID": "chapter_1750980250004_fkbf1ytbj",
+      "slice_thickness": ""
     },
     {
       "abbr": "Scalp/skull, Periorb.ST, Orbits, PNS, NOE-ZMC",
@@ -115,7 +123,8 @@
       "chapter": "Bones/ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750980250004_fkbf1ytbj"
+      "chapterID": "chapter_1750980250004_fkbf1ytbj",
+      "slice_thickness": ""
     },
     {
       "abbr": "TMJ/mastoids -> Ossicles/IAC-VCF,  PetrApex -> CC/CS -> sphenoid body",
@@ -128,7 +137,8 @@
       "chapter": "Bones/ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750980250004_fkbf1ytbj"
+      "chapterID": "chapter_1750980250004_fkbf1ytbj",
+      "slice_thickness": ""
     },
     {
       "abbr": "Occipital",
@@ -141,7 +151,8 @@
       "chapter": "Bones/ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750980250004_fkbf1ytbj"
+      "chapterID": "chapter_1750980250004_fkbf1ytbj",
+      "slice_thickness": ""
     },
     {
       "abbr": "Deep face, NP/Rosenmüller, OP/Tonsils, parotids",
@@ -154,7 +165,8 @@
       "chapter": "Bones/ST",
       "view_plane": "ax",
       "window": "bone",
-      "chapterID": "chapter_1750980250004_fkbf1ytbj"
+      "chapterID": "chapter_1750980250004_fkbf1ytbj",
+      "slice_thickness": ""
     },
     {
       "abbr": "NOP, f.Rosmuller, tonsils, RP/PP nodes",
@@ -166,7 +178,8 @@
       "chunkID": 0,
       "view_plane": "ax",
       "chapter": "",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     }
   ]
 }

@@ -9,7 +9,8 @@
       "chunkID": 0,
       "chapter": "",
       "view_plane": "",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     },
     {
       "abbr": "Proofread",
@@ -20,7 +21,8 @@
       "chunkID": 0,
       "chapter": "",
       "view_plane": "",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     },
     {
       "abbr": "End - Move on Quickly",
@@ -31,7 +33,8 @@
       "chunkID": 0,
       "chapter": "",
       "view_plane": "",
-      "window": ""
+      "window": "",
+      "slice_thickness": ""
     }
   ]
 }

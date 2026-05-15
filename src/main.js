@@ -33,6 +33,9 @@ try {
         /data[\/\\]/,           // Ignore data directory completely
         /settings\.json$/,      // More specific pattern for settings.json
         /sp_list\.json$/,       // More specific pattern for sp_list.json
+        /abbr_registry\.json$/, // Ignore abbr registry data file
+        /coverage_requirements\.json$/, // Ignore coverage requirements data file
+        /patterns[\/\\].*\.json$/, // Ignore per-pattern JSON files
       ]
     });
   }
@@ -722,6 +725,14 @@ ipcMain.handle('get-window-position', (event) => {
 
 ipcMain.handle('get-transparency', () => store.get('transparency', 1.0));
 
+// Resize the editor window height to fit pattern content
+ipcMain.handle('resize-editor-height', (event, height) => {
+  if (!editorWindow || editorWindow.isDestroyed()) return;
+  const [width] = editorWindow.getSize();
+  const targetH = Math.round(Math.max(400, Math.min(height, 1400)));
+  editorWindow.setSize(width, targetH, false);
+});
+
 ipcMain.on('set-transparency', (event, value) => {
   // Store the transparency setting
   store.set('transparency', value);
@@ -864,11 +875,29 @@ ipcMain.on('api-request', (event, data) => {
             break;
 
           case 'get_sacrificed_items':
+          case 'get_automatic_items':
             result = api[method](params.pattern_name);
             break;
 
           case 'save_sacrificed_items':
+          case 'save_automatic_items':
             result = api[method](params.pattern_name, params.items);
+            break;
+
+          case 'get_coverage_requirements':
+            result = api[method](params.pattern_name);
+            break;
+
+          case 'save_coverage_requirements':
+            result = api[method](params.pattern_name, params.requirements);
+            break;
+
+          case 'get_abbr_registry':
+            result = api[method]();
+            break;
+
+          case 'save_abbr_registry':
+            result = api[method](params.registry);
             break;
 
           case 'update_shortcut':

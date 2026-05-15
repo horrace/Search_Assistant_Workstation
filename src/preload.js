@@ -16,6 +16,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   closeTumbler: () => ipcRenderer.send('close-tumbler'),
   closeSettings: () => ipcRenderer.send('close-settings'),
   getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
+  resizeEditorHeight: (height) => ipcRenderer.invoke('resize-editor-height', height),
   
   // Settings
   setTransparency: (value) => ipcRenderer.send('set-transparency', value),

@@ -11,7 +11,8 @@
       "chapter": "Vessels",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_2sajtki18"
+      "chapterID": "chapter_1750993111805_2sajtki18",
+      "slice_thickness": ""
     },
     {
       "abbr": "Pulm arteries",
@@ -24,7 +25,8 @@
       "chapter": "Vessels",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_2sajtki18"
+      "chapterID": "chapter_1750993111805_2sajtki18",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta, arch vessels➔subclav, celiac, SMA, renals",
@@ -37,7 +39,8 @@
       "chapter": "Vessels",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_2sajtki18"
+      "chapterID": "chapter_1750993111805_2sajtki18",
+      "slice_thickness": ""
     },
     {
       "abbr": "Trachea, central bronchi / hilar nodes",
@@ -50,7 +53,8 @@
       "chapter": "Lungs",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_sv7pfd0mm"
+      "chapterID": "chapter_1750993111805_sv7pfd0mm",
+      "slice_thickness": ""
     },
     {
       "abbr": "Lung MIP",
@@ -63,7 +67,8 @@
       "chapter": "Lungs",
       "view_plane": "ax",
       "window": "lung",
-      "chapterID": "chapter_1750993111805_sv7pfd0mm"
+      "chapterID": "chapter_1750993111805_sv7pfd0mm",
+      "slice_thickness": ""
     },
     {
       "abbr": "Lung thins",
@@ -76,7 +81,8 @@
       "chapter": "Lungs",
       "view_plane": "ax",
       "window": "lung",
-      "chapterID": "chapter_1750993111805_sv7pfd0mm"
+      "chapterID": "chapter_1750993111805_sv7pfd0mm",
+      "slice_thickness": ""
     },
     {
       "abbr": "LN",
@@ -89,7 +95,8 @@
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_iy64m6zxh"
+      "chapterID": "chapter_1750993111805_iy64m6zxh",
+      "slice_thickness": ""
     },
     {
       "abbr": "Thyroid",
@@ -102,7 +109,8 @@
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_iy64m6zxh"
+      "chapterID": "chapter_1750993111805_iy64m6zxh",
+      "slice_thickness": ""
     },
     {
       "abbr": "Esoph",
@@ -115,7 +123,8 @@
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_iy64m6zxh"
+      "chapterID": "chapter_1750993111805_iy64m6zxh",
+      "slice_thickness": ""
     },
     {
       "abbr": "Liver, Upper abd",
@@ -128,7 +137,8 @@
       "chapter": "3mm",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_iy64m6zxh"
+      "chapterID": "chapter_1750993111805_iy64m6zxh",
+      "slice_thickness": ""
     },
     {
       "abbr": "PE",
@@ -141,7 +151,8 @@
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_mh3n92odv"
+      "chapterID": "chapter_1750993111805_mh3n92odv",
+      "slice_thickness": ""
     },
     {
       "abbr": "Heart",
@@ -154,7 +165,8 @@
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_mh3n92odv"
+      "chapterID": "chapter_1750993111805_mh3n92odv",
+      "slice_thickness": ""
     },
     {
       "abbr": "Aorta",
@@ -167,7 +179,8 @@
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_mh3n92odv"
+      "chapterID": "chapter_1750993111805_mh3n92odv",
+      "slice_thickness": ""
     },
     {
       "abbr": "Upper abd",
@@ -180,7 +193,8 @@
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_mh3n92odv"
+      "chapterID": "chapter_1750993111805_mh3n92odv",
+      "slice_thickness": ""
     },
     {
       "abbr": "Pneumoperitoneum/medial PTX",
@@ -193,7 +207,8 @@
       "chapter": "Cor Dbl checks",
       "view_plane": "cor",
       "window": "lung",
-      "chapterID": "chapter_1750993111805_mh3n92odv"
+      "chapterID": "chapter_1750993111805_mh3n92odv",
+      "slice_thickness": ""
     },
     {
       "abbr": "ST / chest wall",
@@ -206,7 +221,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_oupukfdlb"
+      "chapterID": "chapter_1750993111805_oupukfdlb",
+      "slice_thickness": ""
     },
     {
       "abbr": "Humerus, scap, Clav, Sternum",
@@ -219,7 +235,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_oupukfdlb"
+      "chapterID": "chapter_1750993111805_oupukfdlb",
+      "slice_thickness": ""
     },
     {
       "abbr": "Ribs",
@@ -232,7 +249,8 @@
       "chapter": "Bone/ST ax",
       "view_plane": "ax",
       "window": "",
-      "chapterID": "chapter_1750993111805_oupukfdlb"
+      "chapterID": "chapter_1750993111805_oupukfdlb",
+      "slice_thickness": ""
     },
     {
       "abbr": "Scapula fxs",
@@ -245,7 +263,8 @@
       "chapter": "Bone/ST",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_bxykzcved"
+      "chapterID": "chapter_1750993111805_bxykzcved",
+      "slice_thickness": ""
     },
     {
       "abbr": "Vertebral bodies",
@@ -258,7 +277,8 @@
       "chapter": "Bone/ST",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_bxykzcved"
+      "chapterID": "chapter_1750993111805_bxykzcved",
+      "slice_thickness": ""
     },
     {
       "abbr": "Chostochondral fxs",
@@ -271,7 +291,8 @@
       "chapter": "Bone/ST",
       "view_plane": "cor",
       "window": "",
-      "chapterID": "chapter_1750993111805_bxykzcved"
+      "chapterID": "chapter_1750993111805_bxykzcved",
+      "slice_thickness": ""
     },
     {
       "abbr": "Sternum",
@@ -284,7 +305,8 @@
       "chapter": "Bone/ST",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1750993111805_bxykzcved"
+      "chapterID": "chapter_1750993111805_bxykzcved",
+      "slice_thickness": ""
     },
     {
       "abbr": "VB",
@@ -297,7 +319,8 @@
       "chapter": "Bone/ST",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1750993111805_bxykzcved"
+      "chapterID": "chapter_1750993111805_bxykzcved",
+      "slice_thickness": ""
     },
     {
       "abbr": "Spinal canal",
@@ -310,7 +333,8 @@
       "chapter": "Bone/ST",
       "view_plane": "sag",
       "window": "",
-      "chapterID": "chapter_1750993111805_bxykzcved"
+      "chapterID": "chapter_1750993111805_bxykzcved",
+      "slice_thickness": ""
     }
   ]
 }

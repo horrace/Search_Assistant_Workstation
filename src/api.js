@@ -108,8 +108,251 @@ class SearchPatternAPI {
     
     // Now load patterns from the determined directory
     this.load_patterns();
-    
+
+    // Run any pending schema migrations on the loaded patterns
+    this.runSchemaMigrations();
+
     console.log('SearchPatternAPI initialized');
+  }
+
+  // === BEGIN MIGRATION SCHEMA-V1 — delete this entire block after all users on v1+ ===
+  // Schema v1: split monolithic `window` field into:
+  //   - view_plane: gains '3D' and 'CPR' (moved out of window)
+  //   - window:     no longer holds 'MIP'/'MinIP'/'tMIP'/'Thin'/'3D'/'CPR'
+  //   - slice_thickness (new): 'thin', '3mm', 'MIP', 'tMIP', 'MinIP', 'thin + MIP'
+  _migrateViewWindowSliceV1(item) {
+    if (!item || typeof item !== 'object') return;
+    const VIEW_PROJECTIONS = new Set(['3D', 'CPR']);
+    const SLICE_FROM_WINDOW = { 'MIP': 'MIP', 'tMIP': 'tMIP', 'MinIP': 'MinIP', 'Thin': 'thin' };
+
+    const w = typeof item.window === 'string' ? item.window : '';
+    if (w && VIEW_PROJECTIONS.has(w)) {
+      // 3D / CPR → move into view_plane
+      item.view_plane = w;
+      item.window = '';
+    } else if (w && Object.prototype.hasOwnProperty.call(SLICE_FROM_WINDOW, w)) {
+      // MIP / tMIP / MinIP / Thin → move into slice_thickness
+      item.slice_thickness = SLICE_FROM_WINDOW[w];
+      item.window = '';
+    }
+    // Guarantee the new field exists on every pattern item going forward
+    if (item.slice_thickness === undefined) item.slice_thickness = '';
+  }
+
+  runSchemaMigrations() {
+    try {
+      const TARGET_VERSION = 2;
+      if (!this.settings || typeof this.settings !== 'object') this.settings = {};
+      const currentVersion = Number(this.settings.schema_version) || 0;
+      if (currentVersion >= TARGET_VERSION) return;
+
+      console.log(`[API runSchemaMigrations] Migrating from schema_version=${currentVersion} → ${TARGET_VERSION}`);
+
+      // v1: window split (idempotent — re-running it is a no-op since post-migration window won't contain the moved values)
+      if (currentVersion < 1) {
+        for (const [name, items] of Object.entries(this.patterns || {})) {
+          if (!Array.isArray(items)) continue;
+          items.forEach(item => this._migrateViewWindowSliceV1(item));
+        }
+        this.save_patterns();
+      }
+
+      // v2: Library schema — promote abbr_registry to library/entries.json + general_abbrs.json
+      if (currentVersion < 2) {
+        this.migrateLibraryV2();
+      }
+
+      this.settings.schema_version = TARGET_VERSION;
+      this.save_settings();
+      console.log(`[API runSchemaMigrations] schema_version stamped at ${TARGET_VERSION}`);
+    } catch (error) {
+      console.error(`[API runSchemaMigrations] ERROR: ${error.message}`);
+      console.error(error.stack);
+    }
+  }
+  // === END MIGRATION SCHEMA-V1 ===
+
+  // === BEGIN MIGRATION SCHEMA-V2 — delete this entire block once all users on v2+ ===
+  // Library schema (Phase 3). Replaces flat abbr_registry with a richer model:
+  //   library/entries.json     — { slug: Entry }   (Anatomy/Task — the canonical record)
+  //   general_abbrs.json       — { abbr: { fullName, note } }  (text-substitution rules)
+  _libraryEntriesPath() { return path.join(this.dataDir, 'library', 'entries.json'); }
+  _generalAbbrsPath()   { return path.join(this.dataDir, 'general_abbrs.json'); }
+
+  _ensureLibraryDir() {
+    const dir = path.join(this.dataDir, 'library');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  }
+
+  _loadLibraryEntries() {
+    try {
+      const p = this._libraryEntriesPath();
+      if (!fs.existsSync(p)) return {};
+      const raw = JSON.parse(fs.readFileSync(p, 'utf-8'));
+      return (raw && typeof raw === 'object') ? raw : {};
+    } catch (e) {
+      console.error(`[API _loadLibraryEntries] ${e.message}`);
+      return {};
+    }
+  }
+
+  _saveLibraryEntries(entries) {
+    try {
+      this._ensureLibraryDir();
+      fs.writeFileSync(this._libraryEntriesPath(), JSON.stringify(entries || {}, null, 2));
+      return true;
+    } catch (e) {
+      console.error(`[API _saveLibraryEntries] ${e.message}`);
+      return false;
+    }
+  }
+
+  _loadGeneralAbbrs() {
+    try {
+      const p = this._generalAbbrsPath();
+      if (!fs.existsSync(p)) return {};
+      const raw = JSON.parse(fs.readFileSync(p, 'utf-8'));
+      return (raw && typeof raw === 'object') ? raw : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  _saveGeneralAbbrs(map) {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      fs.writeFileSync(this._generalAbbrsPath(), JSON.stringify(map || {}, null, 2));
+      return true;
+    } catch (e) {
+      console.error(`[API _saveGeneralAbbrs] ${e.message}`);
+      return false;
+    }
+  }
+
+  _slugify(s) {
+    return String(s || '').trim().toLowerCase()
+      .replace(/[^a-z0-9_]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'entry';
+  }
+
+  _makeEntry(opts) {
+    return {
+      type: opts.type || 'anatomy',
+      fullName: opts.fullName || '',
+      aliases: Array.isArray(opts.aliases) ? opts.aliases.slice() : [],
+      parents: Array.isArray(opts.parents) ? opts.parents.slice() : [],
+      flowsTo: Array.isArray(opts.flowsTo) ? opts.flowsTo.slice() : [],
+      defaultView: opts.defaultView || '',
+      defaultWindow: opts.defaultWindow || '',
+      defaultSliceThickness: opts.defaultSliceThickness || '',
+      defaultStrategy: opts.defaultStrategy || '',
+      image: opts.image || '',
+      note: opts.note || ''
+    };
+  }
+
+  migrateLibraryV2() {
+    const abbrPath = path.join(this.dataDir, 'abbr_registry.json');
+    const libExists = fs.existsSync(this._libraryEntriesPath());
+
+    // Already on v2 and file present → idempotent no-op
+    if (libExists && !fs.existsSync(abbrPath)) return;
+
+    // No source data at all → seed empty files and exit
+    if (!fs.existsSync(abbrPath)) {
+      if (!libExists) this._saveLibraryEntries({});
+      if (!fs.existsSync(this._generalAbbrsPath())) this._saveGeneralAbbrs({});
+      return;
+    }
+
+    let raw;
+    try { raw = JSON.parse(fs.readFileSync(abbrPath, 'utf-8')); } catch (e) { raw = {}; }
+    const specific = (raw && 'specific' in raw) ? (raw.specific || {}) : (raw || {});
+    const general  = (raw && 'general'  in raw) ? (raw.general  || {}) : {};
+
+    const entries = {};
+    const aliasToSlug = {};
+    const usedSlugs = new Set();
+
+    const pickSlug = (candidate) => {
+      let base = this._slugify(candidate);
+      let s = base;
+      let n = 1;
+      while (usedSlugs.has(s)) { n++; s = `${base}_${n}`; }
+      usedSlugs.add(s);
+      return s;
+    };
+
+    // Pass 1 — every top-level abbr-registry entry becomes a Library Entry
+    for (const [key, val] of Object.entries(specific)) {
+      if (!key || key === '__new__') continue;
+      const slug = pickSlug(key);
+      entries[slug] = this._makeEntry({
+        type: 'anatomy',
+        fullName: (val && val.fullName) || '',
+        aliases: [key],
+        note: (val && val.note) || ''
+      });
+      aliasToSlug[key.toLowerCase()] = slug;
+    }
+
+    // Pass 2 — promote subparts to first-class entries with parent links back
+    for (const [key, val] of Object.entries(specific)) {
+      if (!key || key === '__new__') continue;
+      const parentSlug = aliasToSlug[key.toLowerCase()];
+      if (!parentSlug) continue;
+      const subs = (val && Array.isArray(val.subparts)) ? val.subparts : [];
+      for (const sub of subs) {
+        const subStr = String(sub || '').trim();
+        if (!subStr) continue;
+        const lc = subStr.toLowerCase();
+        let subSlug = aliasToSlug[lc];
+        if (!subSlug) {
+          subSlug = pickSlug(subStr);
+          entries[subSlug] = this._makeEntry({
+            type: 'anatomy',
+            fullName: subStr,
+            aliases: [subStr]
+          });
+          aliasToSlug[lc] = subSlug;
+        }
+        const subEntry = entries[subSlug];
+        if (!subEntry.parents.includes(parentSlug)) subEntry.parents.push(parentSlug);
+      }
+    }
+
+    this._saveLibraryEntries(entries);
+    this._saveGeneralAbbrs(general);
+
+    // Rename the legacy file rather than deleting — leaves a recovery trail
+    try {
+      const archive = path.join(this.dataDir, 'abbr_registry.legacy.json');
+      fs.renameSync(abbrPath, archive);
+      console.log(`[API migrateLibraryV2] Archived ${abbrPath} → ${archive}`);
+    } catch (e) {
+      console.warn(`[API migrateLibraryV2] Could not archive abbr_registry.json: ${e.message}`);
+    }
+
+    console.log(`[API migrateLibraryV2] ${Object.keys(specific).length} registry entries → ${Object.keys(entries).length} Library entries; ${Object.keys(general).length} general abbreviations`);
+  }
+  // === END MIGRATION SCHEMA-V2 ===
+
+  // ─── Library API (Phase 3) ──────────────────────────────────────────────────
+  get_library() {
+    return {
+      entries: this._loadLibraryEntries(),
+      generalAbbrs: this._loadGeneralAbbrs()
+    };
+  }
+
+  save_library({ entries, generalAbbrs }) {
+    try {
+      const okE = (entries && typeof entries === 'object') ? this._saveLibraryEntries(entries) : true;
+      const okG = (generalAbbrs && typeof generalAbbrs === 'object') ? this._saveGeneralAbbrs(generalAbbrs) : true;
+      return { success: !!(okE && okG) };
+    } catch (e) {
+      return { success: false, error: e.message };
+    }
   }
 
   _generateChapterID() {
@@ -280,7 +523,7 @@ class SearchPatternAPI {
       
       console.log("[API save_settings] Settings saved successfully to:", settings_path);
       return true;
-      
+
     } catch (error) {
       console.error(`[API save_settings] ERROR: Cannot write to executable directory: ${error.message}`);
       console.error("[API save_settings] The executable directory must be writable for the portable app to function");
@@ -288,7 +531,62 @@ class SearchPatternAPI {
       return false;
     }
   }
-  
+
+  // ─── Pattern metadata (Phase 2): modality / anatomy / indication / variant ─
+  // Stored as a single sidecar file `patterns_metadata.json` keyed by pattern name.
+  // Kept separate from pattern files so the array-shaped pattern data stays untouched.
+  _patternsMetadataPath() {
+    return path.join(this.dataDir, 'patterns_metadata.json');
+  }
+
+  _loadPatternsMetadata() {
+    try {
+      const p = this._patternsMetadataPath();
+      if (!fs.existsSync(p)) return {};
+      const raw = JSON.parse(fs.readFileSync(p, 'utf-8'));
+      return (raw && typeof raw === 'object') ? raw : {};
+    } catch (e) {
+      console.error(`[API _loadPatternsMetadata] ${e.message}`);
+      return {};
+    }
+  }
+
+  _savePatternsMetadata(metaMap) {
+    try {
+      if (!fs.existsSync(this.dataDir)) fs.mkdirSync(this.dataDir, { recursive: true });
+      fs.writeFileSync(this._patternsMetadataPath(), JSON.stringify(metaMap || {}, null, 2));
+      return true;
+    } catch (e) {
+      console.error(`[API _savePatternsMetadata] ${e.message}`);
+      return false;
+    }
+  }
+
+  get_pattern_metadata({ pattern_name }) {
+    if (typeof pattern_name !== 'string') return null;
+    const all = this._loadPatternsMetadata();
+    return all[pattern_name] || null;
+  }
+
+  get_all_pattern_metadata() {
+    return this._loadPatternsMetadata();
+  }
+
+  save_pattern_metadata({ pattern_name, metadata }) {
+    if (typeof pattern_name !== 'string' || !pattern_name) {
+      return { success: false, error: 'Invalid pattern_name' };
+    }
+    const all = this._loadPatternsMetadata();
+    all[pattern_name] = {
+      modality:   (metadata && metadata.modality)   || '',
+      anatomy:    (metadata && metadata.anatomy)    || '',
+      indication: (metadata && metadata.indication) || '',
+      variant:    (metadata && metadata.variant)    || ''
+    };
+    const ok = this._savePatternsMetadata(all);
+    return { success: !!ok, metadata: all[pattern_name] };
+  }
+
   /**
    * Get a list of all available patterns
    */
@@ -1747,6 +2045,212 @@ class SearchPatternAPI {
     } catch (error) {
       console.error(`[API save_sacrificed_items] Error: ${error.message}`);
       return { success: false, error: error.message };
+    }
+  }
+
+  // --- Automatic Items (per-pattern; same semantics as Sacrificed but for items
+  // the user reliably catches without prompting — formerly "Mastered") ---
+  get_automatic_items(pattern_name) {
+    if (!this.settings?.patternAutomatic) return [];
+    return this.settings.patternAutomatic[pattern_name] || [];
+  }
+
+  save_automatic_items(pattern_name, items) {
+    try {
+      if (!this.settings) this.settings = {};
+      if (!this.settings.patternAutomatic) this.settings.patternAutomatic = {};
+      this.settings.patternAutomatic[pattern_name] = JSON.parse(JSON.stringify(items));
+      const saved = this.save_settings();
+      return { success: saved, error: saved ? null : 'Failed to save settings.' };
+    } catch (error) {
+      console.error(`[API save_automatic_items] Error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  get_coverage_requirements(pattern_name) {
+    const filePath = path.join(this.dataDir, 'coverage_requirements.json');
+    try {
+      if (!fs.existsSync(filePath)) return [];
+      const all = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+      return all[pattern_name] || [];
+    } catch (e) {
+      console.error(`[API get_coverage_requirements] ${e.message}`);
+      return [];
+    }
+  }
+
+  save_coverage_requirements(pattern_name, requirements) {
+    try {
+      const filePath = path.join(this.dataDir, 'coverage_requirements.json');
+      let all = {};
+      if (fs.existsSync(filePath)) {
+        try { all = JSON.parse(fs.readFileSync(filePath, 'utf-8')); } catch {}
+      }
+      all[pattern_name] = requirements;
+      fs.writeFileSync(filePath, JSON.stringify(all, null, 2));
+      return { success: true };
+    } catch (e) {
+      console.error(`[API save_coverage_requirements] ${e.message}`);
+      return { success: false, error: e.message };
+    }
+  }
+
+  // Back-compat adapter (Phase 3.1): synthesizes the legacy two-section shape
+  //   { specific: { ABBR: {fullName, note, subparts:[...]} }, general: { ABBR: {fullName, note} } }
+  // from the new Library + General files so the existing abbr-registry dialog keeps working
+  // until the Library editor (Phase 3.4) replaces it. Each Library entry contributes one
+  // record per alias under `specific`; subparts are reconstructed from child→parent links.
+  get_abbr_registry() {
+    try {
+      const entries = this._loadLibraryEntries();
+      const general = this._loadGeneralAbbrs();
+
+      // Build slug → primary alias map (first alias represents the entry in the legacy shape)
+      const slugToPrimaryAlias = {};
+      for (const [slug, e] of Object.entries(entries)) {
+        slugToPrimaryAlias[slug] = (e.aliases && e.aliases[0]) || slug;
+      }
+
+      // Reconstruct subparts: for each entry, find children (entries whose parents include this slug)
+      const childrenBySlug = {};
+      for (const [slug, e] of Object.entries(entries)) {
+        for (const parentSlug of (e.parents || [])) {
+          if (!childrenBySlug[parentSlug]) childrenBySlug[parentSlug] = [];
+          childrenBySlug[parentSlug].push(slug);
+        }
+      }
+
+      const specific = {};
+      for (const [slug, e] of Object.entries(entries)) {
+        const primary = slugToPrimaryAlias[slug];
+        const subpartLabels = (childrenBySlug[slug] || []).map(childSlug => {
+          const c = entries[childSlug];
+          return (c && c.aliases && c.aliases[0]) || childSlug;
+        });
+        specific[primary] = {
+          fullName: e.fullName || '',
+          note: e.note || '',
+          subparts: subpartLabels
+        };
+      }
+
+      return { specific, general };
+    } catch (e) {
+      console.error(`[API get_abbr_registry] Error: ${e.message}`);
+      return { specific: {}, general: {} };
+    }
+  }
+
+  // Back-compat adapter: write the legacy shape back into Library + General files.
+  // Best-effort — preserves Library-only fields (parents, flowsTo, defaults, image) for
+  // entries that already exist; new entries created via the legacy dialog get default values.
+  save_abbr_registry(registry) {
+    try {
+      const incomingSpecific = (registry && registry.specific) || {};
+      const incomingGeneral  = (registry && registry.general)  || {};
+
+      // Save general directly (one-to-one)
+      this._saveGeneralAbbrs(incomingGeneral);
+
+      // Merge specific into Library
+      const existing = this._loadLibraryEntries();
+
+      // Build alias→slug index over existing Library
+      const aliasToSlug = {};
+      for (const [slug, e] of Object.entries(existing)) {
+        for (const a of (e.aliases || [])) aliasToSlug[a.toLowerCase()] = slug;
+      }
+
+      const usedSlugs = new Set(Object.keys(existing));
+      const pickSlug = (candidate) => {
+        let base = this._slugify(candidate);
+        let s = base;
+        let n = 1;
+        while (usedSlugs.has(s)) { n++; s = `${base}_${n}`; }
+        usedSlugs.add(s);
+        return s;
+      };
+
+      const seenSlugs = new Set();
+
+      // Pass 1: ensure every incoming key has a Library entry (preserving any extra fields)
+      for (const [key, val] of Object.entries(incomingSpecific)) {
+        if (!key || key === '__new__') continue;
+        let slug = aliasToSlug[key.toLowerCase()];
+        if (!slug) {
+          slug = pickSlug(key);
+          existing[slug] = this._makeEntry({
+            type: 'anatomy',
+            fullName: (val && val.fullName) || '',
+            aliases: [key],
+            note: (val && val.note) || ''
+          });
+          aliasToSlug[key.toLowerCase()] = slug;
+        } else {
+          // Update mutable fields, preserving Library-only fields
+          existing[slug].fullName = (val && val.fullName) || '';
+          existing[slug].note     = (val && val.note)     || '';
+          if (!existing[slug].aliases || existing[slug].aliases.length === 0) {
+            existing[slug].aliases = [key];
+          }
+        }
+        seenSlugs.add(slug);
+      }
+
+      // Pass 2: rebuild parent links for subparts (entries listed in any parent's subparts gain that parent in their `parents`)
+      // First, clear parents from all "seen" entries to allow removals to take effect through the legacy dialog
+      for (const slug of seenSlugs) {
+        existing[slug].parents = [];
+      }
+      for (const [key, val] of Object.entries(incomingSpecific)) {
+        if (!key || key === '__new__') continue;
+        const parentSlug = aliasToSlug[key.toLowerCase()];
+        if (!parentSlug) continue;
+        const subs = (val && Array.isArray(val.subparts)) ? val.subparts : [];
+        for (const sub of subs) {
+          const subStr = String(sub || '').trim();
+          if (!subStr) continue;
+          const lc = subStr.toLowerCase();
+          let subSlug = aliasToSlug[lc];
+          if (!subSlug) {
+            subSlug = pickSlug(subStr);
+            existing[subSlug] = this._makeEntry({
+              type: 'anatomy',
+              fullName: subStr,
+              aliases: [subStr]
+            });
+            aliasToSlug[lc] = subSlug;
+          }
+          if (!existing[subSlug].parents.includes(parentSlug)) {
+            existing[subSlug].parents.push(parentSlug);
+          }
+        }
+      }
+
+      // Delete entries removed via the legacy dialog (only those whose primary alias was previously
+      // present but is no longer in incomingSpecific). To be safe, only delete entries that have no
+      // children and no aliases other than the missing primary.
+      const incomingKeysLc = new Set(Object.keys(incomingSpecific).map(k => k.toLowerCase()));
+      for (const [slug, e] of Object.entries(existing)) {
+        const primary = (e.aliases && e.aliases[0]) || '';
+        if (!primary) continue;
+        if (incomingKeysLc.has(primary.toLowerCase())) continue;
+        // Skip if this entry is referenced by another entry's parents (would orphan children)
+        const hasChildren = Object.values(existing).some(other => (other.parents || []).includes(slug));
+        if (hasChildren) continue;
+        // Skip if entry has extra aliases or Library-only data we'd lose
+        if ((e.aliases || []).length > 1) continue;
+        if (e.flowsTo && e.flowsTo.length) continue;
+        if (e.defaultView || e.defaultWindow || e.defaultSliceThickness || e.defaultStrategy || e.image) continue;
+        delete existing[slug];
+      }
+
+      this._saveLibraryEntries(existing);
+      return { success: true };
+    } catch (e) {
+      console.error(`[API save_abbr_registry] Error: ${e.message}`);
+      return { success: false, error: e.message };
     }
   }
 

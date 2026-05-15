@@ -1,0 +1,366 @@
+{
+  "fx": {
+    "fullName": "fracture",
+    "note": ""
+  },
+  "displac": {
+    "fullName": "displacement",
+    "note": ""
+  },
+  "disloc": {
+    "fullName": "dislocation",
+    "note": ""
+  },
+  "CMC": {
+    "fullName": "carpometacarpal",
+    "note": "joint"
+  },
+  "MCP": {
+    "fullName": "metacarpophalangeal",
+    "note": "joint"
+  },
+  "TMT": {
+    "fullName": "tarsometatarsal",
+    "note": ""
+  },
+  "MTP": {
+    "fullName": "metatarsophalangeal",
+    "note": "joint"
+  },
+  "DIP": {
+    "fullName": "distal interphalangeal",
+    "note": ""
+  },
+  "RUE": {
+    "fullName": "right upper extremity",
+    "note": ""
+  },
+  "LUE": {
+    "fullName": "left upper extremity",
+    "note": ""
+  },
+  "RLE": {
+    "fullName": "right lower extremity",
+    "note": ""
+  },
+  "LLE": {
+    "fullName": "left lower extremity",
+    "note": ""
+  },
+  "BUE": {
+    "fullName": "bilateral upper extremities",
+    "note": ""
+  },
+  "BLE": {
+    "fullName": "bilateral lower extremities",
+    "note": ""
+  },
+  "UE": {
+    "fullName": "upper extremity",
+    "note": ""
+  },
+  "LE": {
+    "fullName": "lower extremity",
+    "note": ""
+  },
+  "DJD": {
+    "fullName": "degenerative joint disease",
+    "note": ""
+  },
+  "CTD": {
+    "fullName": "connective tissue disease",
+    "note": ""
+  },
+  "RUQ": {
+    "fullName": "right upper quadrant",
+    "note": "abdomen"
+  },
+  "RLQ": {
+    "fullName": "right lower quadrant",
+    "note": "abdomen"
+  },
+  "LUQ": {
+    "fullName": "left upper quadrant",
+    "note": "abdomen"
+  },
+  "LLQ": {
+    "fullName": "left lower quadrant",
+    "note": "abdomen"
+  },
+  "RUL": {
+    "fullName": "right upper lobe",
+    "note": "lung"
+  },
+  "RML": {
+    "fullName": "right middle lobe",
+    "note": "lung"
+  },
+  "RLL": {
+    "fullName": "right lower lobe",
+    "note": "lung"
+  },
+  "LUL": {
+    "fullName": "left upper lobe",
+    "note": "lung"
+  },
+  "LLL": {
+    "fullName": "left lower lobe",
+    "note": "lung"
+  },
+  "AV": {
+    "fullName": "arteriovenous",
+    "note": ""
+  },
+  "AVM": {
+    "fullName": "arteriovenous malformation",
+    "note": ""
+  },
+  "dAVF": {
+    "fullName": "dural arteriovenous fistula",
+    "note": ""
+  },
+  "HN": {
+    "fullName": "head and neck",
+    "note": ""
+  },
+  "WM": {
+    "fullName": "white matter",
+    "note": ""
+  },
+  "GM": {
+    "fullName": "gray matter",
+    "note": ""
+  },
+  "LM": {
+    "fullName": "leptomeningeal",
+    "note": ""
+  },
+  "CSF": {
+    "fullName": "cerebrospinal fluid",
+    "note": ""
+  },
+  "SVID": {
+    "fullName": "small vessel ischemic disease",
+    "note": "chronic white matter changes"
+  },
+  "CNS": {
+    "fullName": "central nervous system",
+    "note": ""
+  },
+  "PNS": {
+    "fullName": "peripheral nervous system",
+    "note": ""
+  },
+  "PORP": {
+    "fullName": "partial ossicular replacement prosthesis",
+    "note": ""
+  },
+  "TORP": {
+    "fullName": "total ossicular replacement prosthesis",
+    "note": ""
+  },
+  "TM": {
+    "fullName": "",
+    "note": ""
+  },
+  "TL": {
+    "fullName": "thoracolumbar",
+    "note": ""
+  },
+  "ID/EM": {
+    "fullName": "intradural/extramedullary",
+    "note": ""
+  },
+  "PTX": {
+    "fullName": "pneumothorax",
+    "note": ""
+  },
+  "mets": {
+    "fullName": "metastases",
+    "note": ""
+  },
+  "ST": {
+    "fullName": "soft tissues",
+    "note": ""
+  },
+  "athero": {
+    "fullName": "atherosclerosis",
+    "note": ""
+  },
+  "calc": {
+    "fullName": "calcification",
+    "note": ""
+  },
+  "adenoCa": {
+    "fullName": "adenocarcinoma",
+    "note": ""
+  },
+  "infxn": {
+    "fullName": "infection",
+    "note": ""
+  },
+  "dz": {
+    "fullName": "disease",
+    "note": ""
+  },
+  "enhanc": {
+    "fullName": "enhancement",
+    "note": ""
+  },
+  "subq": {
+    "fullName": "subcutaneous",
+    "note": ""
+  },
+  "periph": {
+    "fullName": "peripheral",
+    "note": ""
+  },
+  "IUP": {
+    "fullName": "intrauterine pregnancy",
+    "note": ""
+  },
+  "ectopic": {
+    "fullName": "ectopic pregnancy",
+    "note": ""
+  },
+  "PUL": {
+    "fullName": "pregnancy of unknown location",
+    "note": ""
+  },
+  "GS": {
+    "fullName": "gestational sac",
+    "note": ""
+  },
+  "GA": {
+    "fullName": "gestational age",
+    "note": ""
+  },
+  "CRL": {
+    "fullName": "crown-rump length",
+    "note": ""
+  },
+  "LMP": {
+    "fullName": "last menstrual period",
+    "note": ""
+  },
+  "RPOC": {
+    "fullName": "retained products of conception",
+    "note": ""
+  },
+  "IBD": {
+    "fullName": "inflammatory bowel disease",
+    "note": ""
+  },
+  "IBS": {
+    "fullName": "irritable bowel disease",
+    "note": ""
+  },
+  "SBO": {
+    "fullName": "small bowel obstruction",
+    "note": ""
+  },
+  "adj": {
+    "fullName": "adjacent",
+    "note": ""
+  },
+  "incl": {
+    "fullName": "including",
+    "note": ""
+  },
+  "dx": {
+    "fullName": "diagnosis",
+    "note": ""
+  },
+  "assoc": {
+    "fullName": "associated",
+    "note": ""
+  },
+  "w/in": {
+    "fullName": "within",
+    "note": ""
+  },
+  "w/": {
+    "fullName": "with",
+    "note": ""
+  },
+  "w/o": {
+    "fullName": "without",
+    "note": ""
+  },
+  "prox": {
+    "fullName": "proximal",
+    "note": ""
+  },
+  "dist": {
+    "fullName": "distal",
+    "note": ""
+  },
+  "ant": {
+    "fullName": "anterior",
+    "note": ""
+  },
+  "post": {
+    "fullName": "posterior",
+    "note": ""
+  },
+  "sup": {
+    "fullName": "superior",
+    "note": ""
+  },
+  "inf": {
+    "fullName": "inferior",
+    "note": ""
+  },
+  "med": {
+    "fullName": "medial",
+    "note": ""
+  },
+  "lat": {
+    "fullName": "lateral",
+    "note": ""
+  },
+  "L": {
+    "fullName": "left",
+    "note": ""
+  },
+  "R": {
+    "fullName": "right",
+    "note": ""
+  },
+  "ax": {
+    "fullName": "axial",
+    "note": ""
+  },
+  "cor": {
+    "fullName": "coronal",
+    "note": ""
+  },
+  "sag": {
+    "fullName": "sagittal",
+    "note": ""
+  },
+  "recon": {
+    "fullName": "reconstruction",
+    "note": ""
+  },
+  "furcation": {
+    "fullName": "bifurcation",
+    "note": "or trifurcation"
+  },
+  "avuls": {
+    "fullName": "avulsion",
+    "note": ""
+  },
+  "spfc": {
+    "fullName": "superficial",
+    "note": ""
+  },
+  "abd": {
+    "fullName": "Abdomen",
+    "note": ""
+  },
+  "PIP": {
+    "fullName": "proximal interphalangeal",
+    "note": "joint"
+  }
+}
