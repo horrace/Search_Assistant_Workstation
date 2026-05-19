@@ -188,6 +188,7 @@ let selectedLibrarySlug = null;
 let _libSaveTimeout = null;
 let coverageRequirements = [];
 let coverageEditMode = false;
+let covMatchTagViewOnly = false; // false = part/subpart + view; true = view only (window still on hover)
 
 // Load available patterns
 async function loadPatterns() {
@@ -4893,6 +4894,48 @@ function resolvedEntryIndicatorHtml(label) {
   return `<span class="cov-resolved-entry" title="Resolves to Library entry: ${escapeHtml(slug)}">→ ${escapeHtml(display)}</span>`;
 }
 
+function resolvedLibraryEntryDisplay(label) {
+  const slug = resolveToEntrySlug(label);
+  if (!slug || !libraryEntries[slug]) return null;
+  const e = libraryEntries[slug];
+  return (e.aliases && e.aliases[0]) || e.fullName || slug;
+}
+
+// Assessment view: library resolution hints appear only while hovering the status icon.
+function coverageStatusIconHtml(label, satisfied, iconClass = 'cov-icon') {
+  const icon = satisfied ? '✓' : '✗';
+  const display = resolvedLibraryEntryDisplay(label);
+  let tipHtml = '';
+  if (satisfied && display) {
+    tipHtml = `<span class="cov-icon-hover-tip">Resolves to Library Entry: ${escapeHtml(display)}</span>`;
+  } else if (!satisfied && label && String(label).trim() && !display) {
+    tipHtml = '<span class="cov-icon-hover-tip">no library match</span>';
+  }
+  const tipClass = tipHtml ? ' cov-icon--has-tip' : '';
+  return `<span class="${iconClass}${tipClass}">${icon}${tipHtml}</span>`;
+}
+
+function covMatchTagMainHtml(m) {
+  if (covMatchTagViewOnly) {
+    return m.view ? escapeHtml(m.view) : '';
+  }
+  const mainParts = [m.abbr, m.view].filter(Boolean);
+  return mainParts.length ? escapeHtml(mainParts.join(' · ')) : '';
+}
+
+function covMatchTagHtml(m, reqId, subId) {
+  const mainHtml = covMatchTagMainHtml(m);
+  const windowHtml = m.window
+    ? `<span class="cov-match-tag-window">${mainHtml ? ' · ' : ''}${escapeHtml(m.window)}</span>`
+    : '';
+  const countStr = m.count > 1 ? ` ×${m.count}` : '';
+  const matchKey = `${m.abbr}|${m.view}|${m.window}`;
+  const subAttr = subId ? `data-sub-id="${escapeHtml(subId)}"` : '';
+  const manualClass = m.manual ? ' cov-match-manual' : '';
+  const manualBadge = m.manual ? `<span class="cov-match-manual-badge" title="Manually linked">🔗</span>` : '';
+  return `<span class="cov-match-tag${manualClass}" data-req-id="${escapeHtml(reqId)}" ${subAttr} data-match-key="${escapeHtml(matchKey)}">${manualBadge}${mainHtml}${windowHtml}${countStr}<button class="cov-match-exclude-btn" title="Mark irrelevant">✕</button></span>`;
+}
+
 function renderCoveragePanel() {
   const panel = document.getElementById('coverage-panel');
   if (!panel) return;
@@ -4910,21 +4953,15 @@ function renderCoverageAssessmentHtml() {
 
   let html = `<div class="cov-toolbar">`;
   if (assessed.length) html += `<span class="cov-score">${totalSat}/${assessed.length}</span>`;
+  html += `<div class="cov-match-display-toggle" title="How match tags are labeled">
+    <button type="button" class="cov-match-display-btn${covMatchTagViewOnly ? '' : ' cov-match-display-btn--active'}" data-mode="full">Part+view</button>
+    <button type="button" class="cov-match-display-btn${covMatchTagViewOnly ? ' cov-match-display-btn--active' : ''}" data-mode="view">View only</button>
+  </div>`;
   html += `<button class="btn btn-secondary cov-edit-btn">Edit ✏</button></div>`;
 
   if (!assessed.length) {
     html += `<div class="cov-empty">No requirements defined.<br>Click Edit to add tasks and parts.</div>`;
     return html;
-  }
-
-  function matchTagHtml(m, reqId, subId) {
-    const parts = [m.abbr, m.view, m.window].filter(Boolean);
-    const countStr = m.count > 1 ? ` ×${m.count}` : '';
-    const matchKey = `${m.abbr}|${m.view}|${m.window}`;
-    const subAttr = subId ? `data-sub-id="${escapeHtml(subId)}"` : '';
-    const manualClass = m.manual ? ' cov-match-manual' : '';
-    const manualBadge = m.manual ? `<span class="cov-match-manual-badge" title="Manually linked">🔗</span>` : '';
-    return `<span class="cov-match-tag${manualClass}" data-req-id="${escapeHtml(reqId)}" ${subAttr} data-match-key="${escapeHtml(matchKey)}">${manualBadge}${escapeHtml(parts.join(' · '))}${countStr}<button class="cov-match-exclude-btn" title="Mark irrelevant">✕</button></span>`;
   }
 
   function excludedTagHtml(key, reqId, subId) {
@@ -4935,7 +4972,6 @@ function renderCoverageAssessmentHtml() {
 
   function itemHtml(r) {
     const cls = r.satisfied ? 'cov-satisfied' : 'cov-unsatisfied';
-    const icon = r.satisfied ? '✓' : '✗';
     const excluded = r.excludedMatches || [];
 
     let contentHtml = '';
@@ -4943,18 +4979,16 @@ function renderCoverageAssessmentHtml() {
       // Nested sub-requirements view
       const subRows = r.subAssessed.map(sub => {
         const subCls = sub.satisfied ? 'cov-satisfied' : 'cov-unsatisfied';
-        const subIcon = sub.satisfied ? '✓' : '✗';
         const subExcluded = sub.excludedMatches || [];
         const subMatches = sub.satisfied
-          ? sub.matches.map(m => matchTagHtml(m, r.id, sub.id)).join('')
+          ? sub.matches.map(m => covMatchTagHtml(m, r.id, sub.id)).join('')
           : '';
         const subExcludedHtml = subExcluded.length
           ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
           : '';
         return `<div class="cov-sub-item ${subCls}">
-          <span class="cov-sub-icon">${subIcon}</span>
+          ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           <span class="cov-sub-label">${escapeHtml(sub.label)}</span>
-          ${resolvedEntryIndicatorHtml(sub.label)}
           ${subMatches}${subExcludedHtml}
         </div>`;
       }).join('');
@@ -4962,7 +4996,7 @@ function renderCoverageAssessmentHtml() {
     } else {
       // Standard single-level match tags inline with label
       const matchTags = r.satisfied
-        ? r.matches.map(m => matchTagHtml(m, r.id, null)).join('')
+        ? r.matches.map(m => covMatchTagHtml(m, r.id, null)).join('')
         : '';
       const hintHtml = (!r.satisfied && r.type === 'part' && (r.preferredView || r.preferredWindow || r.preferredSliceThickness))
         ? `<span class="cov-hint">expected: ${escapeHtml([r.preferredView, r.preferredWindow, r.preferredSliceThickness].filter(Boolean).join(' '))}</span>`
@@ -4978,11 +5012,10 @@ function renderCoverageAssessmentHtml() {
       : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+ link</button>`;
 
     return `<div class="cov-item ${cls}">
-      <span class="cov-icon">${icon}</span>
+      ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       <div class="cov-item-body">
         <div class="cov-item-line">
           <span class="cov-label">${escapeHtml(r.label)}</span>
-          ${resolvedEntryIndicatorHtml(r.label)}
           ${r.subAssessed ? '' : contentHtml}
           ${linkBtn}
         </div>
@@ -5151,6 +5184,16 @@ function wireCoveragePanel(panel) {
   if (editBtn) editBtn.addEventListener('click', () => {
     coverageEditMode = true;
     renderCoveragePanel();
+  });
+
+  // Assessment mode — match tag display toggle (global)
+  panel.querySelectorAll('.cov-match-display-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const viewOnly = btn.dataset.mode === 'view';
+      if (viewOnly === covMatchTagViewOnly) return;
+      covMatchTagViewOnly = viewOnly;
+      renderCoveragePanel();
+    });
   });
 
   // Assessment mode — exclude match (mark irrelevant)
