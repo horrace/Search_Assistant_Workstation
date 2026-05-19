@@ -179,15 +179,64 @@ let generalAbbrRegistry = {};
 
 // Phase 3 — Library (canonical Entry store)
 let libraryEntries = {};   // slug → Entry
-let aliasIndex = {};       // alias_lc → slug   (built from libraryEntries)
+let aliasIndex = {};       // alias_lc → slug   (exact, lowercased — primary lookup)
+let stemIndex  = {};       // stem    → slug   (plural-insensitive fallback)
 let abbrActiveTab = 'specific';   // legacy — kept for back-compat with any stray references
 // Phase 3.4 — Library dialog state
 let libraryActiveTab = 'entries';
 let librarySortMode  = 'alias';   // 'alias' | 'fullName'
 let selectedLibrarySlug = null;
 let _libSaveTimeout = null;
+const LIBRARY_DIALOG_STATE_KEY = 'searchAssistant.libraryDialogDevState';
+
+// Persist Library dialog UI across renderer hot-reloads (dev). Sync write before saves
+// so a file-watch reload does not lose open/selection/filter state.
+function persistLibraryDialogState() {
+  try {
+    const overlay = document.getElementById('abbr-registry-overlay');
+    const open = overlay && overlay.style.display !== 'none';
+    if (!open) {
+      sessionStorage.removeItem(LIBRARY_DIALOG_STATE_KEY);
+      return;
+    }
+    sessionStorage.setItem(LIBRARY_DIALOG_STATE_KEY, JSON.stringify({
+      open: true,
+      selectedSlug: selectedLibrarySlug,
+      tab: libraryActiveTab,
+      sortMode: librarySortMode,
+      filter: currentLibraryFilter()
+    }));
+  } catch (_) { /* sessionStorage unavailable */ }
+}
+
+function restoreLibraryDialogIfNeeded() {
+  try {
+    const raw = sessionStorage.getItem(LIBRARY_DIALOG_STATE_KEY);
+    if (!raw) return;
+    const s = JSON.parse(raw);
+    if (!s.open) return;
+
+    libraryActiveTab = s.tab || 'entries';
+    librarySortMode = s.sortMode || 'alias';
+    selectedLibrarySlug = (s.selectedSlug && libraryEntries[s.selectedSlug]) ? s.selectedSlug : null;
+
+    const overlay = document.getElementById('abbr-registry-overlay');
+    if (overlay) overlay.style.display = 'flex';
+
+    const sortBtn = document.getElementById('library-sort-toggle');
+    if (sortBtn) {
+      sortBtn.textContent = `Sort: ${librarySortMode === 'alias' ? 'Alias' : 'Full Name'}`;
+    }
+
+    applyLibraryTabVisibility();
+    renderLibrary(s.filter || '');
+    const search = document.getElementById('abbr-registry-search');
+    if (search && s.filter) search.value = s.filter;
+  } catch (_) { /* ignore corrupt state */ }
+}
 let coverageRequirements = [];
 let coverageEditMode = false;
+let covMatchTagViewOnly = true; // false = part/subpart + view; true = view only (window still on hover)
 
 // Load available patterns
 async function loadPatterns() {
@@ -4757,30 +4806,45 @@ function matchesRequirement(req, item) {
   // libHit === false means both sides resolved but no ancestor relationship — still allow
   // fuzzy fallback to catch sibling/synonym cases the user hasn't modeled yet.
 
-  // 2) Fuzzy fallback (legacy behavior, retained for unregistered data)
-  const abbr = (item.abbr || '').toLowerCase();
-  const fullName = (abbrRegistry[item.abbr]?.fullName || '').toLowerCase();
+  // 2) Fuzzy fallback (legacy behavior, retained for unregistered data).
+  //    All comparisons run on stem-normalized lowercase forms so plural
+  //    variants (e.g. "subclavian arteries" ↔ "subclavian artery") match.
+  const stemNeedle = normalizeForMatch(needle);
+  const abbrSegments = splitCompoundLabel(item.abbr || '');
+  const abbrKeys = [...new Set([...(abbrSegments.length ? abbrSegments : [item.abbr || '']), item.abbr].filter(Boolean))];
+
   const subparts = parseStrategyIntoChips(item.strategy || '')
     .filter(c => c.type === 'subpart')
     .map(c => c.text.toLowerCase());
+  const stemSubparts = subparts.map(normalizeForMatch);
 
-  if (abbr && (abbr.includes(needle) || needle.includes(abbr))) return true;
-  if (fullName && (fullName.includes(needle) || needle.includes(fullName))) return true;
-  if (subparts.some(s => s.includes(needle) || needle.includes(s))) return true;
+  const containsEither = (a, b) => a && b && (a.includes(b) || b.includes(a));
 
-  // Check registered subparts for this item's anatomy/task
-  const registryEntry = abbrRegistry[item.abbr];
-  if (registryEntry?.subparts?.length) {
-    const regSubs = registryEntry.subparts.map(s => s.toLowerCase());
-    if (regSubs.some(s => s.includes(needle) || needle.includes(s))) return true;
-  }
+  const fuzzyAgainst = (stemN) => {
+    for (const part of abbrSegments.length ? abbrSegments : [item.abbr || '']) {
+      if (containsEither(normalizeForMatch(part), stemN)) return true;
+      const fullName = (abbrRegistry[part]?.fullName || '').toLowerCase();
+      if (containsEither(normalizeForMatch(fullName), stemN)) return true;
+    }
+    if (stemSubparts.some(s => containsEither(s, stemN))) return true;
+    for (const key of abbrKeys) {
+      const registryEntry = abbrRegistry[key];
+      if (registryEntry?.subparts?.length) {
+        const regSubs = registryEntry.subparts.map(s => normalizeForMatch(s));
+        if (regSubs.some(s => containsEither(s, stemN))) return true;
+      }
+    }
+    return false;
+  };
 
-  // Try again with general-abbr-expanded needle (e.g. "R Kidney" → "right kidney")
+  if (fuzzyAgainst(stemNeedle)) return true;
+
+  // Try again with general-abbr-expanded needle (e.g. "R Kidney" → "right kidney"),
+  // also stem-normalized so plurals still match after expansion.
   const expandedNeedle = expandWithGeneralAbbrs(needle);
   if (expandedNeedle !== needle) {
-    if (abbr && (abbr.includes(expandedNeedle) || expandedNeedle.includes(abbr))) return true;
-    if (fullName && (fullName.includes(expandedNeedle) || expandedNeedle.includes(fullName))) return true;
-    if (subparts.some(s => s.includes(expandedNeedle) || expandedNeedle.includes(s))) return true;
+    const stemExpanded = normalizeForMatch(expandedNeedle);
+    if (fuzzyAgainst(stemExpanded)) return true;
   }
 
   return false;
@@ -4889,8 +4953,49 @@ function resolvedEntryIndicatorHtml(label) {
     return `<span class="cov-resolved-entry cov-resolved-entry--none" title="No Library entry exactly matches this label. Coverage will fall back to fuzzy string matching.">no library match</span>`;
   }
   const e = libraryEntries[slug];
-  const display = (e.aliases && e.aliases[0]) || e.fullName || slug;
+  const display = libraryEntryPrimaryLabel(e, slug);
   return `<span class="cov-resolved-entry" title="Resolves to Library entry: ${escapeHtml(slug)}">→ ${escapeHtml(display)}</span>`;
+}
+
+function resolvedLibraryEntryDisplay(label) {
+  const slug = resolveToEntrySlug(label);
+  if (!slug || !libraryEntries[slug]) return null;
+  return libraryEntryPrimaryLabel(libraryEntries[slug], slug);
+}
+
+// Assessment view: library resolution hints appear only while hovering the status icon.
+function coverageStatusIconHtml(label, satisfied, iconClass = 'cov-icon') {
+  const icon = satisfied ? '✓' : '✗';
+  const display = resolvedLibraryEntryDisplay(label);
+  let tipHtml = '';
+  if (satisfied && display) {
+    tipHtml = `<span class="cov-icon-hover-tip">Resolves to Library Entry: ${escapeHtml(display)}</span>`;
+  } else if (!satisfied && label && String(label).trim() && !display) {
+    tipHtml = '<span class="cov-icon-hover-tip">no library match</span>';
+  }
+  const tipClass = tipHtml ? ' cov-icon--has-tip' : '';
+  return `<span class="${iconClass}${tipClass}">${icon}${tipHtml}</span>`;
+}
+
+function covMatchTagMainHtml(m) {
+  if (covMatchTagViewOnly) {
+    return m.view ? escapeHtml(m.view) : '';
+  }
+  const mainParts = [m.abbr, m.view].filter(Boolean);
+  return mainParts.length ? escapeHtml(mainParts.join(' · ')) : '';
+}
+
+function covMatchTagHtml(m, reqId, subId) {
+  const mainHtml = covMatchTagMainHtml(m);
+  const windowHtml = m.window
+    ? `<span class="cov-match-tag-window">${mainHtml ? ' · ' : ''}${escapeHtml(m.window)}</span>`
+    : '';
+  const countStr = m.count > 1 ? ` ×${m.count}` : '';
+  const matchKey = `${m.abbr}|${m.view}|${m.window}`;
+  const subAttr = subId ? `data-sub-id="${escapeHtml(subId)}"` : '';
+  const manualClass = m.manual ? ' cov-match-manual' : '';
+  const manualBadge = m.manual ? `<span class="cov-match-manual-badge" title="Manually linked">🔗</span>` : '';
+  return `<span class="cov-match-tag${manualClass}" data-req-id="${escapeHtml(reqId)}" ${subAttr} data-match-key="${escapeHtml(matchKey)}">${manualBadge}${mainHtml}${windowHtml}${countStr}<button class="cov-match-exclude-btn" title="Mark irrelevant">✕</button></span>`;
 }
 
 function renderCoveragePanel() {
@@ -4910,21 +5015,15 @@ function renderCoverageAssessmentHtml() {
 
   let html = `<div class="cov-toolbar">`;
   if (assessed.length) html += `<span class="cov-score">${totalSat}/${assessed.length}</span>`;
+  html += `<div class="cov-match-display-toggle" title="How match tags are labeled">
+    <button type="button" class="cov-match-display-btn${covMatchTagViewOnly ? ' cov-match-display-btn--active' : ''}" data-mode="view">View only</button>
+    <button type="button" class="cov-match-display-btn${covMatchTagViewOnly ? '' : ' cov-match-display-btn--active'}" data-mode="full">Part+view</button>
+  </div>`;
   html += `<button class="btn btn-secondary cov-edit-btn">Edit ✏</button></div>`;
 
   if (!assessed.length) {
     html += `<div class="cov-empty">No requirements defined.<br>Click Edit to add tasks and parts.</div>`;
     return html;
-  }
-
-  function matchTagHtml(m, reqId, subId) {
-    const parts = [m.abbr, m.view, m.window].filter(Boolean);
-    const countStr = m.count > 1 ? ` ×${m.count}` : '';
-    const matchKey = `${m.abbr}|${m.view}|${m.window}`;
-    const subAttr = subId ? `data-sub-id="${escapeHtml(subId)}"` : '';
-    const manualClass = m.manual ? ' cov-match-manual' : '';
-    const manualBadge = m.manual ? `<span class="cov-match-manual-badge" title="Manually linked">🔗</span>` : '';
-    return `<span class="cov-match-tag${manualClass}" data-req-id="${escapeHtml(reqId)}" ${subAttr} data-match-key="${escapeHtml(matchKey)}">${manualBadge}${escapeHtml(parts.join(' · '))}${countStr}<button class="cov-match-exclude-btn" title="Mark irrelevant">✕</button></span>`;
   }
 
   function excludedTagHtml(key, reqId, subId) {
@@ -4935,7 +5034,6 @@ function renderCoverageAssessmentHtml() {
 
   function itemHtml(r) {
     const cls = r.satisfied ? 'cov-satisfied' : 'cov-unsatisfied';
-    const icon = r.satisfied ? '✓' : '✗';
     const excluded = r.excludedMatches || [];
 
     let contentHtml = '';
@@ -4943,18 +5041,16 @@ function renderCoverageAssessmentHtml() {
       // Nested sub-requirements view
       const subRows = r.subAssessed.map(sub => {
         const subCls = sub.satisfied ? 'cov-satisfied' : 'cov-unsatisfied';
-        const subIcon = sub.satisfied ? '✓' : '✗';
         const subExcluded = sub.excludedMatches || [];
         const subMatches = sub.satisfied
-          ? sub.matches.map(m => matchTagHtml(m, r.id, sub.id)).join('')
+          ? sub.matches.map(m => covMatchTagHtml(m, r.id, sub.id)).join('')
           : '';
-        const subExcludedHtml = subExcluded.length
+        const subExcludedHtml = (!covMatchTagViewOnly && subExcluded.length)
           ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
           : '';
         return `<div class="cov-sub-item ${subCls}">
-          <span class="cov-sub-icon">${subIcon}</span>
+          ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           <span class="cov-sub-label">${escapeHtml(sub.label)}</span>
-          ${resolvedEntryIndicatorHtml(sub.label)}
           ${subMatches}${subExcludedHtml}
         </div>`;
       }).join('');
@@ -4962,12 +5058,12 @@ function renderCoverageAssessmentHtml() {
     } else {
       // Standard single-level match tags inline with label
       const matchTags = r.satisfied
-        ? r.matches.map(m => matchTagHtml(m, r.id, null)).join('')
+        ? r.matches.map(m => covMatchTagHtml(m, r.id, null)).join('')
         : '';
       const hintHtml = (!r.satisfied && r.type === 'part' && (r.preferredView || r.preferredWindow || r.preferredSliceThickness))
         ? `<span class="cov-hint">expected: ${escapeHtml([r.preferredView, r.preferredWindow, r.preferredSliceThickness].filter(Boolean).join(' '))}</span>`
         : '';
-      const excludedHtml = excluded.length
+      const excludedHtml = (!covMatchTagViewOnly && excluded.length)
         ? `<span class="cov-excluded-wrap">${excluded.map(k => excludedTagHtml(k, r.id, null)).join('')}</span>`
         : '';
       contentHtml = `${matchTags}${hintHtml}${excludedHtml}`;
@@ -4978,11 +5074,10 @@ function renderCoverageAssessmentHtml() {
       : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+ link</button>`;
 
     return `<div class="cov-item ${cls}">
-      <span class="cov-icon">${icon}</span>
+      ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       <div class="cov-item-body">
         <div class="cov-item-line">
           <span class="cov-label">${escapeHtml(r.label)}</span>
-          ${resolvedEntryIndicatorHtml(r.label)}
           ${r.subAssessed ? '' : contentHtml}
           ${linkBtn}
         </div>
@@ -5151,6 +5246,16 @@ function wireCoveragePanel(panel) {
   if (editBtn) editBtn.addEventListener('click', () => {
     coverageEditMode = true;
     renderCoveragePanel();
+  });
+
+  // Assessment mode — match tag display toggle (global)
+  panel.querySelectorAll('.cov-match-display-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const viewOnly = btn.dataset.mode === 'view';
+      if (viewOnly === covMatchTagViewOnly) return;
+      covMatchTagViewOnly = viewOnly;
+      renderCoveragePanel();
+    });
   });
 
   // Assessment mode — exclude match (mark irrelevant)
@@ -5336,7 +5441,7 @@ function importSubpartsFromLibrary(parentId) {
   let added = 0;
   for (const slug of childSlugs) {
     const e = libraryEntries[slug];
-    const label = (e && e.aliases && e.aliases[0]) || (e && e.fullName) || slug;
+    const label = libraryEntryPrimaryLabel(e, slug);
     if (!label) continue;
     if (existingLabelsLc.has(label.toLowerCase())) continue;
     req.subRequirements.push({ id: generateId(), label, excludedMatches: [] });
@@ -5692,36 +5797,199 @@ function loadLibrary() {
       const overlay = document.getElementById('abbr-registry-overlay');
       if (overlay && overlay.style.display !== 'none') {
         try { renderLibrary(currentLibraryFilter()); } catch (_) {}
+      } else {
+        restoreLibraryDialogIfNeeded();
       }
     }
   });
 }
 
+// Irregular plurals (Latin/Greek) common in radiology. Looked up BEFORE the
+// regex rules so they always win. Shape: plural → canonical singular. Both
+// forms get normalized to the singular at match time, so "Foramina" and
+// "Foramen" resolve to the same entry.
+const IRREGULAR_PLURALS = Object.freeze({
+  // Latin -us / -i
+  'bronchi':    'bronchus',
+  'thrombi':    'thrombus',
+  'emboli':     'embolus',
+  'foci':       'focus',
+  'alveoli':    'alveolus',
+  'humeri':     'humerus',
+  'gyri':       'gyrus',
+  'sulci':      'sulcus',
+  'nuclei':     'nucleus',
+  'menisci':    'meniscus',
+  'calculi':    'calculus',
+  'tarsi':      'tarsus',
+
+  // Latin -um / -a
+  'septa':       'septum',
+  'ostia':       'ostium',
+  'atria':       'atrium',
+  'ganglia':     'ganglion',
+  'mediastina':  'mediastinum',
+  'antra':       'antrum',
+  'diverticula': 'diverticulum',
+
+  // Latin -en / -ina
+  'foramina':   'foramen',
+  'lumina':     'lumen',
+
+  // Greek -is / -es (anatomy)
+  'pelves':      'pelvis',
+  'epiphyses':   'epiphysis',
+  'metaphyses':  'metaphysis',
+  'diaphyses':   'diaphysis',
+  'apophyses':   'apophysis',
+  'symphyses':   'symphysis',
+  'testes':      'testis',
+
+  // Greek -is / -es (pathology -osis/-oses, -asis/-ases, -ysis/-yses)
+  'diagnoses':    'diagnosis',
+  'prognoses':    'prognosis',
+  'metastases':   'metastasis',
+  'atelectases':  'atelectasis',
+  'stenoses':     'stenosis',
+  'thromboses':   'thrombosis',
+  'fibroses':     'fibrosis',
+  'anastomoses':  'anastomosis',
+  'necroses':     'necrosis',
+  'cirrhoses':    'cirrhosis',
+  'scolioses':    'scoliosis',
+  'kyphoses':     'kyphosis',
+  'analyses':     'analysis',
+  'paralyses':    'paralysis',
+
+  // Latin -x / -ces
+  'indices':     'index',
+  'appendices':  'appendix',
+  'vertices':    'vertex',
+  'apices':      'apex',
+  'cortices':    'cortex',
+  'helices':     'helix',
+  'fornices':    'fornix',
+  'matrices':    'matrix',
+  'cervices':    'cervix',
+
+  // Latin/Greek -nx → -nges
+  'thoraces':   'thorax',
+  'larynges':   'larynx',
+  'pharynges':  'pharynx',
+  'meninges':   'meninx',
+  'phalanges':  'phalanx',
+
+  // Misc anatomy
+  'corpora':   'corpus',
+  'viscera':   'viscus',
+  'crura':     'crus',
+});
+
+// Lightweight English stemmer for plural-insensitive matching. Tokenizes on
+// whitespace, applies common singularization rules, rejoins. Intentionally
+// conservative — preserves Latin -us/-is/-os endings and -ss words. Irregular
+// Latin/Greek plurals are handled by the IRREGULAR_PLURALS lookup above;
+// everything else falls through the regex suffix rules: arteries↔artery,
+// kidneys↔kidney, vertebrae↔vertebra.
+function stemEnglishToken(t) {
+  if (t.length < 4) return t;
+  // Irregular plurals first — beats the regex rules
+  if (Object.prototype.hasOwnProperty.call(IRREGULAR_PLURALS, t)) {
+    return IRREGULAR_PLURALS[t];
+  }
+  if (t.endsWith('ies')) return t.slice(0, -3) + 'y';                                  // arteries → artery
+  if (t.endsWith('xes') || t.endsWith('ches') || t.endsWith('shes')) return t.slice(0, -2); // boxes → box, brushes → brush
+  if (t.endsWith('ae'))  return t.slice(0, -1);                                        // vertebrae → vertebra
+  if (t.endsWith('s')) {
+    // Preserve common non-plural -s endings
+    if (t.endsWith('ss') || t.endsWith('us') || t.endsWith('is') || t.endsWith('os')) return t;
+    return t.slice(0, -1);                                                             // kidneys → kidney
+  }
+  return t;
+}
+
+function normalizeForMatch(s) {
+  if (!s) return '';
+  return String(s).toLowerCase().trim().split(/\s+/).map(stemEnglishToken).join(' ');
+}
+
 function rebuildAliasIndex() {
   aliasIndex = {};
+  stemIndex  = {};
+  const addKey = (k, slug) => {
+    if (!k) return;
+    if (!aliasIndex[k]) aliasIndex[k] = slug;
+    const stem = normalizeForMatch(k);
+    if (stem && !stemIndex[stem]) stemIndex[stem] = slug;
+  };
   for (const [slug, entry] of Object.entries(libraryEntries || {})) {
     if (!entry) continue;
     // Slug itself is a lookup key
-    aliasIndex[slug.toLowerCase()] = slug;
+    addKey(slug.toLowerCase(), slug);
     // Aliases
     for (const a of (entry.aliases || [])) {
-      if (!a) continue;
-      const k = String(a).trim().toLowerCase();
-      if (k && !aliasIndex[k]) aliasIndex[k] = slug;
+      if (a) addKey(String(a).trim().toLowerCase(), slug);
     }
     // Full name — requirements labeled with the human-readable name should resolve
-    if (entry.fullName) {
-      const fn = String(entry.fullName).trim().toLowerCase();
-      if (fn && !aliasIndex[fn]) aliasIndex[fn] = slug;
-    }
+    if (entry.fullName) addKey(String(entry.fullName).trim().toLowerCase(), slug);
   }
 }
 
-// Resolve a free-form abbreviation/name to a Library slug, if any.
-function resolveToEntrySlug(s) {
+// Primary label for UI: first alias, else full name (not stored as an alias).
+function libraryEntryPrimaryLabel(e, slug = '') {
+  if (!e) return slug || '';
+  const alias = (e.aliases && e.aliases[0]) || '';
+  if (alias) return alias;
+  return e.fullName || slug || '';
+}
+
+// Split compound pattern labels / requirement text on common radiology separators.
+// e.g. "VertebroBas, PCAs" → ["VertebroBas", "PCAs"]; "CCA/ICA" → ["CCA", "ICA"]
+const COMPOUND_LABEL_SEP = /\s*(?:->|→|[,;\/\\])\s*/;
+
+function splitCompoundLabel(s) {
+  if (!s) return [];
+  const whole = String(s).trim();
+  if (!whole) return [];
+  const parts = whole.split(COMPOUND_LABEL_SEP).map(p => p.trim()).filter(Boolean);
+  return parts.length > 0 ? parts : [whole];
+}
+
+// Resolve one label segment (no compound splitting).
+function resolveLabelSegmentToSlug(s) {
   if (!s) return null;
   const k = String(s).trim().toLowerCase();
-  return aliasIndex[k] || null;
+  if (!k) return null;
+  if (aliasIndex[k]) return aliasIndex[k];
+  const stem = normalizeForMatch(s);
+  if (stem && stemIndex[stem]) return stemIndex[stem];
+  return null;
+}
+
+// All Library slugs resolved from a label (whole string, then each compound segment).
+function resolveCompoundToEntrySlugs(s) {
+  if (!s) return [];
+  const slugs = [];
+  const seenSeg = new Set();
+  const addSeg = (seg) => {
+    const key = String(seg || '').trim().toLowerCase();
+    if (!key || seenSeg.has(key)) return;
+    seenSeg.add(key);
+    const slug = resolveLabelSegmentToSlug(seg);
+    if (slug && !slugs.includes(slug)) slugs.push(slug);
+  };
+  addSeg(s);
+  for (const seg of splitCompoundLabel(s)) addSeg(seg);
+  return slugs;
+}
+
+// Resolve a free-form abbreviation/name to a Library slug.
+//   1. Whole string, then each compound segment (comma, /, \, ;, ->, →).
+//   2. Per segment: exact alias / slug / fullName, then plural-insensitive stem index.
+// Returns null if neither layer hits — caller falls back to fuzzy substring matching.
+function resolveToEntrySlug(s) {
+  const slugs = resolveCompoundToEntrySlugs(s);
+  return slugs.length ? slugs[0] : null;
 }
 
 // Compute children of a slug at render time.
@@ -5758,14 +6026,14 @@ function getAncestorSlugs(slug, maxDepth = 16) {
 // a parent (vertebrobas is anatomically broader).
 // Returns true/false/null (null = could not determine; caller falls back to fuzzy).
 function libraryAncestorMatch(req, item) {
-  const itemSlug = resolveToEntrySlug(item.abbr);
-  if (!itemSlug) return null;                       // unregistered pattern item — fall back
+  const itemSlugs = resolveCompoundToEntrySlugs(item.abbr);
+  if (!itemSlugs.length) return null;               // unregistered pattern item — fall back
   const reqSlug  = resolveToEntrySlug(req.label);
   if (!reqSlug) return null;                        // unregistered requirement label — fall back
-  // Walk ancestors of the REQUIREMENT (the narrower side); if the item entry
-  // is among them (or equal), the item is broader and satisfies the requirement.
+  // Walk ancestors of the REQUIREMENT (the narrower side); if any item segment
+  // resolves to an ancestor (or equal), the item is broader and satisfies the requirement.
   const reqAncestors = getAncestorSlugs(reqSlug);
-  return reqAncestors.has(itemSlug);
+  return itemSlugs.some(slug => reqAncestors.has(slug));
 }
 
 // ─── Library dialog (Phase 3.4) ─────────────────────────────────────────────
@@ -5785,11 +6053,13 @@ function openAbbrRegistry() {
   libraryActiveTab = 'entries';
   applyLibraryTabVisibility();
   renderLibrary('');
+  persistLibraryDialogState();
 }
 
 function closeAbbrRegistry() {
   document.getElementById('abbr-registry-overlay').style.display = 'none';
   document.querySelectorAll('.library-ac-dropdown').forEach(d => d.style.display = 'none');
+  persistLibraryDialogState();
 }
 
 function currentLibraryFilter() {
@@ -5832,9 +6102,7 @@ function renderLibraryList(filter) {
     entries.sort(([, a], [, b]) => (a.fullName || '').localeCompare(b.fullName || ''));
   } else {
     entries.sort(([, a], [, b]) => {
-      const aa = (a.aliases && a.aliases[0]) || '';
-      const bb = (b.aliases && b.aliases[0]) || '';
-      return aa.localeCompare(bb);
+      return libraryEntryPrimaryLabel(a).localeCompare(libraryEntryPrimaryLabel(b));
     });
   }
 
@@ -5847,7 +6115,8 @@ function renderLibraryList(filter) {
   }
 
   list.innerHTML = entries.map(([slug, e]) => {
-    const alias = (e.aliases && e.aliases[0]) || slug;
+    const hasAlias = !!(e.aliases && e.aliases[0]);
+    const alias = libraryEntryPrimaryLabel(e, slug);
     const isSel = slug === selectedLibrarySlug ? ' library-list-item--selected' : '';
     const typeBadge = e.type === 'task'
       ? '<span class="library-type-tag library-type-tag--task">T</span>'
@@ -5858,7 +6127,7 @@ function renderLibraryList(filter) {
     return `<div class="library-list-item${isSel}" data-slug="${escapeHtml(slug)}">
       ${typeBadge}
       <span class="library-list-alias">${escapeHtml(alias)}</span>
-      <span class="library-list-fullname">${escapeHtml(e.fullName || '')}</span>
+      <span class="library-list-fullname">${escapeHtml(hasAlias ? (e.fullName || '') : '')}</span>
       ${hierIcon ? `<span class="library-list-hier" title="hierarchy">${hierIcon}</span>` : ''}
     </div>`;
   }).join('');
@@ -5868,6 +6137,7 @@ function renderLibraryList(filter) {
       selectedLibrarySlug = row.dataset.slug;
       renderLibraryList(currentLibraryFilter());
       renderLibraryEditPane();
+      persistLibraryDialogState();
     });
   });
 }
@@ -5899,7 +6169,7 @@ function renderLibraryEditPane() {
 
   function refChipHtml(refSlug, idx, kind) {
     const r = libraryEntries[refSlug];
-    const label = r ? ((r.aliases && r.aliases[0]) || r.fullName || refSlug) : `${refSlug} (missing)`;
+    const label = r ? libraryEntryPrimaryLabel(r, refSlug) : `${refSlug} (missing)`;
     const missing = r ? '' : ' library-chip--missing';
     return `<span class="library-chip library-chip--ref${missing}" data-chip-kind="${kind}" data-chip-index="${idx}" data-slug="${escapeHtml(refSlug)}">${escapeHtml(label)}<button class="library-chip-x" data-chip-index="${idx}" title="Remove">×</button></span>`;
   }
@@ -6068,7 +6338,7 @@ function wireChildrenChips(parentSlug, chipsId, inputId, acId) {
       .slice(0, 8);
     if (matches.length === 0) { ac.style.display = 'none'; return; }
     ac.innerHTML = matches.map(([s, ee]) => {
-      const label = (ee.aliases && ee.aliases[0]) || ee.fullName || s;
+      const label = libraryEntryPrimaryLabel(ee, s);
       const sub = (ee.fullName && ee.fullName !== label) ? `<span class="library-ac-sub">${escapeHtml(ee.fullName)}</span>` : '';
       return `<button class="library-ac-item" data-slug="${escapeHtml(s)}">${escapeHtml(label)}${sub}</button>`;
     }).join('');
@@ -6117,7 +6387,12 @@ function wireAliasChips(slug) {
     const v = input.value.trim();
     if (!v) return;
     if (!libraryEntries[slug].aliases) libraryEntries[slug].aliases = [];
-    if (libraryEntries[slug].aliases.includes(v)) { input.value = ''; return; }
+    // Case-insensitive dedup — "Basilar Artery" and "basilar artery" are the same alias
+    const vLc = v.toLowerCase();
+    if (libraryEntries[slug].aliases.some(a => String(a).toLowerCase() === vLc)) {
+      input.value = '';
+      return;
+    }
     libraryEntries[slug].aliases.push(v);
     scheduleLibrarySave();
     renderLibraryEditPane();
@@ -6156,7 +6431,7 @@ function wireRefChips(slug, field, chipsId, inputId, acId) {
       .slice(0, 8);
     if (matches.length === 0) { ac.style.display = 'none'; return; }
     ac.innerHTML = matches.map(([s, ee]) => {
-      const label = (ee.aliases && ee.aliases[0]) || ee.fullName || s;
+      const label = libraryEntryPrimaryLabel(ee, s);
       const sub = (ee.fullName && ee.fullName !== label) ? `<span class="library-ac-sub">${escapeHtml(ee.fullName)}</span>` : '';
       return `<button class="library-ac-item" data-slug="${escapeHtml(s)}">${escapeHtml(label)}${sub}</button>`;
     }).join('');
@@ -6190,6 +6465,7 @@ function scheduleLibrarySave() {
 }
 
 function saveLibraryToBackend() {
+  persistLibraryDialogState();
   window.electronAPI.callAPI('save_library', {
     entries: libraryEntries,
     generalAbbrs: generalAbbrRegistry
@@ -6227,7 +6503,7 @@ function addLibraryEntry() {
 
 function deleteLibraryEntry(slug) {
   if (!libraryEntries[slug]) return;
-  const label = (libraryEntries[slug].aliases && libraryEntries[slug].aliases[0]) || libraryEntries[slug].fullName || slug;
+  const label = libraryEntryPrimaryLabel(libraryEntries[slug], slug);
   if (!confirm(`Delete Library entry "${label}"?`)) return;
   // Remove from any other entry's parents/flowsTo references
   for (const [s, e] of Object.entries(libraryEntries)) {
@@ -6337,6 +6613,7 @@ function initAbbrRegistrySearch() {
       const f = e.target.value;
       renderLibraryList(f);
       renderGeneralAbbrsTable(f);
+      persistLibraryDialogState();
     });
   }
 
@@ -6345,6 +6622,7 @@ function initAbbrRegistrySearch() {
     btn.addEventListener('click', () => {
       libraryActiveTab = btn.dataset.libraryTab;
       applyLibraryTabVisibility();
+      persistLibraryDialogState();
     });
   });
 
@@ -6355,6 +6633,7 @@ function initAbbrRegistrySearch() {
       librarySortMode = librarySortMode === 'alias' ? 'fullName' : 'alias';
       sortBtn.textContent = `Sort: ${librarySortMode === 'alias' ? 'Alias' : 'Full Name'}`;
       renderLibraryList(currentLibraryFilter());
+      persistLibraryDialogState();
     });
   }
 

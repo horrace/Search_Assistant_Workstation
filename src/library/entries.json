@@ -93,7 +93,8 @@
     "type": "anatomy",
     "fullName": "Aerodigestive Tract",
     "aliases": [
-      "ADT"
+      "ADT",
+      "Aerodig"
     ],
     "parents": [],
     "flowsTo": [],
@@ -200,7 +201,9 @@
     "aliases": [
       "CCA"
     ],
-    "parents": [],
+    "parents": [
+      "new_entry"
+    ],
     "flowsTo": [],
     "defaultView": "",
     "defaultWindow": "",
@@ -215,7 +218,9 @@
     "aliases": [
       "ICA"
     ],
-    "parents": [],
+    "parents": [
+      "new_entry"
+    ],
     "flowsTo": [],
     "defaultView": "",
     "defaultWindow": "",
@@ -301,7 +306,7 @@
   },
   "vbs": {
     "type": "anatomy",
-    "fullName": "Vertebral Body",
+    "fullName": "Vertebral Bodies",
     "aliases": [
       "VBs"
     ],
@@ -1189,7 +1194,7 @@
   },
   "eca": {
     "type": "anatomy",
-    "fullName": "external carotid artery",
+    "fullName": "External Carotid Artery",
     "aliases": [
       "ECA"
     ],
@@ -1239,6 +1244,148 @@
       "TMJ"
     ],
     "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry": {
+    "type": "task",
+    "fullName": "Neck Arteries",
+    "aliases": [],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_2": {
+    "type": "anatomy",
+    "fullName": "Transverse Sinus",
+    "aliases": [
+      "Trans"
+    ],
+    "parents": [
+      "new_entry_3"
+    ],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_3": {
+    "type": "anatomy",
+    "fullName": "Dural Venous Sinuses",
+    "aliases": [
+      "Dural Sinuses"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_4": {
+    "type": "anatomy",
+    "fullName": "Jugular Bulb",
+    "aliases": [
+      "JugB"
+    ],
+    "parents": [
+      "new_entry_3"
+    ],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_5": {
+    "type": "anatomy",
+    "fullName": "Tracheobronchial",
+    "aliases": [
+      "TrachBronch"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_6": {
+    "type": "anatomy",
+    "fullName": "Cerebellar Hemispheres",
+    "aliases": [
+      "C'bellar Hemis",
+      "CBH's"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_7": {
+    "type": "anatomy",
+    "fullName": "Palatine Tonsils",
+    "aliases": [
+      "Palatine T"
+    ],
+    "parents": [],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_8": {
+    "type": "anatomy",
+    "fullName": "Sigmoid Sinus",
+    "aliases": [
+      "sigm"
+    ],
+    "parents": [
+      "new_entry_3"
+    ],
+    "flowsTo": [],
+    "defaultView": "",
+    "defaultWindow": "",
+    "defaultSliceThickness": "",
+    "defaultStrategy": "",
+    "image": "",
+    "note": ""
+  },
+  "new_entry_9": {
+    "type": "anatomy",
+    "fullName": "Vein of Galen",
+    "aliases": [
+      "VoG"
+    ],
+    "parents": [
+      "new_entry_3"
+    ],
     "flowsTo": [],
     "defaultView": "",
     "defaultWindow": "",

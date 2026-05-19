@@ -31,6 +31,9 @@ try {
         /\.git/,
         /\.map$/,
         /data[\/\\]/,           // Ignore data directory completely
+        /[\/\\]library[\/\\]/,  // Library entries/images (often under src/ when dataDirectory points there)
+        /general_abbrs\.json$/, // Library general abbreviations file
+        /src[\/\\].*\.json$/,    // Runtime JSON under src/ (dev dataDirectory) — not app source code
         /settings\.json$/,      // More specific pattern for settings.json
         /sp_list\.json$/,       // More specific pattern for sp_list.json
         /abbr_registry\.json$/, // Ignore abbr registry data file

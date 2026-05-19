@@ -61,8 +61,23 @@
       "preferredWindow": "",
       "subRequirements": [
         {
-          "id": "mp5rmbcvk4hhg",
-          "label": "Transverse Sinus",
+          "id": "mpdl947d7qub6",
+          "label": "Trans",
+          "excludedMatches": []
+        },
+        {
+          "id": "mpdl947drl33q",
+          "label": "JugB",
+          "excludedMatches": []
+        },
+        {
+          "id": "mpdl947d6vrwb",
+          "label": "sigm",
+          "excludedMatches": []
+        },
+        {
+          "id": "mpdl947di4gpe",
+          "label": "VoG",
           "excludedMatches": []
         }
       ]
@@ -90,7 +105,9 @@
       "manualMatches": [
         "Aorta, Subclav, CCA/ICA, Verts|ax|"
       ],
-      "excludedMatches": []
+      "excludedMatches": [
+        "R Scap/Clav, Sternum, L Scap/Clav|ax|bone"
+      ]
     },
     {
       "id": "mp5jznio4nud9",
@@ -114,6 +131,18 @@
       "label": "",
       "preferredView": "",
       "preferredWindow": ""
+    }
+  ],
+  "CT Neck": [
+    {
+      "id": "mpdebjhey7nzn",
+      "type": "part",
+      "label": "",
+      "preferredView": "",
+      "preferredWindow": "",
+      "preferredSliceThickness": "",
+      "subRequirements": [],
+      "excludedMatches": []
     }
   ]
 }

@@ -1424,6 +1424,29 @@ footer {
   flex: 1;
 }
 
+.cov-match-display-toggle {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.cov-match-display-btn {
+  background: #252525;
+  border: 1px solid #383838;
+  color: #888;
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cov-match-display-btn--active {
+  background: #2a3a2a;
+  color: #7aad7a;
+  border-color: #3a5a3a;
+}
+
 .cov-section-head {
   font-size: 10px;
   font-weight: 700;
@@ -1472,6 +1495,42 @@ footer {
   text-align: center;
 }
 
+.cov-icon.cov-icon--has-tip,
+.cov-sub-icon.cov-icon--has-tip {
+  position: relative;
+  cursor: help;
+}
+
+.cov-icon-hover-tip {
+  display: none;
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 20;
+  font-size: 10px;
+  font-weight: 400;
+  white-space: nowrap;
+  pointer-events: none;
+  padding: 2px 6px;
+  border-radius: 9px;
+  color: #6a8;
+  background: #1a2a1f;
+  border: 1px solid #2a4a35;
+}
+
+.cov-unsatisfied .cov-icon--has-tip .cov-icon-hover-tip,
+.cov-sub-item.cov-unsatisfied .cov-icon--has-tip .cov-icon-hover-tip {
+  color: #c80;
+  background: #2a2010;
+  border-color: #4a3a1a;
+  font-style: italic;
+}
+
+.cov-icon--has-tip:hover .cov-icon-hover-tip {
+  display: block;
+}
+
 .cov-satisfied .cov-icon { color: #5a9a6a; }
 .cov-unsatisfied .cov-icon { color: #9a5a5a; }
 
@@ -1504,6 +1563,14 @@ footer {
   font-size: 10px;
   border-radius: 3px;
   padding: 1px 4px 1px 5px;
+}
+
+.cov-match-tag-window {
+  display: none;
+}
+
+.cov-match-tag:hover .cov-match-tag-window {
+  display: inline;
 }
 
 .cov-match-exclude-btn {
@@ -1553,11 +1620,10 @@ footer {
 }
 .cov-match-restore-btn:hover { color: #8ab; }
 
-/* Manual matches (user manually linked) — distinctive accent */
+/* Manual matches (user manually linked) — same tag styling; badge indicates manual */
 .cov-match-tag.cov-match-manual {
-  background: #2a3445;
-  color: #8caac8;
-  border: 1px solid #3a4a60;
+  background: #2a3a2a;
+  color: #7aad7a;
 }
 .cov-match-manual-badge {
   font-size: 9px;
@@ -2993,9 +3059,9 @@ footer {
   font-weight: bold;
   border: 0px solid #555;
   background-color: transparent;
-  color: #6a6076;
+  color: #576475;
   border-radius: 3px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236a6076' d='M2.5 4L6 7.5 9.5 4 11 5.5 6 10.5 1 5.5z'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23576475' d='M2.5 4L6 7.5 9.5 4 11 5.5 6 10.5 1 5.5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: left 2px center;
 }
