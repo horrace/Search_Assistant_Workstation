@@ -5044,7 +5044,6 @@ function renderCoverageAssessmentHtml() {
         const subExcluded = sub.excludedMatches || [];
         const subMatches = sub.satisfied
           ? sub.matches.map(m => covMatchTagHtml(m, r.id, sub.id)).join('')
-          ? sub.matches.map(m => covMatchTagHtml(m, r.id, sub.id)).join('')
           : '';
         const subExcludedHtml = (!covMatchTagViewOnly && subExcluded.length)
           ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
@@ -5061,7 +5060,6 @@ function renderCoverageAssessmentHtml() {
       // Standard single-level match tags inline with label
       const matchTags = r.satisfied
         ? r.matches.map(m => covMatchTagHtml(m, r.id, null)).join('')
-        ? r.matches.map(m => covMatchTagHtml(m, r.id, null)).join('')
         : '';
       const hintHtml = (!r.satisfied && r.type === 'part' && (r.preferredView || r.preferredWindow || r.preferredSliceThickness))
         ? `<span class="cov-hint">expected: ${escapeHtml([r.preferredView, r.preferredWindow, r.preferredSliceThickness].filter(Boolean).join(' '))}</span>`
@@ -5077,7 +5075,6 @@ function renderCoverageAssessmentHtml() {
       : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+ link</button>`;
 
     return `<div class="cov-item ${cls}">
-      ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       <div class="cov-item-body">
         <div class="cov-item-line">
