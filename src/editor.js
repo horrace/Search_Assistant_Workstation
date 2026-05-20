@@ -5044,11 +5044,13 @@ function renderCoverageAssessmentHtml() {
         const subExcluded = sub.excludedMatches || [];
         const subMatches = sub.satisfied
           ? sub.matches.map(m => covMatchTagHtml(m, r.id, sub.id)).join('')
+          ? sub.matches.map(m => covMatchTagHtml(m, r.id, sub.id)).join('')
           : '';
         const subExcludedHtml = (!covMatchTagViewOnly && subExcluded.length)
           ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
           : '';
         return `<div class="cov-sub-item ${subCls}">
+          ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           <span class="cov-sub-label">${escapeHtml(sub.label)}</span>
           ${subMatches}${subExcludedHtml}
@@ -5058,6 +5060,7 @@ function renderCoverageAssessmentHtml() {
     } else {
       // Standard single-level match tags inline with label
       const matchTags = r.satisfied
+        ? r.matches.map(m => covMatchTagHtml(m, r.id, null)).join('')
         ? r.matches.map(m => covMatchTagHtml(m, r.id, null)).join('')
         : '';
       const hintHtml = (!r.satisfied && r.type === 'part' && (r.preferredView || r.preferredWindow || r.preferredSliceThickness))
@@ -5074,6 +5077,7 @@ function renderCoverageAssessmentHtml() {
       : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+ link</button>`;
 
     return `<div class="cov-item ${cls}">
+      ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       <div class="cov-item-body">
         <div class="cov-item-line">
@@ -5246,6 +5250,16 @@ function wireCoveragePanel(panel) {
   if (editBtn) editBtn.addEventListener('click', () => {
     coverageEditMode = true;
     renderCoveragePanel();
+  });
+
+  // Assessment mode — match tag display toggle (global)
+  panel.querySelectorAll('.cov-match-display-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const viewOnly = btn.dataset.mode === 'view';
+      if (viewOnly === covMatchTagViewOnly) return;
+      covMatchTagViewOnly = viewOnly;
+      renderCoveragePanel();
+    });
   });
 
   // Assessment mode — match tag display toggle (global)
