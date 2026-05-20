@@ -5258,6 +5258,16 @@ function wireCoveragePanel(panel) {
     });
   });
 
+  // Assessment mode — match tag display toggle (global)
+  panel.querySelectorAll('.cov-match-display-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const viewOnly = btn.dataset.mode === 'view';
+      if (viewOnly === covMatchTagViewOnly) return;
+      covMatchTagViewOnly = viewOnly;
+      renderCoveragePanel();
+    });
+  });
+
   // Assessment mode — exclude match (mark irrelevant)
   panel.querySelectorAll('.cov-match-exclude-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
