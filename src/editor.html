@@ -82,9 +82,17 @@
         </div>
         <div class="tab-content tab-content--active" data-tab="parts-bank">
           <div class="parts-bank">
+            <div class="parts-bank-toolbar">
+              <input type="text" id="parts-bank-filter" class="parts-bank-filter" placeholder="Filter Library entries…">
+              <div class="parts-bank-type-toggle" role="tablist">
+                <button class="parts-bank-type-btn parts-bank-type-btn--active" data-pb-type="all" title="All entries">All</button>
+                <button class="parts-bank-type-btn" data-pb-type="anatomy" title="Anatomy only">A</button>
+                <button class="parts-bank-type-btn" data-pb-type="task" title="Tasks only">T</button>
+              </div>
+            </div>
             <div id="parts-bank-items" class="parts-bank-items">
-              <!-- Parts bank items will be loaded here -->
-              <div class="loading-indicator">Loading parts bank...</div>
+              <!-- Library entries will be rendered here as draggable items -->
+              <div class="loading-indicator">Loading Library…</div>
             </div>
           </div>
         </div>

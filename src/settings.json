@@ -1,12 +1,12 @@
 {
   "dataDirectory": "C:\\Users\\Jeff\\OneDrive\\Source\\PythonProjects\\SearchAssistant_Electron\\src",
   "mainWindowPosition": {
-    "x": 3116,
-    "y": 498
+    "x": 3098,
+    "y": 482
   },
   "editorWindowPosition": {
     "x": 2724,
-    "y": 68
+    "y": 0
   },
   "settingsWindowPosition": {
     "x": 930,
@@ -37,6 +37,6 @@
       }
     ]
   },
-  "schema_version": 2,
+  "schema_version": 3,
   "transparency": 0.8
 }

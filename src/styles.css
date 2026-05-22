@@ -1398,6 +1398,29 @@ footer {
   border-right: 2px solid #7aadcc;
 }
 
+/* ── Pattern-list insertion indicators (drop from Parts Bank between items) ── */
+.draggable-item.drop-before-target,
+.draggable-item.drop-after-target {
+  position: relative;
+}
+
+.draggable-item.drop-before-target::before,
+.draggable-item.drop-after-target::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: #4a90e2;
+  box-shadow: 0 0 6px rgba(74, 144, 226, 0.6);
+  z-index: 100;
+  pointer-events: none;
+  border-radius: 2px;
+}
+
+.draggable-item.drop-before-target::before { top:    -2px; }
+.draggable-item.drop-after-target::after   { bottom: -2px; }
+
 /* ── Coverage panel ── */
 .coverage-panel {
   flex: 1;
@@ -3291,8 +3314,95 @@ footer {
 }
 
 .parts-bank-items {
-    height: 100%;
+    flex: 1;
     overflow-y: auto;
+    min-height: 0;
+}
+
+/* Parts Bank toolbar (Phase 3 — Library-derived bank) */
+.parts-bank-toolbar {
+  display: flex;
+  gap: 4px;
+  padding: 4px 6px;
+  border-bottom: 1px solid #2a2a2a;
+  flex-shrink: 0;
+  align-items: center;
+}
+
+.parts-bank-filter {
+  flex: 1;
+  background: #2a2a2a;
+  border: 1px solid #444;
+  color: #ddd;
+  font-size: 12px;
+  padding: 3px 6px;
+  border-radius: 3px;
+  min-width: 0;
+}
+.parts-bank-filter:focus {
+  outline: none;
+  border-color: #6080a0;
+  background: #1e1e1e;
+}
+
+.parts-bank-type-toggle {
+  display: flex;
+  gap: 1px;
+}
+
+.parts-bank-type-btn {
+  background: #252525;
+  border: 1px solid #383838;
+  color: #888;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.parts-bank-type-btn:hover { color: #ccc; background: #303030; }
+.parts-bank-type-btn--active {
+  background: #2a3a4a;
+  color: #a0c8f0;
+  border-color: #3a5a7a;
+}
+
+/* Library-derived bank items */
+.part-bank-item {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 3px 6px;
+  cursor: grab;
+  border-radius: 3px;
+  transition: background 0.1s;
+  font-size: 12px;
+}
+.part-bank-item:hover { background: #2a3a4a; }
+.part-bank-item:active { cursor: grabbing; }
+
+.part-bank-abbr {
+  color: #d0d8e0;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.part-bank-subtitle {
+  color: #777;
+  font-size: 11px;
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+
+.parts-bank {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 /* Style for next-area when background is hidden */

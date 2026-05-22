@@ -141,7 +141,7 @@ class SearchPatternAPI {
 
   runSchemaMigrations() {
     try {
-      const TARGET_VERSION = 2;
+      const TARGET_VERSION = 3;
       if (!this.settings || typeof this.settings !== 'object') this.settings = {};
       const currentVersion = Number(this.settings.schema_version) || 0;
       if (currentVersion >= TARGET_VERSION) return;
@@ -160,6 +160,11 @@ class SearchPatternAPI {
       // v2: Library schema — promote abbr_registry to library/entries.json + general_abbrs.json
       if (currentVersion < 2) {
         this.migrateLibraryV2();
+      }
+
+      // v3: Parts Bank → Library — import settings.parts_bank into Library
+      if (currentVersion < 3) {
+        this.migratePartsBankV3();
       }
 
       this.settings.schema_version = TARGET_VERSION;
@@ -336,6 +341,83 @@ class SearchPatternAPI {
     console.log(`[API migrateLibraryV2] ${Object.keys(specific).length} registry entries → ${Object.keys(entries).length} Library entries; ${Object.keys(general).length} general abbreviations`);
   }
   // === END MIGRATION SCHEMA-V2 ===
+
+  // === BEGIN MIGRATION SCHEMA-V3 — delete once all users on v3+ ===
+  // Parts Bank → Library: each settings.parts_bank entry becomes (or is merged
+  // into) a Library entry. After migration the legacy bank is cleared.
+  migratePartsBankV3() {
+    const bank = (this.settings && Array.isArray(this.settings.parts_bank))
+      ? this.settings.parts_bank : [];
+    if (bank.length === 0) {
+      // Nothing to import; just ensure the field is gone
+      if (this.settings && 'parts_bank' in this.settings) {
+        this.settings.parts_bank_legacy = this.settings.parts_bank;
+        delete this.settings.parts_bank;
+      }
+      return;
+    }
+
+    const entries = this._loadLibraryEntries();
+
+    // Build alias→slug index from existing Library
+    const aliasToSlug = {};
+    for (const [slug, e] of Object.entries(entries)) {
+      aliasToSlug[slug.toLowerCase()] = slug;
+      for (const a of (e.aliases || [])) {
+        aliasToSlug[String(a).toLowerCase()] = slug;
+      }
+    }
+
+    const usedSlugs = new Set(Object.keys(entries));
+    const pickSlug = (cand) => {
+      let base = this._slugify(cand);
+      let s = base;
+      let n = 1;
+      while (usedSlugs.has(s)) { n++; s = `${base}_${n}`; }
+      usedSlugs.add(s);
+      return s;
+    };
+
+    let added = 0, merged = 0;
+    for (const part of bank) {
+      if (!part || !part.abbr) continue;
+      const lcAbbr = String(part.abbr).trim().toLowerCase();
+      const existingSlug = aliasToSlug[lcAbbr];
+      if (existingSlug) {
+        // Merge defaults non-destructively (preserve any user-set values)
+        const e = entries[existingSlug];
+        if (!e.defaultStrategy        && part.strategy)        e.defaultStrategy        = part.strategy;
+        if (!e.defaultWindow          && part.window)          e.defaultWindow          = part.window;
+        if (!e.defaultView            && part.view_plane)      e.defaultView            = part.view_plane;
+        if (!e.defaultSliceThickness  && part.slice_thickness) e.defaultSliceThickness  = part.slice_thickness;
+        merged++;
+      } else {
+        const slug = pickSlug(part.abbr);
+        entries[slug] = this._makeEntry({
+          type: 'anatomy',
+          fullName: '',
+          aliases: [part.abbr],
+          defaultStrategy:       part.strategy        || '',
+          defaultWindow:         part.window          || '',
+          defaultView:           part.view_plane      || '',
+          defaultSliceThickness: part.slice_thickness || ''
+        });
+        aliasToSlug[lcAbbr] = slug;
+        added++;
+      }
+    }
+
+    this._saveLibraryEntries(entries);
+
+    // Archive the legacy bank in settings and clear the live field
+    if (this.settings) {
+      this.settings.parts_bank_legacy = bank;
+      delete this.settings.parts_bank;
+    }
+
+    console.log(`[API migratePartsBankV3] Imported ${added} new Library entries, merged defaults into ${merged} existing entries`);
+  }
+  // === END MIGRATION SCHEMA-V3 ===
 
   // ─── Library API (Phase 3) ──────────────────────────────────────────────────
   get_library() {
@@ -1961,13 +2043,23 @@ class SearchPatternAPI {
   }
 
   // --- Parts Bank Methods ---
+  // After schema v3 the Parts Bank is derived from the Library — every entry
+  // can be dragged into a pattern. This method now synthesizes the legacy
+  // shape from library/entries.json so any back-compat callers keep working.
   get_parts_bank() {
-    //console.log('[API get_parts_bank] Retrieving parts bank.');
-    if (!this.settings || !this.settings.parts_bank) {
-        //console.warn('[API get_parts_bank] Parts bank not found in settings, returning empty array.');
-        return []; // Ensure it returns an array even if undefined
+    try {
+      const entries = this._loadLibraryEntries();
+      return Object.entries(entries).map(([slug, e]) => ({
+        abbr:             (e.aliases && e.aliases[0]) || slug,
+        strategy:         e.defaultStrategy        || '',
+        view_plane:       e.defaultView            || '',
+        window:           e.defaultWindow          || '',
+        slice_thickness:  e.defaultSliceThickness  || ''
+      }));
+    } catch (e) {
+      console.error(`[API get_parts_bank] ${e.message}`);
+      return [];
     }
-    return this.settings.parts_bank;
   }
 
   save_parts_bank(parts_bank_data) {

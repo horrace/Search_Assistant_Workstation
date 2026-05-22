@@ -153,7 +153,9 @@ if (togglePartsBankBtn && partsBankContainer) {
 let patterns = [];
 let currentPattern = '';
 let currentPatternItems = [];
-let partsBankList = [];
+let partsBankList = [];          // legacy — unused after Phase 3 link-up; kept for safety
+let partsBankFilter = '';        // current text filter for the Library-derived bank
+let partsBankTypeFilter = 'all'; // 'all' | 'anatomy' | 'task'
 let editorSettings = { hideOutroInEditor: false }; // Default editor settings
 let selectedIndex = -1;
 let selectedIndices = [];
@@ -2508,115 +2510,233 @@ async function saveCurrentPattern() {
 // ... (Assuming parts bank logic exists and uses `saveCurrentPattern` or similar on changes) ...
 // Make sure parts dragged from the bank are added with a default 'view: 'ax''
 
-// Function to add item from parts bank
-function addItemFromBank(partData) {
+// Function to add item from parts bank. If `insertIndex` is provided, the new
+// item is spliced into the pattern at that index (and inherits chapter/chunk
+// context from its neighbors); otherwise it's appended at the end.
+function addItemFromBank(partData, insertIndex) {
     const newItem = {
         abbr: partData.abbr || '',
         strategy: partData.strategy || '',
         chunkID: 0, // New items are not in chunks initially
-        view_plane: '', // Allow empty view_plane for new items
+        view_plane: partData.view_plane || '',
         window: partData.window || '',
-        slice_thickness: partData.slice_thickness || ''
+        slice_thickness: partData.slice_thickness || '',
+        chapter: '',
+        chapterID: ''
     };
 
-    // Add to the end of the current pattern list
-    currentPatternItems.push(newItem);
+    const len = currentPatternItems.length;
+    const targetIdx = (typeof insertIndex === 'number' && insertIndex >= 0 && insertIndex <= len)
+      ? insertIndex
+      : len;
 
-    console.log('Added item from bank:', newItem);
-    saveCurrentPattern(); // Save the updated pattern
-    renderPatternItems(); // Re-render the list
+    // Inherit chapter from the item being displaced (or the previous item at end-of-list)
+    // so dropping into a chaptered section keeps the new item in that chapter.
+    if (targetIdx < len) {
+      const next = currentPatternItems[targetIdx];
+      newItem.chapter   = next.chapter   || '';
+      newItem.chapterID = next.chapterID || '';
+    } else if (len > 0) {
+      const prev = currentPatternItems[len - 1];
+      newItem.chapter   = prev.chapter   || '';
+      newItem.chapterID = prev.chapterID || '';
+    }
+
+    currentPatternItems.splice(targetIdx, 0, newItem);
+    console.log(`Added item from bank at index ${targetIdx}:`, newItem);
+    saveCurrentPattern();
+    renderPatternItems();
 }
 
-// Load parts bank items
+// Parts Bank is now a Library-derived, draggable view of every Entry.
+// `loadPartsBank()` no longer hits a separate data source — it just (re)renders
+// from in-memory `libraryEntries`. The actual library data is fetched by
+// `loadLibrary()` at startup and refreshed whenever the Library is saved.
 async function loadPartsBank() {
-    partsBankItems.innerHTML = '<div class="loading-indicator">Loading parts bank...</div>';
-    window.electronAPI.callAPI('get_parts_bank', {});
-
-    const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-        if (data && data.responseFor === 'get_parts_bank') {
-            unsubscribe();
-            if (data.result && Array.isArray(data.result)) {
-                partsBankList = data.result.map(item => ({ ...item, view_plane: item.view_plane || '', window: item.window || '', slice_thickness: item.slice_thickness || '' })); // Allow empty fields
-                renderPartsBank();
-            } else if (data.error) {
-                console.error('Error loading parts bank:', data.error);
-                partsBankItems.innerHTML = `<div class="loading-indicator error">Error loading parts bank: ${data.error}</div>`;
-            } else {
-                 console.error('Unknown error loading parts bank. Response:', data);
-                 partsBankItems.innerHTML = '<div class="loading-indicator error">Unknown error loading parts bank.</div>';
-            }
-        }
-    });
+  if (!partsBankItems) return;
+  // If the library hasn't arrived yet, render a placeholder; loadLibrary will
+  // call renderPartsBank() once the data is ready.
+  if (!libraryEntries || Object.keys(libraryEntries).length === 0) {
+    partsBankItems.innerHTML = '<div class="loading-indicator">Loading Library…</div>';
+    return;
+  }
+  renderPartsBank();
 }
 
-// Render parts bank items
+// Render Parts Bank from libraryEntries, applying text + type filters.
 function renderPartsBank() {
-    if (!partsBankList || partsBankList.length === 0) {
-        partsBankItems.innerHTML = '<div class="loading-indicator">No parts in bank</div>';
-        return;
-    }
+  if (!partsBankItems) return;
 
-    let html = '';
-    partsBankList.forEach((part, index) => {
-        html += `
-            <div class="part-bank-item" draggable="true" data-index="${index}">
-                <span class="part-bank-abbr">${part.abbr}</span>
-                <span class="part-bank-strategy">${part.strategy || ''}</span>
-            </div>
-        `;
-    });
-    partsBankItems.innerHTML = html;
+  const filterLc = (partsBankFilter || '').toLowerCase().trim();
+  const typeFilter = partsBankTypeFilter || 'all';
 
-    // Add drag start listeners
-    document.querySelectorAll('.part-bank-item').forEach(item => {
-        item.addEventListener('dragstart', handlePartBankDragStart);
-    });
+  let entries = Object.entries(libraryEntries || {}).filter(([slug, e]) => {
+    if (!e) return false;
+    if (typeFilter !== 'all' && (e.type || 'anatomy') !== typeFilter) return false;
+    if (!filterLc) return true;
+    if (slug.toLowerCase().includes(filterLc)) return true;
+    if ((e.fullName || '').toLowerCase().includes(filterLc)) return true;
+    return (e.aliases || []).some(a => String(a).toLowerCase().includes(filterLc));
+  });
+
+  // Sort by primary alias for stable ordering
+  entries.sort(([sA, a], [sB, b]) => {
+    const aa = ((a.aliases && a.aliases[0]) || a.fullName || sA).toLowerCase();
+    const bb = ((b.aliases && b.aliases[0]) || b.fullName || sB).toLowerCase();
+    return aa.localeCompare(bb);
+  });
+
+  if (entries.length === 0) {
+    partsBankItems.innerHTML = filterLc || typeFilter !== 'all'
+      ? '<div class="loading-indicator">No Library entries match this filter.</div>'
+      : '<div class="loading-indicator">No Library entries yet. Add some via the Library button.</div>';
+    return;
+  }
+
+  partsBankItems.innerHTML = entries.map(([slug, e]) => {
+    const primary = (e.aliases && e.aliases[0]) || e.fullName || slug;
+    const showFn  = e.fullName && e.fullName !== primary;
+    const typeTag = (e.type === 'task')
+      ? '<span class="library-type-tag library-type-tag--task">T</span>'
+      : '<span class="library-type-tag library-type-tag--anatomy">A</span>';
+    return `<div class="part-bank-item" draggable="true" data-slug="${escapeHtml(slug)}">
+      ${typeTag}
+      <span class="part-bank-abbr">${escapeHtml(primary)}</span>
+      ${showFn ? `<span class="part-bank-subtitle">${escapeHtml(e.fullName)}</span>` : ''}
+    </div>`;
+  }).join('');
+
+  partsBankItems.querySelectorAll('.part-bank-item').forEach(item => {
+    item.addEventListener('dragstart', handlePartBankDragStart);
+  });
 }
 
-// Handle drag start from parts bank
+// Handle drag start — looks up the Library entry by slug and seeds the new
+// pattern item with the entry's defaults (view/window/slice/strategy).
 function handlePartBankDragStart(e) {
-    const index = parseInt(e.target.getAttribute('data-index'));
-    if (!isNaN(index) && index < partsBankList.length) {
-        const partData = partsBankList[index];
-        // Set data to be transferred (e.g., JSON string of the part)
-        e.dataTransfer.setData('application/json', JSON.stringify(partData));
-        e.dataTransfer.effectAllowed = 'copy'; // Indicate copying
-        console.log('Dragging part from bank:', partData);
-    } else {
-        console.error('Invalid index for parts bank drag start');
-        e.preventDefault(); // Prevent drag if data is invalid
-    }
+  const target = e.target.closest('[data-slug]');
+  if (!target) { e.preventDefault(); return; }
+  const slug = target.getAttribute('data-slug');
+  const entry = slug ? libraryEntries[slug] : null;
+  if (!entry) { e.preventDefault(); return; }
+
+  const primary = (entry.aliases && entry.aliases[0]) || entry.fullName || slug;
+  const partData = {
+    type:            'library-entry',          // discriminator for drop targets
+    slug:            slug,
+    abbr:            primary,
+    strategy:        entry.defaultStrategy        || '',
+    view_plane:      entry.defaultView            || '',
+    window:          entry.defaultWindow          || '',
+    slice_thickness: entry.defaultSliceThickness  || ''
+  };
+  e.dataTransfer.setData('application/json', JSON.stringify(partData));
+  e.dataTransfer.effectAllowed = 'copy';
 }
 
 // --- Setup Drag and Drop for Pattern Items Area ---
+
+// Find the insertion index based on where the mouse is over the pattern list.
+// Returns:
+//   - integer in [0, currentPatternItems.length] — insert before that pattern index
+//   - null when the mouse is over a strategy-chip drop target (let that handler run)
+function getPatternInsertionIndex(e) {
+  // If the cursor is over a strategy chips view, defer to its drop handler.
+  if (e.target.closest && e.target.closest('.strategy-chips-view')) return null;
+
+  // Collect every leaf-or-chunk-container pattern item with a data-item-index.
+  // We DON'T include chapter wrappers (data-is-chapter="true") because their
+  // children carry the real per-item indices.
+  const candidates = Array.from(patternItems.querySelectorAll('.draggable-item[data-item-index]'))
+    .filter(el => el.dataset.isChapter !== 'true')
+    .map(el => ({
+      el,
+      idx:  parseInt(el.dataset.itemIndex, 10),
+      rect: el.getBoundingClientRect()
+    }))
+    .filter(c => !isNaN(c.idx))
+    .sort((a, b) => a.rect.top - b.rect.top);
+
+  if (candidates.length === 0) return 0;
+
+  const mouseY = e.clientY;
+  for (const c of candidates) {
+    if (mouseY < c.rect.top + c.rect.height / 2) return c.idx;
+  }
+  return currentPatternItems.length;
+}
+
+function clearPatternDropIndicator() {
+  patternItems.querySelectorAll('.drop-before-target, .drop-after-target').forEach(el =>
+    el.classList.remove('drop-before-target', 'drop-after-target'));
+  patternItems.classList.remove('drag-over');
+}
+
+function showPatternDropIndicator(insertIndex) {
+  clearPatternDropIndicator();
+  patternItems.classList.add('drag-over');
+
+  if (insertIndex >= currentPatternItems.length) {
+    // After the last visible candidate
+    const visible = Array.from(patternItems.querySelectorAll('.draggable-item[data-item-index]'))
+      .filter(el => el.dataset.isChapter !== 'true');
+    const last = visible[visible.length - 1];
+    if (last) last.classList.add('drop-after-target');
+    return;
+  }
+
+  // Before the candidate whose data-item-index matches
+  const target = Array.from(patternItems.querySelectorAll(`.draggable-item[data-item-index="${insertIndex}"]`))
+    .find(el => el.dataset.isChapter !== 'true');
+  if (target) target.classList.add('drop-before-target');
+}
+
 function setupPatternDropZone() {
     patternItems.addEventListener('dragover', (e) => {
-        e.preventDefault(); // Necessary to allow dropping
-        e.dataTransfer.dropEffect = 'copy'; // Visual cue
-        patternItems.classList.add('drag-over'); // Add visual feedback
+        // Must call preventDefault to allow drop
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+
+        const idx = getPatternInsertionIndex(e);
+        if (idx === null) {
+          // Strategy-chip drop target is handling this — clear our own indicator
+          clearPatternDropIndicator();
+          return;
+        }
+        // Stash the live insertion index on the container for the drop handler
+        patternItems.dataset.dropInsertIndex = String(idx);
+        showPatternDropIndicator(idx);
     });
 
     patternItems.addEventListener('dragleave', (e) => {
-        patternItems.classList.remove('drag-over'); // Remove visual feedback
+        // Only clear when the cursor truly leaves patternItems (not when crossing
+        // into a child element).
+        if (e.relatedTarget && patternItems.contains(e.relatedTarget)) return;
+        clearPatternDropIndicator();
+        delete patternItems.dataset.dropInsertIndex;
     });
 
     patternItems.addEventListener('drop', (e) => {
         e.preventDefault();
-        patternItems.classList.remove('drag-over');
         const partDataString = e.dataTransfer.getData('application/json');
+        const insertIndex = parseInt(patternItems.dataset.dropInsertIndex ?? '', 10);
+        clearPatternDropIndicator();
+        delete patternItems.dataset.dropInsertIndex;
 
-        if (partDataString) {
-            try {
-                const partData = JSON.parse(partDataString);
-                console.log('Dropped part data:', partData);
-                // TODO: Determine drop position if needed, or just add to end
-                addItemFromBank(partData);
-            } catch (error) {
-                console.error('Error parsing dropped data:', error);
-            }
-        } else {
-            console.log('Drop event without expected data type.');
-        }
+        if (!partDataString) return;
+
+        let partData;
+        try { partData = JSON.parse(partDataString); }
+        catch (err) { console.error('Error parsing dropped data:', err); return; }
+
+        // Only accept Library-entry drops here; chip moves are handled by
+        // handleChipViewDrop which stops propagation before we see them.
+        if (!partData || partData.type !== 'library-entry') return;
+
+        const targetIdx = (!isNaN(insertIndex) && insertIndex >= 0)
+          ? insertIndex
+          : currentPatternItems.length;
+        addItemFromBank(partData, targetIdx);
     });
 }
 
@@ -3357,6 +3477,23 @@ function init() {
   initRightPanelTabs();
   loadAbbrRegistry();
   loadLibrary();
+
+  // Parts Bank filter + type toggle (Phase 3 — Library-derived bank)
+  const pbFilterInput = document.getElementById('parts-bank-filter');
+  if (pbFilterInput) {
+    pbFilterInput.addEventListener('input', (e) => {
+      partsBankFilter = e.target.value;
+      renderPartsBank();
+    });
+  }
+  document.querySelectorAll('.parts-bank-type-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      partsBankTypeFilter = btn.dataset.pbType || 'all';
+      document.querySelectorAll('.parts-bank-type-btn').forEach(b =>
+        b.classList.toggle('parts-bank-type-btn--active', b === btn));
+      renderPartsBank();
+    });
+  });
 
   const abbrRegistryBtn = document.getElementById('abbr-registry-btn');
   if (abbrRegistryBtn) abbrRegistryBtn.addEventListener('click', openAbbrRegistry);
@@ -4719,17 +4856,44 @@ function handleChipViewDrop(e) {
 
   let data;
   try { data = JSON.parse(e.dataTransfer.getData('application/json')); } catch { return; }
-  if (!data || data.type !== 'chip') return;
+  if (!data) return;
 
   const targetItemIndex = parseInt(view.dataset.index);
-  const { chipText, itemIndex: sourceItemIndex } = data;
-
   if (isNaN(targetItemIndex) || targetItemIndex < 0 || targetItemIndex >= currentPatternItems.length) return;
-  if (isNaN(sourceItemIndex) || sourceItemIndex < 0 || sourceItemIndex >= currentPatternItems.length) return;
-
-  const sourceItem = currentPatternItems[sourceItemIndex];
   const targetItem = currentPatternItems[targetItemIndex];
-  if (sourceItem.isOutroItem || targetItem.isOutroItem) return;
+  if (targetItem.isOutroItem) return;
+
+  // ── Branch A: dropping a Library entry into the strategy area → add as a subpart chip
+  if (data.type === 'library-entry') {
+    const subpartText = String(data.abbr || '').trim();
+    if (!subpartText) return;
+
+    const targetChips      = parseStrategyIntoChips(targetItem.strategy || '');
+    const targetSubparts   = targetChips.filter(c => c.type === 'subpart');
+    const targetStrategies = targetChips.filter(c => c.type === 'strategy');
+
+    // Avoid duplicates — if it's already a subpart, do nothing
+    if (targetSubparts.some(c => c.text.toLowerCase() === subpartText.toLowerCase())) return;
+
+    const subpartInsert = Math.max(0, Math.min(insertIndex, targetSubparts.length));
+    targetSubparts.splice(subpartInsert, 0, { type: 'subpart', text: subpartText });
+    currentPatternItems[targetItemIndex] = {
+      ...targetItem,
+      strategy: serializeChipsToStrategy([...targetSubparts, ...targetStrategies])
+    };
+
+    saveCurrentPattern();
+    renderPatternItems();
+    return;
+  }
+
+  // ── Branch B: dropping an existing strategy chip (move between strategy fields)
+  if (data.type !== 'chip') return;
+
+  const { chipText, itemIndex: sourceItemIndex } = data;
+  if (isNaN(sourceItemIndex) || sourceItemIndex < 0 || sourceItemIndex >= currentPatternItems.length) return;
+  const sourceItem = currentPatternItems[sourceItemIndex];
+  if (sourceItem.isOutroItem) return;
 
   // Remove chip from source item
   const sourceChips = parseStrategyIntoChips(sourceItem.strategy || '');
@@ -5049,7 +5213,6 @@ function renderCoverageAssessmentHtml() {
           ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
           : '';
         return `<div class="cov-sub-item ${subCls}">
-          ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           <span class="cov-sub-label">${escapeHtml(sub.label)}</span>
           ${subMatches}${subExcludedHtml}
@@ -5804,6 +5967,8 @@ function loadLibrary() {
       rebuildAliasIndex();
       // Coverage may re-assess now that Library is available
       try { renderCoveragePanel(); } catch (_) {}
+      // Parts Bank derives from libraryEntries — refresh the bank now that data is in
+      try { renderPartsBank(); } catch (_) {}
       // If the Library dialog happens to be open, refresh it with the new data
       const overlay = document.getElementById('abbr-registry-overlay');
       if (overlay && overlay.style.display !== 'none') {
@@ -5833,6 +5998,13 @@ const IRREGULAR_PLURALS = Object.freeze({
   'menisci':    'meniscus',
   'calculi':    'calculus',
   'tarsi':      'tarsus',
+
+  // English-style -uses → -us (Latin 4th-decl. nouns where English uses -uses)
+  'sinuses':    'sinus',
+  'meatuses':   'meatus',
+  'plexuses':   'plexus',
+  'uteruses':   'uterus',
+  'fetuses':    'fetus',
 
   // Latin -um / -a
   'septa':       'septum',
@@ -6485,6 +6657,7 @@ function saveLibraryToBackend() {
   rebuildAliasIndex();
   loadAbbrRegistry();
   renderCoveragePanel();
+  try { renderPartsBank(); } catch (_) {}
 }
 
 function addLibraryEntry() {
