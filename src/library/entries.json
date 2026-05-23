@@ -1,5 +1,5 @@
 {
-  "mca": {
+  "Middle Cerebral Artery": {
     "type": "anatomy",
     "fullName": "Middle Cerebral Artery",
     "aliases": [
@@ -12,9 +12,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "carotids": {
+  "Carotid Arteries": {
     "type": "anatomy",
     "fullName": "Carotid Arteries",
     "aliases": [
@@ -27,9 +31,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "vascular"
+    ]
   },
-  "mca_furcation": {
+  "bifurcation": {
     "type": "anatomy",
     "fullName": "bifurcation",
     "aliases": [
@@ -42,9 +50,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "aneurysm": {
+  "Aneurysm Review": {
     "type": "task",
     "fullName": "Aneurysm Review",
     "aliases": [
@@ -57,24 +69,30 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "global": {
+  "Global review of cerebral vasculature": {
     "type": "task",
-    "fullName": "",
+    "fullName": "Global review of cerebral vasculature",
     "aliases": [
       "Global"
     ],
     "parents": [],
     "flowsTo": [],
-    "defaultView": "",
+    "defaultView": "3D",
     "defaultWindow": "",
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Tasks",
+    "tags": []
   },
-  "salivary": {
+  "Salivary Glands": {
     "type": "anatomy",
     "fullName": "Salivary Glands",
     "aliases": [
@@ -87,9 +105,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "gland"
+    ]
   },
-  "adt": {
+  "Aerodigestive Tract": {
     "type": "anatomy",
     "fullName": "Aerodigestive Tract",
     "aliases": [
@@ -103,11 +125,15 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "airway"
+    ]
   },
-  "fat_pads": {
+  "Fat pads": {
     "type": "anatomy",
-    "fullName": "",
+    "fullName": "Fat pads",
     "aliases": [
       "Fat pads"
     ],
@@ -118,9 +144,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": "Face"
+    "note": "Face",
+    "region": "Head/Neck",
+    "tags": [
+      "soft tissue"
+    ]
   },
-  "pe": {
+  "Pulmonary Embolism": {
     "type": "anatomy",
     "fullName": "Pulmonary Embolism",
     "aliases": [
@@ -133,11 +163,15 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "vascular"
+    ]
   },
-  "face_st": {
+  "Face ST": {
     "type": "anatomy",
-    "fullName": "",
+    "fullName": "Face ST",
     "aliases": [
       "Face ST"
     ],
@@ -148,9 +182,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "soft tissue"
+    ]
   },
-  "ant_spfc_st": {
+  "Anterior Superficial Soft Tissues": {
     "type": "anatomy",
     "fullName": "Anterior Superficial Soft Tissues",
     "aliases": [
@@ -163,11 +201,15 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "soft tissue"
+    ]
   },
-  "mandible_maxilla": {
+  "Mandible, maxilla": {
     "type": "anatomy",
-    "fullName": "",
+    "fullName": "Mandible, maxilla",
     "aliases": [
       "Mandible, maxilla"
     ],
@@ -178,16 +220,20 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "bone"
+    ]
   },
-  "cca": {
+  "Common Carotid Artery": {
     "type": "anatomy",
     "fullName": "Common Carotid Artery",
     "aliases": [
       "CCA"
     ],
     "parents": [
-      "new_entry"
+      "Neck Arteries"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -195,16 +241,20 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "vascular"
+    ]
   },
-  "ica": {
+  "Internal Carotid Artery": {
     "type": "anatomy",
     "fullName": "Internal Carotid Artery",
     "aliases": [
       "ICA"
     ],
     "parents": [
-      "new_entry"
+      "Neck Arteries"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -212,9 +262,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "vascular"
+    ]
   },
-  "vertebrobas": {
+  "Vertebrobasilar System": {
     "type": "anatomy",
     "fullName": "Vertebrobasilar System",
     "aliases": [
@@ -227,9 +281,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "ln": {
+  "Lymph Nodes": {
     "type": "anatomy",
     "fullName": "Lymph Nodes",
     "aliases": [
@@ -243,9 +301,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "lymphatic"
+    ]
   },
-  "thyr": {
+  "Thyroid": {
     "type": "anatomy",
     "fullName": "Thyroid",
     "aliases": [
@@ -258,9 +320,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "gland"
+    ]
   },
-  "esoph": {
+  "Esophagus": {
     "type": "anatomy",
     "fullName": "Esophagus",
     "aliases": [
@@ -273,9 +339,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "GI"
+    ]
   },
-  "verts": {
+  "Vertebral Arteries": {
     "type": "anatomy",
     "fullName": "Vertebral Arteries",
     "aliases": [
@@ -288,9 +358,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "vbs": {
+  "Vertebral Bodies": {
     "type": "anatomy",
     "fullName": "Vertebral Bodies",
     "aliases": [
@@ -303,9 +377,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "basilar": {
+  "Basilar Artery": {
     "type": "anatomy",
     "fullName": "Basilar Artery",
     "aliases": [
@@ -313,7 +389,7 @@
       "Bas"
     ],
     "parents": [
-      "vertebrobas"
+      "Vertebrobasilar System"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -321,9 +397,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "sfa": {
+  "Superficial Femoral Artery": {
     "type": "anatomy",
     "fullName": "Superficial Femoral Artery",
     "aliases": [
@@ -336,9 +416,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "ivc": {
+  "Inferior Vena Cava": {
     "type": "anatomy",
     "fullName": "Inferior Vena Cava",
     "aliases": [
@@ -351,9 +435,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "svc": {
+  "Superior Vena Cava": {
     "type": "anatomy",
     "fullName": "Superior Vena Cava",
     "aliases": [
@@ -366,9 +454,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "vascular"
+    ]
   },
-  "acom": {
+  "Anterior Communicating Artery": {
     "type": "anatomy",
     "fullName": "Anterior Communicating Artery",
     "aliases": [
@@ -381,9 +473,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "pcom": {
+  "Posterior Communicating Artery": {
     "type": "anatomy",
     "fullName": "Posterior Communicating Artery",
     "aliases": [
@@ -396,9 +492,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "cia": {
+  "Common Iliac Artery": {
     "type": "anatomy",
     "fullName": "Common Iliac Artery",
     "aliases": [
@@ -411,9 +511,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "eia": {
+  "External Iliac Artery": {
     "type": "anatomy",
     "fullName": "External Iliac Artery",
     "aliases": [
@@ -426,9 +530,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "panc": {
+  "Pancreas": {
     "type": "anatomy",
     "fullName": "Pancreas",
     "aliases": [
@@ -441,9 +549,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "iliac_ivc": {
+  "Iliac Veins Through IVC": {
     "type": "anatomy",
     "fullName": "Iliac Veins Through IVC",
     "aliases": [
@@ -456,11 +568,15 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "free_air_free_fluid": {
+  "Free air / Free fluid": {
     "type": "anatomy",
-    "fullName": "",
+    "fullName": "Free air / Free fluid",
     "aliases": [
       "Free air / Free fluid"
     ],
@@ -471,9 +587,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "finding"
+    ]
   },
-  "adrenals": {
+  "Adrenal Glands": {
     "type": "anatomy",
     "fullName": "Adrenal Glands",
     "aliases": [
@@ -486,9 +606,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "endocrine"
+    ]
   },
-  "kub": {
+  "Kidneys, Ureters, Bladder": {
     "type": "anatomy",
     "fullName": "Kidneys, Ureters, Bladder",
     "aliases": [
@@ -501,9 +625,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GU"
+    ]
   },
-  "ven_vasc": {
+  "Venous Vasculature": {
     "type": "anatomy",
     "fullName": "Venous Vasculature",
     "aliases": [
@@ -516,11 +644,15 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "vascular"
+    ]
   },
-  "ant_abd_wall_omentum_peri_neum_rectal_post_abd_wall": {
+  "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall": {
     "type": "anatomy",
-    "fullName": "",
+    "fullName": "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall",
     "aliases": [
       "Ant abd wall/omentum -> Peri-neum/rectal -> Post Abd wall"
     ],
@@ -531,9 +663,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "soft tissue"
+    ]
   },
-  "canal": {
+  "Spinal Canal": {
     "type": "anatomy",
     "fullName": "Spinal Canal",
     "aliases": [
@@ -546,9 +682,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "sacr": {
+  "Sacrum": {
     "type": "anatomy",
     "fullName": "Sacrum",
     "aliases": [
@@ -561,9 +699,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "bstem": {
+  "brainstem": {
     "type": "anatomy",
     "fullName": "brainstem",
     "aliases": [
@@ -576,9 +716,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "parenchyma"
+    ]
   },
-  "bg": {
+  "basal ganglia": {
     "type": "anatomy",
     "fullName": "basal ganglia",
     "aliases": [
@@ -591,9 +735,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "parenchyma"
+    ]
   },
-  "subclav": {
+  "Subclavian Artery": {
     "type": "anatomy",
     "fullName": "Subclavian Artery",
     "aliases": [
@@ -606,9 +754,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "vascular"
+    ]
   },
-  "sma": {
+  "Superior Mesenteric Artery": {
     "type": "anatomy",
     "fullName": "Superior Mesenteric Artery",
     "aliases": [
@@ -621,9 +773,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "sb": {
+  "Small Bowel": {
     "type": "anatomy",
     "fullName": "Small Bowel",
     "aliases": [
@@ -636,9 +792,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "mes": {
+  "Mesentery": {
     "type": "anatomy",
     "fullName": "Mesentery",
     "aliases": [
@@ -651,9 +811,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "duod": {
+  "duodenum": {
     "type": "anatomy",
     "fullName": "duodenum",
     "aliases": [
@@ -666,9 +830,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "gb": {
+  "Gallbladder": {
     "type": "anatomy",
     "fullName": "Gallbladder",
     "aliases": [
@@ -681,9 +849,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "scap": {
+  "Scapula": {
     "type": "anatomy",
     "fullName": "Scapula",
     "aliases": [
@@ -696,9 +868,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "MSK",
+    "tags": [
+      "bone"
+    ]
   },
-  "clav": {
+  "Clavicle": {
     "type": "anatomy",
     "fullName": "Clavicle",
     "aliases": [
@@ -711,9 +887,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "MSK",
+    "tags": [
+      "bone"
+    ]
   },
-  "aca": {
+  "Anterior Cerebral Artery": {
     "type": "anatomy",
     "fullName": "Anterior Cerebral Artery",
     "aliases": [
@@ -726,9 +906,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "la": {
+  "Left Atrium": {
     "type": "anatomy",
     "fullName": "Left Atrium",
     "aliases": [
@@ -741,9 +925,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": "Heart"
+    "note": "Heart",
+    "region": "Chest",
+    "tags": [
+      "cardiac"
+    ]
   },
-  "rect": {
+  "Rectum": {
     "type": "anatomy",
     "fullName": "Rectum",
     "aliases": [
@@ -756,9 +944,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "appe": {
+  "appendix": {
     "type": "anatomy",
     "fullName": "appendix",
     "aliases": [
@@ -771,9 +963,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "bronch": {
+  "Bronchi": {
     "type": "anatomy",
     "fullName": "Bronchi",
     "aliases": [
@@ -786,9 +982,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "airway"
+    ]
   },
-  "scapclav": {
+  "Scapula and Clavicle": {
     "type": "anatomy",
     "fullName": "Scapula and Clavicle",
     "aliases": [
@@ -801,9 +1001,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "MSK",
+    "tags": [
+      "bone"
+    ]
   },
-  "grtroch": {
+  "Greater Trochanter": {
     "type": "anatomy",
     "fullName": "Greater Trochanter",
     "aliases": [
@@ -816,9 +1020,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "MSK",
+    "tags": [
+      "bone"
+    ]
   },
-  "transproc": {
+  "Transverse Process": {
     "type": "anatomy",
     "fullName": "Transverse Process",
     "aliases": [
@@ -831,9 +1039,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "aort": {
+  "aorta": {
     "type": "anatomy",
     "fullName": "aorta",
     "aliases": [
@@ -846,9 +1056,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "vascular"
+    ]
   },
-  "ata": {
+  "anterior tibial artery": {
     "type": "anatomy",
     "fullName": "anterior tibial artery",
     "aliases": [
@@ -861,9 +1075,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "pta": {
+  "Posterior tibial artery": {
     "type": "anatomy",
     "fullName": "Posterior tibial artery",
     "aliases": [
@@ -876,9 +1094,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "pca": {
+  "Posterior Cerebral Artery": {
     "type": "anatomy",
     "fullName": "Posterior Cerebral Artery",
     "aliases": [
@@ -891,9 +1113,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "rv": {
+  "Right Ventricle": {
     "type": "anatomy",
     "fullName": "Right Ventricle",
     "aliases": [
@@ -906,9 +1132,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": "Heart"
+    "note": "Heart",
+    "region": "Chest",
+    "tags": [
+      "cardiac"
+    ]
   },
-  "lv": {
+  "Left Ventricle": {
     "type": "anatomy",
     "fullName": "Left Ventricle",
     "aliases": [
@@ -921,9 +1151,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": "Heart"
+    "note": "Heart",
+    "region": "Chest",
+    "tags": [
+      "cardiac"
+    ]
   },
-  "ra": {
+  "Right Atrium": {
     "type": "anatomy",
     "fullName": "Right Atrium",
     "aliases": [
@@ -936,9 +1170,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": "Heart"
+    "note": "Heart",
+    "region": "Chest",
+    "tags": [
+      "cardiac"
+    ]
   },
-  "apex": {
+  "Lung Apex": {
     "type": "anatomy",
     "fullName": "Lung Apex",
     "aliases": [
@@ -951,9 +1189,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "pulmonary"
+    ]
   },
-  "cbd": {
+  "Common Bile Duct": {
     "type": "anatomy",
     "fullName": "Common Bile Duct",
     "aliases": [
@@ -966,9 +1208,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "GI"
+    ]
   },
-  "tbone": {
+  "Temporal Bone": {
     "type": "anatomy",
     "fullName": "Temporal Bone",
     "aliases": [
@@ -981,9 +1227,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "bone"
+    ]
   },
-  "iac": {
+  "Internal Auditory Canal": {
     "type": "anatomy",
     "fullName": "Internal Auditory Canal",
     "aliases": [
@@ -996,9 +1246,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "bone"
+    ]
   },
-  "eac": {
+  "External Auditory Canal": {
     "type": "anatomy",
     "fullName": "External Auditory Canal",
     "aliases": [
@@ -1011,9 +1265,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "bone"
+    ]
   },
-  "cfa": {
+  "Common Femoral Artery": {
     "type": "anatomy",
     "fullName": "Common Femoral Artery",
     "aliases": [
@@ -1026,9 +1284,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "civ": {
+  "Common Iliac Vein": {
     "type": "anatomy",
     "fullName": "Common Iliac Vein",
     "aliases": [
@@ -1041,9 +1303,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "cfv": {
+  "Common Femoral Vein": {
     "type": "anatomy",
     "fullName": "Common Femoral Vein",
     "aliases": [
@@ -1056,9 +1322,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "pfossa": {
+  "Posterior Fossa": {
     "type": "anatomy",
     "fullName": "Posterior Fossa",
     "aliases": [
@@ -1071,9 +1341,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": "Infratentorial"
+    "note": "Infratentorial",
+    "region": "Intracranial",
+    "tags": [
+      "parenchyma"
+    ]
   },
-  "sfv": {
+  "Superficial Femoral Vein": {
     "type": "anatomy",
     "fullName": "Superficial Femoral Vein",
     "aliases": [
@@ -1086,9 +1360,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "smv": {
+  "Superior Mesenteric Vein": {
     "type": "anatomy",
     "fullName": "Superior Mesenteric Vein",
     "aliases": [
@@ -1101,9 +1379,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "tspine": {
+  "Thoracic Spine": {
     "type": "anatomy",
     "fullName": "Thoracic Spine",
     "aliases": [
@@ -1116,9 +1398,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "cspine": {
+  "Cervical Spine": {
     "type": "anatomy",
     "fullName": "Cervical Spine",
     "aliases": [
@@ -1131,9 +1415,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "lspine": {
+  "Lumbar Spine": {
     "type": "anatomy",
     "fullName": "Lumbar Spine",
     "aliases": [
@@ -1146,9 +1432,11 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Spine",
+    "tags": []
   },
-  "cc": {
+  "corpus callosum": {
     "type": "anatomy",
     "fullName": "corpus callosum",
     "aliases": [
@@ -1161,9 +1449,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "parenchyma"
+    ]
   },
-  "eiv": {
+  "External Iliac Vein": {
     "type": "anatomy",
     "fullName": "External Iliac Vein",
     "aliases": [
@@ -1176,9 +1468,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Abdomen/Pelvis",
+    "tags": [
+      "vascular"
+    ]
   },
-  "eca": {
+  "External Carotid Artery": {
     "type": "anatomy",
     "fullName": "External Carotid Artery",
     "aliases": [
@@ -1191,9 +1487,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "vascular"
+    ]
   },
-  "ijv": {
+  "internal jugular vein": {
     "type": "anatomy",
     "fullName": "internal jugular vein",
     "aliases": [
@@ -1206,9 +1506,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "vascular"
+    ]
   },
-  "tm": {
+  "tympanic membrane": {
     "type": "anatomy",
     "fullName": "tympanic membrane",
     "aliases": [
@@ -1221,9 +1525,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "soft tissue"
+    ]
   },
-  "tmj": {
+  "Temporomandibular Joint": {
     "type": "anatomy",
     "fullName": "Temporomandibular Joint",
     "aliases": [
@@ -1236,12 +1544,18 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "bone"
+    ]
   },
-  "new_entry": {
+  "Neck Arteries": {
     "type": "task",
     "fullName": "Neck Arteries",
-    "aliases": [],
+    "aliases": [
+      "Neck Art"
+    ],
     "parents": [],
     "flowsTo": [],
     "defaultView": "",
@@ -1249,16 +1563,18 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Tasks",
+    "tags": []
   },
-  "new_entry_2": {
+  "Transverse Sinus": {
     "type": "anatomy",
     "fullName": "Transverse Sinus",
     "aliases": [
       "Trans"
     ],
     "parents": [
-      "new_entry_3"
+      "Dural Venous Sinuses"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -1266,9 +1582,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "new_entry_3": {
+  "Dural Venous Sinuses": {
     "type": "anatomy",
     "fullName": "Dural Venous Sinuses",
     "aliases": [
@@ -1281,16 +1601,20 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "new_entry_4": {
+  "Jugular Bulb": {
     "type": "anatomy",
     "fullName": "Jugular Bulb",
     "aliases": [
       "JugB"
     ],
     "parents": [
-      "new_entry_3"
+      "Dural Venous Sinuses"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -1298,9 +1622,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "new_entry_5": {
+  "Tracheobronchial": {
     "type": "anatomy",
     "fullName": "Tracheobronchial",
     "aliases": [
@@ -1313,9 +1641,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Chest",
+    "tags": [
+      "airway"
+    ]
   },
-  "new_entry_6": {
+  "Cerebellar Hemispheres": {
     "type": "anatomy",
     "fullName": "Cerebellar Hemispheres",
     "aliases": [
@@ -1329,9 +1661,13 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "parenchyma"
+    ]
   },
-  "new_entry_7": {
+  "Palatine Tonsils": {
     "type": "anatomy",
     "fullName": "Palatine Tonsils",
     "aliases": [
@@ -1344,16 +1680,20 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Head/Neck",
+    "tags": [
+      "soft tissue"
+    ]
   },
-  "new_entry_8": {
+  "Sigmoid Sinus": {
     "type": "anatomy",
     "fullName": "Sigmoid Sinus",
     "aliases": [
       "sigm"
     ],
     "parents": [
-      "new_entry_3"
+      "Dural Venous Sinuses"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -1361,16 +1701,20 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   },
-  "new_entry_9": {
+  "Vein of Galen": {
     "type": "anatomy",
     "fullName": "Vein of Galen",
     "aliases": [
       "VoG"
     ],
     "parents": [
-      "new_entry_3"
+      "Dural Venous Sinuses"
     ],
     "flowsTo": [],
     "defaultView": "",
@@ -1378,6 +1722,10 @@
     "defaultSliceThickness": "",
     "defaultStrategy": "",
     "image": "",
-    "note": ""
+    "note": "",
+    "region": "Intracranial",
+    "tags": [
+      "vascular"
+    ]
   }
 }

@@ -2238,6 +2238,56 @@ footer {
   flex-shrink: 0;
 }
 
+/* Region group headers — Library list */
+.library-region-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px 3px;
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.library-region-header:hover { background: #222; }
+.library-region-chevron { font-size: 9px; color: #666; flex-shrink: 0; }
+.library-region-name   { font-size: 10px; font-weight: 700; color: #7a9abf; text-transform: uppercase; letter-spacing: 0.06em; flex: 1; }
+.library-region-count  { font-size: 10px; color: #555; flex-shrink: 0; }
+.library-region-items--collapsed { display: none; }
+
+/* Tag pills in library list */
+.library-list-tag {
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  background: #2a3520;
+  color: #8ab070;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Region group headers — Parts Bank */
+.pb-region-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px 2px;
+  background: #1a1a1a;
+  border-top: 1px solid #2a2a2a;
+  cursor: pointer;
+  user-select: none;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+.pb-region-header:hover { background: #222; }
+.pb-region-chevron { font-size: 9px; color: #666; }
+.pb-region-name    { font-size: 10px; font-weight: 700; color: #7a9abf; text-transform: uppercase; letter-spacing: 0.06em; }
+.pb-region-items--collapsed { display: none; }
+
 .library-type-tag {
   font-size: 9px;
   font-weight: 700;
@@ -2342,6 +2392,13 @@ footer {
   flex-direction: column;
   gap: 4px;
 }
+
+.library-edit-row--inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.library-edit-row--inline .library-label { white-space: nowrap; margin-bottom: 0; }
 
 .library-label {
   font-size: 11px;

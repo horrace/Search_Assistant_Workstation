@@ -194,12 +194,17 @@ let generalAbbrRegistry = {}; // populated from the same library file via loadLi
 let aliasIndex = {};       // alias_lc → slug   (exact, lowercased — primary lookup)
 let stemIndex  = {};       // stem    → slug   (plural-insensitive fallback)
 
+// Anatomic regions — defines display order in Library and Parts Bank
+const LIBRARY_REGIONS = ['Intracranial', 'Head/Neck', 'Chest', 'Abdomen/Pelvis', 'Spine', 'MSK', 'Tasks'];
+
 // Phase 3.4 — Library dialog state
 let libraryActiveTab = 'entries';
 let librarySortMode  = 'alias';   // 'alias' | 'fullName'
 let selectedLibrarySlug = null;
 let _libSaveTimeout = null;
 const LIBRARY_DIALOG_STATE_KEY = 'searchAssistant.libraryDialogDevState';
+const collapsedLibraryRegions = new Set();
+const collapsedPbRegions      = new Set();
 
 // Persist Library dialog UI across renderer hot-reloads (dev). Sync write before saves
 // so a file-watch reload does not lose open/selection/filter state.
@@ -2598,11 +2603,11 @@ async function loadPartsBank() {
   renderPartsBank();
 }
 
-// Render Parts Bank from libraryEntries, applying text + type filters.
+// Render Parts Bank from libraryEntries, applying text + type filters, grouped by region.
 function renderPartsBank() {
   if (!partsBankItems) return;
 
-  const filterLc = (partsBankFilter || '').toLowerCase().trim();
+  const filterLc   = (partsBankFilter || '').toLowerCase().trim();
   const typeFilter = partsBankTypeFilter || 'all';
 
   let entries = Object.entries(libraryEntries || {}).filter(([slug, e]) => {
@@ -2614,7 +2619,6 @@ function renderPartsBank() {
     return (e.aliases || []).some(a => String(a).toLowerCase().includes(filterLc));
   });
 
-  // Sort by primary alias for stable ordering
   entries.sort(([sA, a], [sB, b]) => {
     const aa = ((a.aliases && a.aliases[0]) || a.fullName || sA).toLowerCase();
     const bb = ((b.aliases && b.aliases[0]) || b.fullName || sB).toLowerCase();
@@ -2628,7 +2632,15 @@ function renderPartsBank() {
     return;
   }
 
-  partsBankItems.innerHTML = entries.map(([slug, e]) => {
+  // Group by region
+  const groups = {};
+  [...LIBRARY_REGIONS, ''].forEach(r => { groups[r] = []; });
+  entries.forEach(pair => {
+    const r = pair[1].region || '';
+    (groups[r] = groups[r] || []).push(pair);
+  });
+
+  const itemHtml = ([slug, e]) => {
     const primary = (e.aliases && e.aliases[0]) || e.fullName || slug;
     const showFn  = e.fullName && e.fullName !== primary;
     const typeTag = (e.type === 'task')
@@ -2639,7 +2651,35 @@ function renderPartsBank() {
       <span class="part-bank-abbr">${escapeHtml(primary)}</span>
       ${showFn ? `<span class="part-bank-subtitle">${escapeHtml(e.fullName)}</span>` : ''}
     </div>`;
-  }).join('');
+  };
+
+  let html = '';
+  [...LIBRARY_REGIONS, ''].forEach(region => {
+    const items = groups[region];
+    if (!items || items.length === 0) return;
+    const label     = region || 'Unassigned';
+    const collapsed = collapsedPbRegions.has(region);
+    html += `<div class="pb-region-group">
+      <div class="pb-region-header" data-region="${escapeHtml(region)}">
+        <span class="pb-region-chevron">${collapsed ? '▸' : '▾'}</span>
+        <span class="pb-region-name">${escapeHtml(label)}</span>
+      </div>
+      <div class="pb-region-items${collapsed ? ' pb-region-items--collapsed' : ''}">
+        ${items.map(itemHtml).join('')}
+      </div>
+    </div>`;
+  });
+
+  partsBankItems.innerHTML = html;
+
+  partsBankItems.querySelectorAll('.pb-region-header').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const r = hdr.dataset.region;
+      if (collapsedPbRegions.has(r)) collapsedPbRegions.delete(r);
+      else collapsedPbRegions.add(r);
+      renderPartsBank();
+    });
+  });
 
   partsBankItems.querySelectorAll('.part-bank-item').forEach(item => {
     item.addEventListener('dragstart', handlePartBankDragStart);
@@ -6329,6 +6369,35 @@ function renderLibrary(filter) {
   renderGeneralAbbrsTable(filter);
 }
 
+function _libraryListItemHtml(slug, e) {
+  const isSel = slug === selectedLibrarySlug ? ' library-list-item--selected' : '';
+  const typeBadge = e.type === 'task'
+    ? '<span class="library-type-tag library-type-tag--task">T</span>'
+    : '<span class="library-type-tag library-type-tag--anatomy">A</span>';
+  const hasChildren = Object.values(libraryEntries).some(other => (other.parents || []).includes(slug));
+  const hasParents  = (e.parents || []).length > 0;
+  const hierIcon    = hasChildren && hasParents ? '↕' : (hasChildren ? '↧' : (hasParents ? '↥' : ''));
+  let primary, secondary, fnMode;
+  if (librarySortMode === 'fullName') {
+    fnMode    = ' library-list-item--fn-mode';
+    primary   = e.fullName || libraryEntryPrimaryLabel(e, slug);
+    secondary = (e.aliases || []).join(', ');
+  } else {
+    fnMode    = '';
+    primary   = libraryEntryPrimaryLabel(e, slug);
+    secondary = (e.aliases && e.aliases[0]) ? (e.fullName || '') : '';
+  }
+  const tagPills = (e.tags || []).map(t =>
+    `<span class="library-list-tag">${escapeHtml(t)}</span>`).join('');
+  return `<div class="library-list-item${isSel}${fnMode}" data-slug="${escapeHtml(slug)}">
+    ${typeBadge}
+    <span class="library-list-alias">${escapeHtml(primary)}</span>
+    <span class="library-list-fullname">${escapeHtml(secondary)}</span>
+    ${tagPills}
+    ${hierIcon ? `<span class="library-list-hier" title="hierarchy">${hierIcon}</span>` : ''}
+  </div>`;
+}
+
 function renderLibraryList(filter) {
   const list = document.getElementById('library-list');
   if (!list) return;
@@ -6344,9 +6413,7 @@ function renderLibraryList(filter) {
   if (librarySortMode === 'fullName') {
     entries.sort(([, a], [, b]) => (a.fullName || '').localeCompare(b.fullName || ''));
   } else {
-    entries.sort(([, a], [, b]) => {
-      return libraryEntryPrimaryLabel(a).localeCompare(libraryEntryPrimaryLabel(b));
-    });
+    entries.sort(([, a], [, b]) => libraryEntryPrimaryLabel(a).localeCompare(libraryEntryPrimaryLabel(b)));
   }
 
   const countEl = document.getElementById('library-entry-count');
@@ -6357,33 +6424,42 @@ function renderLibraryList(filter) {
     return;
   }
 
-  list.innerHTML = entries.map(([slug, e]) => {
-    const isSel = slug === selectedLibrarySlug ? ' library-list-item--selected' : '';
-    const typeBadge = e.type === 'task'
-      ? '<span class="library-type-tag library-type-tag--task">T</span>'
-      : '<span class="library-type-tag library-type-tag--anatomy">A</span>';
-    const hasChildren = Object.values(libraryEntries).some(other => (other.parents || []).includes(slug));
-    const hasParents = (e.parents || []).length > 0;
-    const hierIcon = hasChildren && hasParents ? '↕' : (hasChildren ? '↧' : (hasParents ? '↥' : ''));
+  // Group by region
+  const groups = {};
+  [...LIBRARY_REGIONS, ''].forEach(r => { groups[r] = []; });
+  entries.forEach(pair => {
+    const r = pair[1].region || '';
+    (groups[r] = groups[r] || []).push(pair);
+  });
 
-    let primary, secondary, fnMode;
-    if (librarySortMode === 'fullName') {
-      fnMode = ' library-list-item--fn-mode';
-      primary = e.fullName || libraryEntryPrimaryLabel(e, slug);
-      secondary = (e.aliases || []).join(', ');
-    } else {
-      fnMode = '';
-      primary = libraryEntryPrimaryLabel(e, slug);
-      secondary = (e.aliases && e.aliases[0]) ? (e.fullName || '') : '';
-    }
-
-    return `<div class="library-list-item${isSel}${fnMode}" data-slug="${escapeHtml(slug)}">
-      ${typeBadge}
-      <span class="library-list-alias">${escapeHtml(primary)}</span>
-      <span class="library-list-fullname">${escapeHtml(secondary)}</span>
-      ${hierIcon ? `<span class="library-list-hier" title="hierarchy">${hierIcon}</span>` : ''}
+  let html = '';
+  [...LIBRARY_REGIONS, ''].forEach(region => {
+    const items = groups[region];
+    if (!items || items.length === 0) return;
+    const label     = region || 'Unassigned';
+    const collapsed = collapsedLibraryRegions.has(region);
+    html += `<div class="library-region-group">
+      <div class="library-region-header" data-region="${escapeHtml(region)}">
+        <span class="library-region-chevron">${collapsed ? '▸' : '▾'}</span>
+        <span class="library-region-name">${escapeHtml(label)}</span>
+        <span class="library-region-count">${items.length}</span>
+      </div>
+      <div class="library-region-items${collapsed ? ' library-region-items--collapsed' : ''}">
+        ${items.map(([s, e]) => _libraryListItemHtml(s, e)).join('')}
+      </div>
     </div>`;
-  }).join('');
+  });
+
+  list.innerHTML = html;
+
+  list.querySelectorAll('.library-region-header').forEach(hdr => {
+    hdr.addEventListener('click', () => {
+      const r = hdr.dataset.region;
+      if (collapsedLibraryRegions.has(r)) collapsedLibraryRegions.delete(r);
+      else collapsedLibraryRegions.add(r);
+      renderLibraryList(currentLibraryFilter());
+    });
+  });
 
   list.querySelectorAll('.library-list-item').forEach(row => {
     row.addEventListener('click', () => {
@@ -6430,7 +6506,7 @@ function renderLibraryEditPane() {
   pane.innerHTML = `
     <div class="library-edit-form">
       <div class="library-edit-header-row">
-        <span class="library-slug" title="Entry ID">${escapeHtml(slug)}</span>
+        <span class="library-slug" style="display:none"></span>
         <div class="library-edit-type-toggle">
           <button class="library-type-btn${e.type === 'anatomy' ? ' library-type-btn--active' : ''}" data-type="anatomy">Anatomy</button>
           <button class="library-type-btn${e.type === 'task' ? ' library-type-btn--active' : ''}" data-type="task">Task</button>
@@ -6442,6 +6518,20 @@ function renderLibraryEditPane() {
         <span class="library-label">Full Name</span>
         <input type="text" class="library-input" id="library-fullname" value="${escapeHtml(e.fullName || '')}" placeholder="e.g. basilar artery">
       </label>
+
+      <div class="library-edit-row library-edit-row--inline">
+        <span class="library-label">Region</span>
+        <select id="library-region" class="library-input library-input--small">
+          <option value="">— Unassigned —</option>
+          ${LIBRARY_REGIONS.map(r => `<option value="${escapeHtml(r)}"${e.region === r ? ' selected' : ''}>${escapeHtml(r)}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="library-edit-row">
+        <span class="library-label">Tags</span>
+        <div class="library-chips" id="library-tags-chips">${(e.tags || []).map((t, i) => chipHtml(t, i, 'tag')).join('')}</div>
+        <input type="text" class="library-chip-input" id="library-tag-input" placeholder="Add tag and press Enter…">
+      </div>
 
       <div class="library-edit-row">
         <span class="library-label">Aliases <em>(abbreviations &amp; synonyms)</em></span>
@@ -6537,13 +6627,47 @@ function wireLibraryEditPane(slug) {
       if (field === 'fullName') renderLibraryList(currentLibraryFilter());
     });
   };
-  wireField('library-fullname',         'fullName');
+  // fullName IS the key — editing it renames the entry
+  const fnEl = document.getElementById('library-fullname');
+  if (fnEl) {
+    fnEl.addEventListener('change', () => {
+      const newKey = fnEl.value.trim();
+      if (!newKey) { fnEl.value = slug; return; }
+      if (newKey === slug) { scheduleLibrarySave(); return; }
+      if (libraryEntries[newKey]) {
+        alert(`A Library entry named "${newKey}" already exists.`);
+        fnEl.value = slug;
+        return;
+      }
+      libraryEntries[newKey] = { ...libraryEntries[slug], fullName: newKey };
+      delete libraryEntries[slug];
+      for (const e of Object.values(libraryEntries)) {
+        if (e.parents) e.parents = e.parents.map(p => p === slug ? newKey : p);
+        if (e.flowsTo) e.flowsTo = e.flowsTo.map(f => f === slug ? newKey : f);
+      }
+      selectedLibrarySlug = newKey;
+      saveLibraryToBackend();
+      renderLibraryList(currentLibraryFilter());
+      renderLibraryEditPane();
+    });
+  }
   wireField('library-image',            'image');
   wireField('library-default-strategy', 'defaultStrategy');
   wireField('library-note',             'note');
   wireField('library-default-view',     'defaultView');
   wireField('library-default-window',   'defaultWindow');
   wireField('library-default-slice',    'defaultSliceThickness');
+
+  // Region dropdown
+  document.getElementById('library-region')?.addEventListener('change', (ev) => {
+    libraryEntries[slug].region = ev.target.value;
+    scheduleLibrarySave();
+    renderLibraryList(currentLibraryFilter());
+    try { renderPartsBank(); } catch (_) {}
+  });
+
+  // Tags — free-text chips (same pattern as aliases)
+  wireTagChips(slug);
 
   // Aliases — free-text chips
   wireAliasChips(slug);
@@ -6616,6 +6740,36 @@ function wireChildrenChips(parentSlug, chipsId, inputId, acId) {
   input.addEventListener('input', updateAC);
   input.addEventListener('focus', updateAC);
   input.addEventListener('blur', () => setTimeout(() => { ac.style.display = 'none'; }, 150));
+}
+
+function wireTagChips(slug) {
+  const container = document.getElementById('library-tags-chips');
+  const input     = document.getElementById('library-tag-input');
+  if (!container || !input) return;
+
+  container.querySelectorAll('.library-chip-x').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const i = parseInt(btn.dataset.chipIndex, 10);
+      if (!libraryEntries[slug].tags) libraryEntries[slug].tags = [];
+      libraryEntries[slug].tags.splice(i, 1);
+      scheduleLibrarySave();
+      renderLibraryEditPane();
+    });
+  });
+
+  input.addEventListener('keydown', (ev) => {
+    if (ev.key !== 'Enter') return;
+    ev.preventDefault();
+    const v = input.value.trim().toLowerCase();
+    if (!v) return;
+    if (!libraryEntries[slug].tags) libraryEntries[slug].tags = [];
+    if (!libraryEntries[slug].tags.includes(v)) {
+      libraryEntries[slug].tags.push(v);
+      scheduleLibrarySave();
+      renderLibraryEditPane();
+    }
+    input.value = '';
+  });
 }
 
 function wireAliasChips(slug) {
@@ -6730,13 +6884,13 @@ function saveLibraryToBackend() {
 }
 
 function addLibraryEntry() {
-  let base = 'new_entry';
+  let base = 'New Entry';
   let slug = base;
   let n = 1;
-  while (libraryEntries[slug]) { n++; slug = `${base}_${n}`; }
+  while (libraryEntries[slug]) { n++; slug = `${base} ${n}`; }
   libraryEntries[slug] = {
     type: 'anatomy',
-    fullName: '',
+    fullName: slug,
     aliases: [],
     parents: [],
     flowsTo: [],
