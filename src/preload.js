@@ -12,9 +12,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openEditor: () => ipcRenderer.send('open-editor'),
   openTumbler: (patternName) => ipcRenderer.send('open-tumbler', patternName),
   openSettings: () => ipcRenderer.send('open-settings'),
+  openHistory: (patternName) => ipcRenderer.send('open-history', patternName),
   closeEditor: () => ipcRenderer.send('close-editor'),
   closeTumbler: () => ipcRenderer.send('close-tumbler'),
   closeSettings: () => ipcRenderer.send('close-settings'),
+  closeHistory: () => ipcRenderer.send('close-history'),
   getWindowPosition: () => ipcRenderer.invoke('get-window-position'),
   resizeEditorHeight: (height) => ipcRenderer.invoke('resize-editor-height', height),
   
@@ -73,6 +75,30 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('pattern-selected', handler);
   },
   
+  // Version control (data/patterns git repo) — thin sugar over invoke()
+  vc: {
+    available:      ()              => ipcRenderer.invoke('vc:available'),
+    log:            (params = {})   => ipcRenderer.invoke('vc:log', params),
+    diff:           (params)        => ipcRenderer.invoke('vc:diff', params),
+    revert:         (params)        => ipcRenderer.invoke('vc:revert', params),
+    listBranches:   ()              => ipcRenderer.invoke('vc:branches'),
+    createBranch:   (params)        => ipcRenderer.invoke('vc:branch-create', params),
+    checkoutBranch: (params)        => ipcRenderer.invoke('vc:branch-checkout', params),
+    listTags:       ()              => ipcRenderer.invoke('vc:tags'),
+    createTag:      (params)        => ipcRenderer.invoke('vc:tag-create', params),
+  },
+
+  onPatternChanged: (callback) => {
+    const handler = (_e, name) => callback(name);
+    ipcRenderer.on('pattern-changed', handler);
+    return () => ipcRenderer.removeListener('pattern-changed', handler);
+  },
+  onPatternsReloaded: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('patterns-reloaded', handler);
+    return () => ipcRenderer.removeListener('patterns-reloaded', handler);
+  },
+
   onAdvanceTumbler: (callback) => {
     const handler = (event) => {
       callback();

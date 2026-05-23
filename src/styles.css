@@ -1577,6 +1577,23 @@ footer {
   flex-shrink: 0;
 }
 
+.cov-sub-toggle-btn {
+  background: none;
+  border: none;
+  color: #777;
+  cursor: pointer;
+  font-size: 9px;
+  line-height: 1;
+  padding: 0 2px 0 0;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.cov-sub-toggle-btn:hover { color: #bbb; }
+
+.cov-item--subs-collapsed .cov-sub-list {
+  display: none;
+}
+
 .cov-match-tag {
   display: inline-flex;
   align-items: center;

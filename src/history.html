@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pattern History</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="vendor/jsondiffpatch.css">
+  <style>
+    .history-layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 12px;
+      height: calc(100vh - 110px);
+      padding: 0 12px 12px;
+      box-sizing: border-box;
+    }
+    .history-sidebar {
+      background: #262626;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 8px;
+      overflow-y: auto;
+    }
+    .history-main {
+      background: #262626;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 12px;
+      overflow: auto;
+    }
+    .commit-row {
+      padding: 6px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+      color: #ddd;
+      font-size: 12px;
+    }
+    .commit-row:hover { background: #333; }
+    .commit-row.selected { background: #4a5d75; }
+    .commit-row .msg { font-weight: 600; }
+    .commit-row .meta { color: #888; font-size: 11px; margin-top: 2px; }
+    .commit-row.compare-left  { box-shadow: inset 3px 0 0 #6cc; }
+    .commit-row.compare-right { box-shadow: inset 3px 0 0 #c96; }
+    .toolbar {
+      display: flex; gap: 8px; align-items: center;
+      padding: 8px 12px; border-bottom: 1px solid #444;
+      flex-wrap: wrap;
+    }
+    .toolbar label { color: #aaa; font-size: 12px; }
+    .toolbar select, .toolbar input[type=text] {
+      background: #1d1d1d; color: #ddd; border: 1px solid #555;
+      border-radius: 3px; padding: 3px 6px;
+    }
+    .diff-empty { color: #888; font-style: italic; padding: 24px; }
+    .branch-indicator { color: #6cc; font-weight: 600; }
+    .section-header {
+      color: #aaa; font-size: 11px; text-transform: uppercase;
+      letter-spacing: 1px; margin: 8px 0 4px;
+    }
+    .hint { color: #888; font-size: 11px; padding: 4px 8px; }
+  </style>
+</head>
+<body>
+  <div class="window-header"></div>
+  <div class="editor-header">
+    <h1>History:</h1>
+    <select id="pattern-selector" class="pattern-selector"></select>
+    <div style="flex: 1;"></div>
+    <div class="editor-header-right">
+      <button id="close-btn" class="btn">Close</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <label>Branch:</label>
+    <select id="branch-selector"></select>
+    <button id="new-branch-btn" class="btn">+ Branch</button>
+
+    <label style="margin-left:12px;">Tag:</label>
+    <select id="tag-selector"></select>
+    <button id="new-tag-btn" class="btn">+ Tag</button>
+
+    <div style="flex:1"></div>
+    <span class="hint" id="compare-hint">
+      Click a commit to view its diff vs working tree. Shift-click a second commit to compare two.
+    </span>
+  </div>
+
+  <div class="history-layout">
+    <div class="history-sidebar">
+      <div class="section-header">Commits</div>
+      <div id="commits"></div>
+    </div>
+    <div class="history-main">
+      <div class="toolbar" style="border:none; padding: 0 0 8px;">
+        <button id="revert-btn" class="btn" disabled>Revert pattern to selected commit</button>
+        <span id="status" class="hint"></span>
+      </div>
+      <div id="diff-output" class="diff-empty">Select a commit to view changes.</div>
+    </div>
+  </div>
+
+  <script src="history.js"></script>
+</body>
+</html>

@@ -73,6 +73,12 @@ const newPatternBtn = document.getElementById('new-pattern-btn');
 const backBtn = document.getElementById('back-btn');
 const undoBtn = document.getElementById('undo-btn'); // Get reference to existing Undo button
 const redoBtn = document.getElementById('redo-btn'); // Get reference to Redo button
+const historyBtn = document.getElementById('history-btn');
+if (historyBtn) {
+  historyBtn.addEventListener('click', () => {
+    window.electronAPI.openHistory(currentPattern || null);
+  });
+}
 const patternItems = document.getElementById('pattern-items');
 const partsBankItems = document.getElementById('parts-bank-items');
 const contextMenu = document.getElementById('context-menu');
@@ -239,6 +245,7 @@ function restoreLibraryDialogIfNeeded() {
 let coverageRequirements = [];
 let coverageEditMode = false;
 let covMatchTagViewOnly = true; // false = part/subpart + view; true = view only (window still on hover)
+const covCollapsedReqIds = new Set(); // assessment view: parent req ids with nested subs hidden
 
 // Load available patterns
 async function loadPatterns() {
@@ -4934,6 +4941,7 @@ function loadCoverageRequirements(patternName) {
     if (data && data.responseFor === 'get_coverage_requirements') {
       unsub();
       coverageRequirements = Array.isArray(data.result) ? data.result : [];
+      covCollapsedReqIds.clear();
       renderCoveragePanel();
     }
   });
@@ -5212,10 +5220,12 @@ function renderCoverageAssessmentHtml() {
         const subExcludedHtml = (!covMatchTagViewOnly && subExcluded.length)
           ? `<span class="cov-excluded-wrap">${subExcluded.map(k => excludedTagHtml(k, r.id, sub.id)).join('')}</span>`
           : '';
+        const subLinkBtn = `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" data-sub-id="${escapeHtml(sub.id)}" title="Manually link a pattern item to this sub-requirement">+</button>`;
         return `<div class="cov-sub-item ${subCls}">
           ${coverageStatusIconHtml(sub.label, sub.satisfied, 'cov-sub-icon')}
           <span class="cov-sub-label">${escapeHtml(sub.label)}</span>
           ${subMatches}${subExcludedHtml}
+          ${subLinkBtn}
         </div>`;
       }).join('');
       contentHtml = `<div class="cov-sub-list">${subRows}</div>`;
@@ -5235,12 +5245,18 @@ function renderCoverageAssessmentHtml() {
 
     const linkBtn = r.subAssessed
       ? ''
-      : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+ link</button>`;
+      : `<button class="cov-link-match-btn" data-req-id="${escapeHtml(r.id)}" title="Manually link a pattern item to this requirement">+</button>`;
+    const subsCollapsed = r.subAssessed && covCollapsedReqIds.has(r.id);
+    const collapseCls = subsCollapsed ? ' cov-item--subs-collapsed' : '';
+    const toggleBtn = r.subAssessed
+      ? `<button type="button" class="cov-sub-toggle-btn" data-req-id="${escapeHtml(r.id)}" title="${subsCollapsed ? 'Show' : 'Hide'} sub-items" aria-expanded="${subsCollapsed ? 'false' : 'true'}">${subsCollapsed ? '▶' : '▼'}</button>`
+      : '';
 
-    return `<div class="cov-item ${cls}">
+    return `<div class="cov-item ${cls}${collapseCls}" data-req-id="${escapeHtml(r.id)}">
       ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       <div class="cov-item-body">
         <div class="cov-item-line">
+          ${toggleBtn}
           <span class="cov-label">${escapeHtml(r.label)}</span>
           ${r.subAssessed ? '' : contentHtml}
           ${linkBtn}
@@ -5457,7 +5473,23 @@ function wireCoveragePanel(panel) {
   panel.querySelectorAll('.cov-link-match-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       e.stopPropagation();
-      showLinkMatchPopover(btn, btn.dataset.reqId);
+      showLinkMatchPopover(btn, btn.dataset.reqId, btn.dataset.subId || null);
+    });
+  });
+
+  // Assessment mode — collapse/expand nested sub-requirements
+  panel.querySelectorAll('.cov-sub-toggle-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const reqId = btn.dataset.reqId;
+      const item = btn.closest('.cov-item');
+      if (!reqId || !item) return;
+      const collapsed = item.classList.toggle('cov-item--subs-collapsed');
+      if (collapsed) covCollapsedReqIds.add(reqId);
+      else covCollapsedReqIds.delete(reqId);
+      btn.textContent = collapsed ? '▶' : '▼';
+      btn.title = collapsed ? 'Show sub-items' : 'Hide sub-items';
+      btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     });
   });
 

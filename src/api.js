@@ -3,6 +3,16 @@ const fs = require('fs');
 const path = require('path');
 const { app } = require('electron');
 
+// Optional version-control hook (isomorphic-git + jsondiffpatch).
+// Lazily required so api.js still loads cleanly if the deps aren't
+// installed yet (e.g. fresh checkout pre-`npm install`).
+let vc = null;
+try {
+  vc = require('./version-control');
+} catch (err) {
+  console.warn('[API] Version control module not available:', err.message);
+}
+
 
 class SearchPatternAPI {
   constructor() {
@@ -111,6 +121,17 @@ class SearchPatternAPI {
 
     // Run any pending schema migrations on the loaded patterns
     this.runSchemaMigrations();
+
+    // Initialize the patterns/ directory as a git repo for in-app version
+    // control (best-effort, non-fatal). See PATTERNS_REPO.md for details.
+    if (vc) {
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      if (fs.existsSync(patternsDir)) {
+        vc.init(patternsDir).catch(err => {
+          console.error('[API] VC init failed:', err.message);
+        });
+      }
+    }
 
     console.log('SearchPatternAPI initialized');
   }
@@ -486,8 +507,11 @@ class SearchPatternAPI {
       this.patternRedoHistory = {};
 
       if (fs.existsSync(patternsDir)) {
-        // New per-pattern format
-        const files = fs.readdirSync(patternsDir).filter(f => f.endsWith('.json'));
+        // New per-pattern format. Files (and subdirs) whose name starts with
+        // '_' are skipped — that's how _inactive/ and _archive/ are hidden
+        // without losing their git history.
+        const files = fs.readdirSync(patternsDir)
+          .filter(f => f.endsWith('.json') && !f.startsWith('_'));
         this.patterns = {};
         for (const file of files) {
           try {
@@ -579,6 +603,14 @@ class SearchPatternAPI {
         fs.writeFileSync(filePath, JSON.stringify({ [name]: items }, null, 2));
       }
       console.log(`[API save_patterns] Saved ${Object.keys(this.patterns || {}).length} patterns to patterns/ directory`);
+
+      // Auto-commit via version control (best-effort, non-blocking).
+      // commitAll() is a no-op if nothing changed.
+      if (vc) {
+        vc.commitAll(patternsDir, 'Update patterns').catch(err => {
+          console.error('[API] VC commitAll failed:', err.message);
+        });
+      }
       return true;
     } catch (error) {
       console.error(`[API save_patterns] ERROR: ${error.message}`);
@@ -2933,6 +2965,148 @@ class SearchPatternAPI {
       return { success: false, error: error.message };
     }
   }
+
+  // -------------------------------------------------------------------------
+  // Per-pattern save + activation/deactivation + version-control passthrough
+  //
+  // These were added when the in-app history viewer was wired up. They are
+  // additive — existing call sites that use save_patterns() / save_settings()
+  // continue to work unchanged.
+  // -------------------------------------------------------------------------
+
+  /**
+   * Write a single pattern to disk (one file) and auto-commit it via VC.
+   * If `name` is not in this.patterns, the file is deleted instead.
+   * Returns true on success.
+   */
+  save_pattern(name, commitMessage = null) {
+    try {
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      if (!fs.existsSync(patternsDir)) fs.mkdirSync(patternsDir, { recursive: true });
+      const rel = this._patternFileName(name);
+      const filePath = path.join(patternsDir, rel);
+      const items = this.patterns[name];
+
+      if (items === undefined) {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      } else {
+        fs.writeFileSync(filePath, JSON.stringify({ [name]: items }, null, 2));
+      }
+
+      if (vc) {
+        const msg = commitMessage || `Update pattern: ${name}`;
+        vc.commitFile(patternsDir, rel, msg).catch(err => {
+          console.error('[API] VC commitFile failed:', err.message);
+        });
+      }
+      return true;
+    } catch (err) {
+      console.error(`[API save_pattern] Error saving '${name}': ${err.message}`);
+      return false;
+    }
+  }
+
+  /**
+   * Move a pattern file into patterns/_inactive/ so it's hidden from the
+   * loader without losing its history. Returns { success } / { success, error }.
+   */
+  deactivate_pattern(name) {
+    try {
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      const inactiveDir = path.join(patternsDir, '_inactive');
+      const src = path.join(patternsDir, this._patternFileName(name));
+      if (!fs.existsSync(src)) return { success: false, error: 'Not found' };
+      if (!fs.existsSync(inactiveDir)) fs.mkdirSync(inactiveDir, { recursive: true });
+      const dst = path.join(inactiveDir, this._patternFileName(name));
+      fs.renameSync(src, dst);
+      delete this.patterns[name];
+      if (vc) {
+        vc.commitAll(patternsDir, `Deactivate pattern: ${name}`).catch(err => {
+          console.error('[API] VC commit failed:', err.message);
+        });
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Move a pattern file from patterns/_inactive/ back to patterns/.
+   */
+  activate_pattern(name) {
+    try {
+      const patternsDir = path.join(this.dataDir, 'patterns');
+      const inactiveDir = path.join(patternsDir, '_inactive');
+      const src = path.join(inactiveDir, this._patternFileName(name));
+      if (!fs.existsSync(src)) return { success: false, error: 'Not found' };
+      const dst = path.join(patternsDir, this._patternFileName(name));
+      fs.renameSync(src, dst);
+      try {
+        const raw = JSON.parse(fs.readFileSync(dst, 'utf8'));
+        const keys = Object.keys(raw);
+        if (keys.length === 1) this.patterns[keys[0]] = raw[keys[0]];
+      } catch (e) { /* leave patterns in-memory unchanged */ }
+      if (vc) {
+        vc.commitAll(patternsDir, `Activate pattern: ${name}`).catch(err => {
+          console.error('[API] VC commit failed:', err.message);
+        });
+      }
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * List patterns currently sitting in patterns/_inactive/.
+   */
+  get_inactive_patterns() {
+    const inactiveDir = path.join(this.dataDir, 'patterns', '_inactive');
+    if (!fs.existsSync(inactiveDir)) return [];
+    return fs.readdirSync(inactiveDir)
+      .filter(n => n.endsWith('.json') && !n.startsWith('.'))
+      .map(n => {
+        try {
+          const raw = JSON.parse(fs.readFileSync(path.join(inactiveDir, n), 'utf8'));
+          const keys = Object.keys(raw);
+          return keys.length === 1 ? keys[0] : n.replace(/\.json$/, '');
+        } catch { return n.replace(/\.json$/, ''); }
+      });
+  }
+
+  /**
+   * Re-read a single pattern from disk (used after a VC revert).
+   */
+  reload_pattern(name) {
+    try {
+      const fp = path.join(this.dataDir, 'patterns', this._patternFileName(name));
+      if (!fs.existsSync(fp)) {
+        delete this.patterns[name];
+        return { success: true, removed: true };
+      }
+      const raw = JSON.parse(fs.readFileSync(fp, 'utf8'));
+      const keys = Object.keys(raw);
+      if (keys.length === 1) this.patterns[keys[0]] = raw[keys[0]];
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.message };
+    }
+  }
+
+  /**
+   * Re-read every pattern from disk (used after VC branch checkout).
+   */
+  reload_all_patterns() {
+    this.load_patterns();
+    return { success: true, count: Object.keys(this.patterns).length };
+  }
+
+  // VC passthrough — main.js uses these to expose IPC handlers without
+  // importing version-control.js directly.
+  vc_available()    { return !!vc; }
+  vc_module()       { return vc; }
+  vc_patternsDir()  { return path.join(this.dataDir, 'patterns'); }
 
 } // END OF SearchPatternAPI CLASS
 

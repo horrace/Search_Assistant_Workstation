@@ -13,7 +13,6 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 # Intermediate SP import files
 data/*.xml
 data/*.docx
-data/*.json
 data/*.rtf
 
 scripts/*.json
@@ -143,11 +142,26 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
-data/SP_CT_Chest_AP.docx
+
+# Pattern data lives in its own git repo (see PATTERNS_REPO.md).
+# It is mounted under data/patterns/ at runtime but must NOT be tracked by the main project repo.
+data/patterns/
+data/settings.json
+data/Leftovers_from_import/
+
+# Legacy single-file pattern store (replaced by data/patterns/*.json)
+sp_list.json
+data/sp_list.json
+
+# Legacy on-disk copy of patterns (replaced by data/patterns/)
+src/patterns/
+
 my-vscode-extension/extension.js
 my-vscode-extension/package-lock.json
 my-vscode-extension/package.json
 
+.claude/worktrees/strange-einstein-0c7894/
+.claude/worktrees/youthful-morse-2f94f9/
 
 settings.json
 SearchAssistant_Portable_2025.07.23.zip

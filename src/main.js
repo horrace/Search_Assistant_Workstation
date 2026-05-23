@@ -54,6 +54,7 @@ let mainWindow;
 let editorWindow;
 let tumblerWindow;
 let settingsWindow;
+let historyWindow;
 
 // Helper function to ensure window position is within visible bounds
 function ensureWindowInBounds(x, y, width, height) {
@@ -659,8 +660,49 @@ ipcMain.on('unregister-shortcuts', () => {
 });
 
 // IPC handlers for window management
+function createHistoryWindow(initialPattern) {
+  if (historyWindow && !historyWindow.isDestroyed()) {
+    historyWindow.show();
+    historyWindow.focus();
+    if (initialPattern) {
+      historyWindow.webContents.send('pattern-selected', initialPattern);
+    }
+    return;
+  }
+  historyWindow = new BrowserWindow({
+    width: 1000,
+    height: 720,
+    parent: editorWindow || mainWindow,
+    modal: false,
+    frame: false,
+    titleBarStyle: 'hidden',
+    webPreferences: {
+      nodeIntegration: false,
+      contextIsolation: true,
+      preload: path.join(__dirname, 'preload.js'),
+    },
+    backgroundColor: '#303030',
+    show: false,
+  });
+  historyWindow.loadFile(path.join(__dirname, 'history.html'));
+  historyWindow.setOpacity(1.0);
+  historyWindow.webContents.on('did-finish-load', () => {
+    if (initialPattern) {
+      historyWindow.webContents.send('pattern-selected', initialPattern);
+    }
+  });
+  historyWindow.on('closed', () => { historyWindow = null; });
+  historyWindow.once('ready-to-show', () => historyWindow.show());
+}
+
 ipcMain.on('open-editor', () => {
   if (!editorWindow) createEditorWindow();
+});
+ipcMain.on('open-history', (event, patternName) => {
+  createHistoryWindow(patternName);
+});
+ipcMain.on('close-history', () => {
+  if (historyWindow) historyWindow.close();
 });
 ipcMain.on('open-tumbler', (event, patternName) => {
   if (!tumblerWindow) createTumblerWindow(patternName);
@@ -1004,6 +1046,70 @@ ipcMain.handle('show-sp-list-file-dialog', async (event) => {
   
   return result;
 });
+
+// ---------------------------------------------------------------------------
+// Version-control IPC (data/patterns repo, via isomorphic-git + jsondiffpatch)
+// Wrapped so failures surface to the renderer as { error } instead of killing
+// the IPC channel.
+// ---------------------------------------------------------------------------
+function vcMod() {
+  if (!api.vc_available || !api.vc_available()) return null;
+  return api.vc_module();
+}
+function vcDir() { return api.vc_patternsDir(); }
+function vcWrap(fn) {
+  return async (event, ...args) => {
+    const vc = vcMod();
+    if (!vc) return { error: 'Version control unavailable' };
+    try { return await fn(vc, vcDir(), ...args); }
+    catch (err) {
+      console.error('[VC] handler error:', err);
+      return { error: err.message };
+    }
+  };
+}
+
+ipcMain.handle('vc:available', async () => ({
+  available: !!vcMod(),
+  patternsDir: vcDir(),
+  isRepo: vcMod() ? await vcMod().isRepo(vcDir()) : false,
+}));
+ipcMain.handle('vc:log', vcWrap(async (vc, dir, { pattern } = {}) => {
+  if (pattern) return vc.logFile(dir, api._patternFileNameForVC ? api._patternFileNameForVC(pattern) : pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json');
+  return vc.logRepo(dir);
+}));
+ipcMain.handle('vc:diff', vcWrap(async (vc, dir, { pattern, oidA, oidB }) => {
+  const rel = pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
+  return vc.diffFile(dir, oidA, oidB || 'WORKDIR', rel);
+}));
+ipcMain.handle('vc:revert', vcWrap(async (vc, dir, { pattern, oid, message }) => {
+  const rel = pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
+  const newOid = await vc.revertFile(dir, oid, rel, message);
+  api.reload_pattern(pattern);
+  if (editorWindow) editorWindow.webContents.send('pattern-changed', pattern);
+  if (mainWindow) mainWindow.webContents.send('pattern-changed', pattern);
+  return { oid: newOid };
+}));
+ipcMain.handle('vc:branches', vcWrap(async (vc, dir) => vc.listBranches(dir)));
+ipcMain.handle('vc:branch-create', vcWrap(async (vc, dir, { name, checkout }) => {
+  await vc.createBranch(dir, name, checkout !== false);
+  api.reload_all_patterns();
+  if (editorWindow) editorWindow.webContents.send('patterns-reloaded');
+  if (mainWindow) mainWindow.webContents.send('patterns-reloaded');
+  return { name };
+}));
+ipcMain.handle('vc:branch-checkout', vcWrap(async (vc, dir, { name }) => {
+  await vc.checkoutBranch(dir, name);
+  api.reload_all_patterns();
+  if (editorWindow) editorWindow.webContents.send('patterns-reloaded');
+  if (mainWindow) mainWindow.webContents.send('patterns-reloaded');
+  return { name };
+}));
+ipcMain.handle('vc:tags', vcWrap(async (vc, dir) => ({ tags: await vc.listTags(dir) })));
+ipcMain.handle('vc:tag-create', vcWrap(async (vc, dir, { name, message }) => {
+  await vc.createTag(dir, name, message);
+  return { name };
+}));
 
 // App lifecycle events
 app.whenReady().then(() => {

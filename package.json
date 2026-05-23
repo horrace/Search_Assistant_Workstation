@@ -19,6 +19,8 @@
   "dependencies": {
     "electron-log": "^5.4.0",
     "electron-store": "^8.1.0",
+    "isomorphic-git": "^1.27.1",
+    "jsondiffpatch": "^0.6.0",
     "sortablejs": "^1.15.2",
     "ws": "^8.18.2",
     "xmldom": "^0.6.0",
