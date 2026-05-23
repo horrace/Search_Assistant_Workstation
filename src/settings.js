@@ -24,7 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
   let showChapterAsChunk = false;
   let inlineHeaderLayout = false;
   let hideViewPlaneInChapter = true;
-  let editorSettings = { hideOutroInEditor: false };
+  let editorSettings = {
+    hideOutroInEditor: false,
+    sidePanelOpen: false,
+    sidePanelTab: 'parts-bank'
+  };
   
   async function syncTransparencySliderFromMain() {
     if (!transparencySlider || !window.electronAPI.getTransparency) return;
@@ -397,6 +401,8 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.result && typeof data.result === 'object') {
           editorSettings = {
             hideOutroInEditor: false,
+            sidePanelOpen: false,
+            sidePanelTab: 'parts-bank',
             ...data.result
           };
           

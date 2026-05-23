@@ -180,11 +180,28 @@ function createMainWindow() {
   });
 }
 
+function clampEditorWindowSize(width, height) {
+  const { width: maxW, height: maxH } = screen.getPrimaryDisplay().workAreaSize;
+  const minW = 500;
+  const minH = 400;
+  return {
+    width: Math.max(minW, Math.min(maxW - 40, Math.round(width))),
+    height: Math.max(minH, Math.min(maxH - 40, Math.round(height)))
+  };
+}
+
 function createEditorWindow() {
   const savedPosition = api.get_editor_window_position();
+  const savedSize = api.get_editor_window_size();
   let initialX, initialY;
-  const windowWidth = 800;
-  const windowHeight = 700;
+  let windowWidth = 800;
+  let windowHeight = 700;
+
+  if (savedSize && typeof savedSize.width === 'number' && typeof savedSize.height === 'number') {
+    const clamped = clampEditorWindowSize(savedSize.width, savedSize.height);
+    windowWidth = clamped.width;
+    windowHeight = clamped.height;
+  }
   
   if (savedPosition && typeof savedPosition.x === 'number' && typeof savedPosition.y === 'number') {
     // Validate the saved position
@@ -232,13 +249,28 @@ function createEditorWindow() {
     }, 500);
   });
 
-  // Save position before close
+  // Save size on resize (debounced)
+  let editorResizeTimeout;
+  editorWindow.on('resize', () => {
+    clearTimeout(editorResizeTimeout);
+    editorResizeTimeout = setTimeout(() => {
+      if (editorWindow && !editorWindow.isDestroyed()) {
+        const [width, height] = editorWindow.getSize();
+        api.save_editor_window_size({ width, height });
+      }
+    }, 500);
+  });
+
+  // Save position and size before close
   editorWindow.on('close', () => {
-    clearTimeout(editorMoveTimeout); // Clear any pending save on move
+    clearTimeout(editorMoveTimeout);
+    clearTimeout(editorResizeTimeout);
     if (editorWindow && !editorWindow.isDestroyed()) {
       const [x, y] = editorWindow.getPosition();
+      const [width, height] = editorWindow.getSize();
       //console.log(`Editor window about to close at: x=${x}, y=${y}. Saving final position.`);
       api.save_editor_window_position({ x, y });
+      api.save_editor_window_size({ width, height });
     }
   });
 
@@ -253,8 +285,10 @@ function createEditorWindow() {
     // Save initial position once shown
     if (editorWindow && !editorWindow.isDestroyed()) {
         const [x, y] = editorWindow.getPosition();
+        const [width, height] = editorWindow.getSize();
         //console.log(`Editor window shown at: x=${x}, y=${y}. Saving initial position.`);
         api.save_editor_window_position({ x, y });
+        api.save_editor_window_size({ width, height });
     }
   });
 }
@@ -935,14 +969,6 @@ ipcMain.on('api-request', (event, data) => {
 
           case 'save_coverage_requirements':
             result = api[method](params.pattern_name, params.requirements);
-            break;
-
-          case 'get_abbr_registry':
-            result = api[method]();
-            break;
-
-          case 'save_abbr_registry':
-            result = api[method](params.registry);
             break;
 
           case 'update_shortcut':

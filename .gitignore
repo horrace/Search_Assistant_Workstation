@@ -156,12 +156,16 @@ data/sp_list.json
 # Legacy on-disk copy of patterns (replaced by data/patterns/)
 src/patterns/
 
+# Legacy VS Code extension
 my-vscode-extension/extension.js
 my-vscode-extension/package-lock.json
 my-vscode-extension/package.json
 
+# Legacy Claude worktrees
 .claude/worktrees/strange-einstein-0c7894/
 .claude/worktrees/youthful-morse-2f94f9/
 
 settings.json
+
+# Legacy portable build
 SearchAssistant_Portable_2025.07.23.zip

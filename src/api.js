@@ -119,9 +119,6 @@ class SearchPatternAPI {
     // Now load patterns from the determined directory
     this.load_patterns();
 
-    // Run any pending schema migrations on the loaded patterns
-    this.runSchemaMigrations();
-
     // Initialize the patterns/ directory as a git repo for in-app version
     // control (best-effort, non-fatal). See PATTERNS_REPO.md for details.
     if (vc) {
@@ -136,72 +133,10 @@ class SearchPatternAPI {
     console.log('SearchPatternAPI initialized');
   }
 
-  // === BEGIN MIGRATION SCHEMA-V1 — delete this entire block after all users on v1+ ===
-  // Schema v1: split monolithic `window` field into:
-  //   - view_plane: gains '3D' and 'CPR' (moved out of window)
-  //   - window:     no longer holds 'MIP'/'MinIP'/'tMIP'/'Thin'/'3D'/'CPR'
-  //   - slice_thickness (new): 'thin', '3mm', 'MIP', 'tMIP', 'MinIP', 'thin + MIP'
-  _migrateViewWindowSliceV1(item) {
-    if (!item || typeof item !== 'object') return;
-    const VIEW_PROJECTIONS = new Set(['3D', 'CPR']);
-    const SLICE_FROM_WINDOW = { 'MIP': 'MIP', 'tMIP': 'tMIP', 'MinIP': 'MinIP', 'Thin': 'thin' };
-
-    const w = typeof item.window === 'string' ? item.window : '';
-    if (w && VIEW_PROJECTIONS.has(w)) {
-      // 3D / CPR → move into view_plane
-      item.view_plane = w;
-      item.window = '';
-    } else if (w && Object.prototype.hasOwnProperty.call(SLICE_FROM_WINDOW, w)) {
-      // MIP / tMIP / MinIP / Thin → move into slice_thickness
-      item.slice_thickness = SLICE_FROM_WINDOW[w];
-      item.window = '';
-    }
-    // Guarantee the new field exists on every pattern item going forward
-    if (item.slice_thickness === undefined) item.slice_thickness = '';
-  }
-
-  runSchemaMigrations() {
-    try {
-      const TARGET_VERSION = 3;
-      if (!this.settings || typeof this.settings !== 'object') this.settings = {};
-      const currentVersion = Number(this.settings.schema_version) || 0;
-      if (currentVersion >= TARGET_VERSION) return;
-
-      console.log(`[API runSchemaMigrations] Migrating from schema_version=${currentVersion} → ${TARGET_VERSION}`);
-
-      // v1: window split (idempotent — re-running it is a no-op since post-migration window won't contain the moved values)
-      if (currentVersion < 1) {
-        for (const [name, items] of Object.entries(this.patterns || {})) {
-          if (!Array.isArray(items)) continue;
-          items.forEach(item => this._migrateViewWindowSliceV1(item));
-        }
-        this.save_patterns();
-      }
-
-      // v2: Library schema — promote abbr_registry to library/entries.json + general_abbrs.json
-      if (currentVersion < 2) {
-        this.migrateLibraryV2();
-      }
-
-      // v3: Parts Bank → Library — import settings.parts_bank into Library
-      if (currentVersion < 3) {
-        this.migratePartsBankV3();
-      }
-
-      this.settings.schema_version = TARGET_VERSION;
-      this.save_settings();
-      console.log(`[API runSchemaMigrations] schema_version stamped at ${TARGET_VERSION}`);
-    } catch (error) {
-      console.error(`[API runSchemaMigrations] ERROR: ${error.message}`);
-      console.error(error.stack);
-    }
-  }
-  // === END MIGRATION SCHEMA-V1 ===
-
-  // === BEGIN MIGRATION SCHEMA-V2 — delete this entire block once all users on v2+ ===
-  // Library schema (Phase 3). Replaces flat abbr_registry with a richer model:
-  //   library/entries.json     — { slug: Entry }   (Anatomy/Task — the canonical record)
-  //   general_abbrs.json       — { abbr: { fullName, note } }  (text-substitution rules)
+  // ─── Library file helpers ──────────────────────────────────────────────────
+  // Persistence layer for the canonical Entry store and general abbreviations.
+  //   library/entries.json — { slug: Entry }      (Anatomy/Task records)
+  //   general_abbrs.json   — { abbr: {fullName, note} }  (text-substitution rules)
   _libraryEntriesPath() { return path.join(this.dataDir, 'library', 'entries.json'); }
   _generalAbbrsPath()   { return path.join(this.dataDir, 'general_abbrs.json'); }
 
@@ -276,169 +211,6 @@ class SearchPatternAPI {
       note: opts.note || ''
     };
   }
-
-  migrateLibraryV2() {
-    const abbrPath = path.join(this.dataDir, 'abbr_registry.json');
-    const libExists = fs.existsSync(this._libraryEntriesPath());
-
-    // Already on v2 and file present → idempotent no-op
-    if (libExists && !fs.existsSync(abbrPath)) return;
-
-    // No source data at all → seed empty files and exit
-    if (!fs.existsSync(abbrPath)) {
-      if (!libExists) this._saveLibraryEntries({});
-      if (!fs.existsSync(this._generalAbbrsPath())) this._saveGeneralAbbrs({});
-      return;
-    }
-
-    let raw;
-    try { raw = JSON.parse(fs.readFileSync(abbrPath, 'utf-8')); } catch (e) { raw = {}; }
-    const specific = (raw && 'specific' in raw) ? (raw.specific || {}) : (raw || {});
-    const general  = (raw && 'general'  in raw) ? (raw.general  || {}) : {};
-
-    const entries = {};
-    const aliasToSlug = {};
-    const usedSlugs = new Set();
-
-    const pickSlug = (candidate) => {
-      let base = this._slugify(candidate);
-      let s = base;
-      let n = 1;
-      while (usedSlugs.has(s)) { n++; s = `${base}_${n}`; }
-      usedSlugs.add(s);
-      return s;
-    };
-
-    // Pass 1 — every top-level abbr-registry entry becomes a Library Entry
-    for (const [key, val] of Object.entries(specific)) {
-      if (!key || key === '__new__') continue;
-      const slug = pickSlug(key);
-      entries[slug] = this._makeEntry({
-        type: 'anatomy',
-        fullName: (val && val.fullName) || '',
-        aliases: [key],
-        note: (val && val.note) || ''
-      });
-      aliasToSlug[key.toLowerCase()] = slug;
-    }
-
-    // Pass 2 — promote subparts to first-class entries with parent links back
-    for (const [key, val] of Object.entries(specific)) {
-      if (!key || key === '__new__') continue;
-      const parentSlug = aliasToSlug[key.toLowerCase()];
-      if (!parentSlug) continue;
-      const subs = (val && Array.isArray(val.subparts)) ? val.subparts : [];
-      for (const sub of subs) {
-        const subStr = String(sub || '').trim();
-        if (!subStr) continue;
-        const lc = subStr.toLowerCase();
-        let subSlug = aliasToSlug[lc];
-        if (!subSlug) {
-          subSlug = pickSlug(subStr);
-          entries[subSlug] = this._makeEntry({
-            type: 'anatomy',
-            fullName: subStr,
-            aliases: [subStr]
-          });
-          aliasToSlug[lc] = subSlug;
-        }
-        const subEntry = entries[subSlug];
-        if (!subEntry.parents.includes(parentSlug)) subEntry.parents.push(parentSlug);
-      }
-    }
-
-    this._saveLibraryEntries(entries);
-    this._saveGeneralAbbrs(general);
-
-    // Rename the legacy file rather than deleting — leaves a recovery trail
-    try {
-      const archive = path.join(this.dataDir, 'abbr_registry.legacy.json');
-      fs.renameSync(abbrPath, archive);
-      console.log(`[API migrateLibraryV2] Archived ${abbrPath} → ${archive}`);
-    } catch (e) {
-      console.warn(`[API migrateLibraryV2] Could not archive abbr_registry.json: ${e.message}`);
-    }
-
-    console.log(`[API migrateLibraryV2] ${Object.keys(specific).length} registry entries → ${Object.keys(entries).length} Library entries; ${Object.keys(general).length} general abbreviations`);
-  }
-  // === END MIGRATION SCHEMA-V2 ===
-
-  // === BEGIN MIGRATION SCHEMA-V3 — delete once all users on v3+ ===
-  // Parts Bank → Library: each settings.parts_bank entry becomes (or is merged
-  // into) a Library entry. After migration the legacy bank is cleared.
-  migratePartsBankV3() {
-    const bank = (this.settings && Array.isArray(this.settings.parts_bank))
-      ? this.settings.parts_bank : [];
-    if (bank.length === 0) {
-      // Nothing to import; just ensure the field is gone
-      if (this.settings && 'parts_bank' in this.settings) {
-        this.settings.parts_bank_legacy = this.settings.parts_bank;
-        delete this.settings.parts_bank;
-      }
-      return;
-    }
-
-    const entries = this._loadLibraryEntries();
-
-    // Build alias→slug index from existing Library
-    const aliasToSlug = {};
-    for (const [slug, e] of Object.entries(entries)) {
-      aliasToSlug[slug.toLowerCase()] = slug;
-      for (const a of (e.aliases || [])) {
-        aliasToSlug[String(a).toLowerCase()] = slug;
-      }
-    }
-
-    const usedSlugs = new Set(Object.keys(entries));
-    const pickSlug = (cand) => {
-      let base = this._slugify(cand);
-      let s = base;
-      let n = 1;
-      while (usedSlugs.has(s)) { n++; s = `${base}_${n}`; }
-      usedSlugs.add(s);
-      return s;
-    };
-
-    let added = 0, merged = 0;
-    for (const part of bank) {
-      if (!part || !part.abbr) continue;
-      const lcAbbr = String(part.abbr).trim().toLowerCase();
-      const existingSlug = aliasToSlug[lcAbbr];
-      if (existingSlug) {
-        // Merge defaults non-destructively (preserve any user-set values)
-        const e = entries[existingSlug];
-        if (!e.defaultStrategy        && part.strategy)        e.defaultStrategy        = part.strategy;
-        if (!e.defaultWindow          && part.window)          e.defaultWindow          = part.window;
-        if (!e.defaultView            && part.view_plane)      e.defaultView            = part.view_plane;
-        if (!e.defaultSliceThickness  && part.slice_thickness) e.defaultSliceThickness  = part.slice_thickness;
-        merged++;
-      } else {
-        const slug = pickSlug(part.abbr);
-        entries[slug] = this._makeEntry({
-          type: 'anatomy',
-          fullName: '',
-          aliases: [part.abbr],
-          defaultStrategy:       part.strategy        || '',
-          defaultWindow:         part.window          || '',
-          defaultView:           part.view_plane      || '',
-          defaultSliceThickness: part.slice_thickness || ''
-        });
-        aliasToSlug[lcAbbr] = slug;
-        added++;
-      }
-    }
-
-    this._saveLibraryEntries(entries);
-
-    // Archive the legacy bank in settings and clear the live field
-    if (this.settings) {
-      this.settings.parts_bank_legacy = bank;
-      delete this.settings.parts_bank;
-    }
-
-    console.log(`[API migratePartsBankV3] Imported ${added} new Library entries, merged defaults into ${merged} existing entries`);
-  }
-  // === END MIGRATION SCHEMA-V3 ===
 
   // ─── Library API (Phase 3) ──────────────────────────────────────────────────
   get_library() {
@@ -1454,8 +1226,8 @@ class SearchPatternAPI {
    */
   save_editor_settings(settings_data) {
     try {
-      // Store the editor settings
-      this.settings.editor = settings_data;
+      // Merge so partial saves (e.g. settings window) do not drop layout prefs
+      this.settings.editor = { ...(this.settings.editor || {}), ...settings_data };
       this.save_settings();
       return { success: true, settings: settings_data };
     } catch (error) {
@@ -1554,6 +1326,28 @@ class SearchPatternAPI {
       return { success: true, position: position_data };
     } catch (error) {
       console.error(`Error saving editor window position: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Get the current editor window size settings
+   */
+  get_editor_window_size() {
+    return this.settings.editorWindowSize || null;
+  }
+
+  /**
+   * Save editor window size settings
+   */
+  save_editor_window_size(size_data) {
+    try {
+      if (!this.settings) this.settings = {};
+      this.settings.editorWindowSize = size_data;
+      this.save_settings();
+      return { success: true, size: size_data };
+    } catch (error) {
+      console.error(`Error saving editor window size: ${error.message}`);
       return { success: false, error: error.message };
     }
   }
@@ -2216,164 +2010,6 @@ class SearchPatternAPI {
       return { success: true };
     } catch (e) {
       console.error(`[API save_coverage_requirements] ${e.message}`);
-      return { success: false, error: e.message };
-    }
-  }
-
-  // Back-compat adapter (Phase 3.1): synthesizes the legacy two-section shape
-  //   { specific: { ABBR: {fullName, note, subparts:[...]} }, general: { ABBR: {fullName, note} } }
-  // from the new Library + General files so the existing abbr-registry dialog keeps working
-  // until the Library editor (Phase 3.4) replaces it. Each Library entry contributes one
-  // record per alias under `specific`; subparts are reconstructed from child→parent links.
-  get_abbr_registry() {
-    try {
-      const entries = this._loadLibraryEntries();
-      const general = this._loadGeneralAbbrs();
-
-      // Build slug → primary alias map (first alias represents the entry in the legacy shape)
-      const slugToPrimaryAlias = {};
-      for (const [slug, e] of Object.entries(entries)) {
-        slugToPrimaryAlias[slug] = (e.aliases && e.aliases[0]) || slug;
-      }
-
-      // Reconstruct subparts: for each entry, find children (entries whose parents include this slug)
-      const childrenBySlug = {};
-      for (const [slug, e] of Object.entries(entries)) {
-        for (const parentSlug of (e.parents || [])) {
-          if (!childrenBySlug[parentSlug]) childrenBySlug[parentSlug] = [];
-          childrenBySlug[parentSlug].push(slug);
-        }
-      }
-
-      const specific = {};
-      for (const [slug, e] of Object.entries(entries)) {
-        const primary = slugToPrimaryAlias[slug];
-        const subpartLabels = (childrenBySlug[slug] || []).map(childSlug => {
-          const c = entries[childSlug];
-          return (c && c.aliases && c.aliases[0]) || childSlug;
-        });
-        specific[primary] = {
-          fullName: e.fullName || '',
-          note: e.note || '',
-          subparts: subpartLabels
-        };
-      }
-
-      return { specific, general };
-    } catch (e) {
-      console.error(`[API get_abbr_registry] Error: ${e.message}`);
-      return { specific: {}, general: {} };
-    }
-  }
-
-  // Back-compat adapter: write the legacy shape back into Library + General files.
-  // Best-effort — preserves Library-only fields (parents, flowsTo, defaults, image) for
-  // entries that already exist; new entries created via the legacy dialog get default values.
-  save_abbr_registry(registry) {
-    try {
-      const incomingSpecific = (registry && registry.specific) || {};
-      const incomingGeneral  = (registry && registry.general)  || {};
-
-      // Save general directly (one-to-one)
-      this._saveGeneralAbbrs(incomingGeneral);
-
-      // Merge specific into Library
-      const existing = this._loadLibraryEntries();
-
-      // Build alias→slug index over existing Library
-      const aliasToSlug = {};
-      for (const [slug, e] of Object.entries(existing)) {
-        for (const a of (e.aliases || [])) aliasToSlug[a.toLowerCase()] = slug;
-      }
-
-      const usedSlugs = new Set(Object.keys(existing));
-      const pickSlug = (candidate) => {
-        let base = this._slugify(candidate);
-        let s = base;
-        let n = 1;
-        while (usedSlugs.has(s)) { n++; s = `${base}_${n}`; }
-        usedSlugs.add(s);
-        return s;
-      };
-
-      const seenSlugs = new Set();
-
-      // Pass 1: ensure every incoming key has a Library entry (preserving any extra fields)
-      for (const [key, val] of Object.entries(incomingSpecific)) {
-        if (!key || key === '__new__') continue;
-        let slug = aliasToSlug[key.toLowerCase()];
-        if (!slug) {
-          slug = pickSlug(key);
-          existing[slug] = this._makeEntry({
-            type: 'anatomy',
-            fullName: (val && val.fullName) || '',
-            aliases: [key],
-            note: (val && val.note) || ''
-          });
-          aliasToSlug[key.toLowerCase()] = slug;
-        } else {
-          // Update mutable fields, preserving Library-only fields
-          existing[slug].fullName = (val && val.fullName) || '';
-          existing[slug].note     = (val && val.note)     || '';
-          if (!existing[slug].aliases || existing[slug].aliases.length === 0) {
-            existing[slug].aliases = [key];
-          }
-        }
-        seenSlugs.add(slug);
-      }
-
-      // Pass 2: rebuild parent links for subparts (entries listed in any parent's subparts gain that parent in their `parents`)
-      // First, clear parents from all "seen" entries to allow removals to take effect through the legacy dialog
-      for (const slug of seenSlugs) {
-        existing[slug].parents = [];
-      }
-      for (const [key, val] of Object.entries(incomingSpecific)) {
-        if (!key || key === '__new__') continue;
-        const parentSlug = aliasToSlug[key.toLowerCase()];
-        if (!parentSlug) continue;
-        const subs = (val && Array.isArray(val.subparts)) ? val.subparts : [];
-        for (const sub of subs) {
-          const subStr = String(sub || '').trim();
-          if (!subStr) continue;
-          const lc = subStr.toLowerCase();
-          let subSlug = aliasToSlug[lc];
-          if (!subSlug) {
-            subSlug = pickSlug(subStr);
-            existing[subSlug] = this._makeEntry({
-              type: 'anatomy',
-              fullName: subStr,
-              aliases: [subStr]
-            });
-            aliasToSlug[lc] = subSlug;
-          }
-          if (!existing[subSlug].parents.includes(parentSlug)) {
-            existing[subSlug].parents.push(parentSlug);
-          }
-        }
-      }
-
-      // Delete entries removed via the legacy dialog (only those whose primary alias was previously
-      // present but is no longer in incomingSpecific). To be safe, only delete entries that have no
-      // children and no aliases other than the missing primary.
-      const incomingKeysLc = new Set(Object.keys(incomingSpecific).map(k => k.toLowerCase()));
-      for (const [slug, e] of Object.entries(existing)) {
-        const primary = (e.aliases && e.aliases[0]) || '';
-        if (!primary) continue;
-        if (incomingKeysLc.has(primary.toLowerCase())) continue;
-        // Skip if this entry is referenced by another entry's parents (would orphan children)
-        const hasChildren = Object.values(existing).some(other => (other.parents || []).includes(slug));
-        if (hasChildren) continue;
-        // Skip if entry has extra aliases or Library-only data we'd lose
-        if ((e.aliases || []).length > 1) continue;
-        if (e.flowsTo && e.flowsTo.length) continue;
-        if (e.defaultView || e.defaultWindow || e.defaultSliceThickness || e.defaultStrategy || e.image) continue;
-        delete existing[slug];
-      }
-
-      this._saveLibraryEntries(existing);
-      return { success: true };
-    } catch (e) {
-      console.error(`[API save_abbr_registry] Error: ${e.message}`);
       return { success: false, error: e.message };
     }
   }

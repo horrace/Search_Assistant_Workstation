@@ -152,6 +152,7 @@ if (togglePartsBankBtn && partsBankContainer) {
         } else {
             togglePartsBankBtn.textContent = '◀';
         }
+        schedulePersistEditorLayoutSettings();
     });
 }
 
@@ -159,10 +160,14 @@ if (togglePartsBankBtn && partsBankContainer) {
 let patterns = [];
 let currentPattern = '';
 let currentPatternItems = [];
-let partsBankList = [];          // legacy — unused after Phase 3 link-up; kept for safety
 let partsBankFilter = '';        // current text filter for the Library-derived bank
 let partsBankTypeFilter = 'all'; // 'all' | 'anatomy' | 'task'
-let editorSettings = { hideOutroInEditor: false }; // Default editor settings
+let editorSettings = {
+  hideOutroInEditor: false,
+  sidePanelOpen: false,
+  sidePanelTab: 'parts-bank'
+};
+let editorLayoutSaveTimeout = null;
 let selectedIndex = -1;
 let selectedIndices = [];
 let multiSelectionMode = false;
@@ -182,14 +187,13 @@ let currentPatternData = [];
 let mirrorReplacementContext = null; // For storing context for mirror replacement
 let sacrificedItems = [];
 let automaticItems = [];   // Phase 3.3 — "Automatic" (formerly Mastered): per-pattern, same semantics as Sacrificed
-let abbrRegistry = {};
-let generalAbbrRegistry = {};
 
 // Phase 3 — Library (canonical Entry store)
 let libraryEntries = {};   // slug → Entry
+let generalAbbrRegistry = {}; // populated from the same library file via loadLibrary()
 let aliasIndex = {};       // alias_lc → slug   (exact, lowercased — primary lookup)
 let stemIndex  = {};       // stem    → slug   (plural-insensitive fallback)
-let abbrActiveTab = 'specific';   // legacy — kept for back-compat with any stray references
+
 // Phase 3.4 — Library dialog state
 let libraryActiveTab = 'entries';
 let librarySortMode  = 'alias';   // 'alias' | 'fullName'
@@ -334,9 +338,12 @@ async function loadEditorSettings() {
           // Update editor settings with defaults for any missing properties
           editorSettings = {
             hideOutroInEditor: false,
+            sidePanelOpen: false,
+            sidePanelTab: 'parts-bank',
             ...data.result
           };
           console.log('Editor settings loaded:', editorSettings);
+          applyEditorLayoutFromSettings();
           // Fix race condition: if a pattern was already loaded before settings arrived, reload it
           if (currentPattern) {
             loadPattern(currentPattern);
@@ -358,6 +365,27 @@ function saveEditorSettings() {
   } catch (error) {
     console.error('Error saving editor settings:', error);
   }
+}
+
+function applyEditorLayoutFromSettings() {
+  if (!partsBankContainer || !togglePartsBankBtn) return;
+  const open = !!editorSettings.sidePanelOpen;
+  partsBankContainer.classList.toggle('collapsed', !open);
+  togglePartsBankBtn.textContent = open ? '◀' : '▶';
+  const tab = editorSettings.sidePanelTab || 'parts-bank';
+  setActiveTab(tab);
+}
+
+function persistEditorLayoutSettings() {
+  if (!partsBankContainer) return;
+  editorSettings.sidePanelOpen = !partsBankContainer.classList.contains('collapsed');
+  editorSettings.sidePanelTab = getActiveTab();
+  saveEditorSettings();
+}
+
+function schedulePersistEditorLayoutSettings() {
+  clearTimeout(editorLayoutSaveTimeout);
+  editorLayoutSaveTimeout = setTimeout(persistEditorLayoutSettings, 300);
 }
 
 // Render the pattern selector dropdown
@@ -3425,8 +3453,14 @@ function init() {
 
   // Listen for editor settings changes from the settings window
   window.electronAPI.on('editor-settings-changed', (newSettings) => {
-    editorSettings = { hideOutroInEditor: false, ...newSettings };
+    editorSettings = {
+      hideOutroInEditor: false,
+      sidePanelOpen: false,
+      sidePanelTab: 'parts-bank',
+      ...newSettings
+    };
     console.log('Editor settings changed, reloading pattern:', editorSettings);
+    applyEditorLayoutFromSettings();
     if (currentPattern) {
       loadPattern(currentPattern);
     }
@@ -3482,7 +3516,6 @@ function init() {
   loadPartsBank();
   setupPatternDropZone(); // Add drop zone setup
   initRightPanelTabs();
-  loadAbbrRegistry();
   loadLibrary();
 
   // Parts Bank filter + type toggle (Phase 3 — Library-derived bank)
@@ -4428,6 +4461,7 @@ function initRightPanelTabs() {
       btn.classList.add('tab-btn--active');
       const panel = document.querySelector(`.tab-content[data-tab="${tab}"]`);
       if (panel) panel.classList.add('tab-content--active');
+      schedulePersistEditorLayoutSettings();
     });
   });
 }
@@ -4993,16 +5027,27 @@ function matchesRequirement(req, item) {
   const containsEither = (a, b) => a && b && (a.includes(b) || b.includes(a));
 
   const fuzzyAgainst = (stemN) => {
+    // Each abbr segment: fuzzy-match against the segment and against its
+    // Library entry's fullName (when the segment resolves to an entry).
     for (const part of abbrSegments.length ? abbrSegments : [item.abbr || '']) {
       if (containsEither(normalizeForMatch(part), stemN)) return true;
-      const fullName = (abbrRegistry[part]?.fullName || '').toLowerCase();
+      const slug = resolveToEntrySlug(part);
+      const fullName = (libraryEntries[slug]?.fullName || '').toLowerCase();
       if (containsEither(normalizeForMatch(fullName), stemN)) return true;
     }
     if (stemSubparts.some(s => containsEither(s, stemN))) return true;
+    // For each abbr key, fuzzy-match against the labels of the entry's
+    // children — i.e. Library-derived subparts.
     for (const key of abbrKeys) {
-      const registryEntry = abbrRegistry[key];
-      if (registryEntry?.subparts?.length) {
-        const regSubs = registryEntry.subparts.map(s => normalizeForMatch(s));
+      const slug = resolveToEntrySlug(key);
+      if (!slug) continue;
+      const childLabels = childrenSlugsOf(slug)
+        .map(cs => libraryEntries[cs])
+        .filter(Boolean)
+        .map(e => (e.aliases && e.aliases[0]) || e.fullName || '')
+        .filter(Boolean);
+      if (childLabels.length) {
+        const regSubs = childLabels.map(normalizeForMatch);
         if (regSubs.some(s => containsEither(s, stemN))) return true;
       }
     }
@@ -5256,10 +5301,10 @@ function renderCoverageAssessmentHtml() {
       ${coverageStatusIconHtml(r.label, r.satisfied, 'cov-icon')}
       <div class="cov-item-body">
         <div class="cov-item-line">
-          ${toggleBtn}
           <span class="cov-label">${escapeHtml(r.label)}</span>
           ${r.subAssessed ? '' : contentHtml}
           ${linkBtn}
+          ${toggleBtn}
         </div>
         ${r.subAssessed ? contentHtml : ''}
       </div>
@@ -5955,39 +6000,6 @@ const DEFAULT_GENERAL_ABBRS = {
   "recon": { fullName: "reconstruction", note: "" },
 };
 
-function loadAbbrRegistry() {
-  window.electronAPI.callAPI('get_abbr_registry', {});
-  const unsub = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'get_abbr_registry') {
-      unsub();
-      const raw = (data.result && typeof data.result === 'object') ? data.result : {};
-      // Migrate: old flat format → specific section
-      if ('specific' in raw || 'general' in raw) {
-        abbrRegistry = raw.specific || {};
-        generalAbbrRegistry = raw.general || {};
-      } else {
-        abbrRegistry = raw;
-        generalAbbrRegistry = {};
-      }
-      // Seed defaults if general section has never been populated
-      if (Object.keys(generalAbbrRegistry).length === 0) {
-        generalAbbrRegistry = { ...DEFAULT_GENERAL_ABBRS };
-        saveAbbrRegistry();
-      }
-    }
-  });
-}
-
-function saveAbbrRegistry() {
-  window.electronAPI.callAPI('save_abbr_registry', {
-    registry: { specific: abbrRegistry, general: generalAbbrRegistry }
-  });
-  // Adapter writes through to the Library — refresh in-memory Library so the
-  // hybrid matcher and any new UI see the change immediately.
-  loadLibrary();
-  renderCoveragePanel();
-}
-
 // ─── Phase 3 — Library (canonical Entry store) ──────────────────────────────
 function loadLibrary() {
   window.electronAPI.callAPI('get_library', {});
@@ -5996,6 +6008,22 @@ function loadLibrary() {
       unsub();
       const result = (data.result && typeof data.result === 'object') ? data.result : {};
       libraryEntries = (result.entries && typeof result.entries === 'object') ? result.entries : {};
+      generalAbbrRegistry = (result.generalAbbrs && typeof result.generalAbbrs === 'object')
+        ? result.generalAbbrs
+        : {};
+
+      // First-run seed: populate the general-abbreviation registry from the
+      // built-in defaults so users have something to start from.
+      if (Object.keys(generalAbbrRegistry).length === 0
+          && typeof DEFAULT_GENERAL_ABBRS === 'object') {
+        generalAbbrRegistry = { ...DEFAULT_GENERAL_ABBRS };
+        // Persist the seed so it survives reload
+        window.electronAPI.callAPI('save_library', {
+          entries: libraryEntries,
+          generalAbbrs: generalAbbrRegistry
+        });
+      }
+
       rebuildAliasIndex();
       // Coverage may re-assess now that Library is available
       try { renderCoveragePanel(); } catch (_) {}
@@ -6330,8 +6358,6 @@ function renderLibraryList(filter) {
   }
 
   list.innerHTML = entries.map(([slug, e]) => {
-    const hasAlias = !!(e.aliases && e.aliases[0]);
-    const alias = libraryEntryPrimaryLabel(e, slug);
     const isSel = slug === selectedLibrarySlug ? ' library-list-item--selected' : '';
     const typeBadge = e.type === 'task'
       ? '<span class="library-type-tag library-type-tag--task">T</span>'
@@ -6339,10 +6365,22 @@ function renderLibraryList(filter) {
     const hasChildren = Object.values(libraryEntries).some(other => (other.parents || []).includes(slug));
     const hasParents = (e.parents || []).length > 0;
     const hierIcon = hasChildren && hasParents ? '↕' : (hasChildren ? '↧' : (hasParents ? '↥' : ''));
-    return `<div class="library-list-item${isSel}" data-slug="${escapeHtml(slug)}">
+
+    let primary, secondary, fnMode;
+    if (librarySortMode === 'fullName') {
+      fnMode = ' library-list-item--fn-mode';
+      primary = e.fullName || libraryEntryPrimaryLabel(e, slug);
+      secondary = (e.aliases || []).join(', ');
+    } else {
+      fnMode = '';
+      primary = libraryEntryPrimaryLabel(e, slug);
+      secondary = (e.aliases && e.aliases[0]) ? (e.fullName || '') : '';
+    }
+
+    return `<div class="library-list-item${isSel}${fnMode}" data-slug="${escapeHtml(slug)}">
       ${typeBadge}
-      <span class="library-list-alias">${escapeHtml(alias)}</span>
-      <span class="library-list-fullname">${escapeHtml(hasAlias ? (e.fullName || '') : '')}</span>
+      <span class="library-list-alias">${escapeHtml(primary)}</span>
+      <span class="library-list-fullname">${escapeHtml(secondary)}</span>
       ${hierIcon ? `<span class="library-list-hier" title="hierarchy">${hierIcon}</span>` : ''}
     </div>`;
   }).join('');
@@ -6685,9 +6723,8 @@ function saveLibraryToBackend() {
     entries: libraryEntries,
     generalAbbrs: generalAbbrRegistry
   });
-  // Keep the alias index and the legacy `abbrRegistry` adapter view in sync
+  // Keep the alias index in sync with the just-saved Library
   rebuildAliasIndex();
-  loadAbbrRegistry();
   renderCoveragePanel();
   try { renderPartsBank(); } catch (_) {}
 }
@@ -6815,10 +6852,6 @@ function addGeneralAbbreviation() {
   }, 20);
 }
 
-// Stub kept so any stale references don't crash; new code uses renderLibrary().
-function renderAbbrRegistryDialog(filter) {
-  renderLibrary(filter);
-}
 
 // ─── Library dialog wiring (Phase 3.4) ─────────────────────────────────────
 function initAbbrRegistrySearch() {

@@ -8,7 +8,9 @@
       "Bash(npm run build-portable:*)",
       "Bash(ls:*)",
       "Bash(npm start)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(find /c/Users/Jeff -name \"entries.json\" -path \"*/library/*\" 2>/dev/null | head -5)",
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total entries: {len\\(d\\)}'\\); print\\('Types:', set\\(v.get\\(\\\\\"type\\\\\"\\) for v in d.values\\(\\)\\)\\); print\\('Entries with parents:', sum\\(1 for v in d.values\\(\\) if v.get\\(\\\\\"parents\\\\\"\\)\\)\\)\")"
     ],
     "deny": []
   }

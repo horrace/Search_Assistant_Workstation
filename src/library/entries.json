@@ -45,7 +45,7 @@
     "note": ""
   },
   "aneurysm": {
-    "type": "anatomy",
+    "type": "task",
     "fullName": "Aneurysm Review",
     "aliases": [
       "Aneurysm"
@@ -60,7 +60,7 @@
     "note": ""
   },
   "global": {
-    "type": "anatomy",
+    "type": "task",
     "fullName": "",
     "aliases": [
       "Global"
@@ -119,21 +119,6 @@
     "defaultStrategy": "",
     "image": "",
     "note": "Face"
-  },
-  "nodes": {
-    "type": "anatomy",
-    "fullName": "Lymph Nodes",
-    "aliases": [
-      "Nodes"
-    ],
-    "parents": [],
-    "flowsTo": [],
-    "defaultView": "",
-    "defaultWindow": "",
-    "defaultSliceThickness": "",
-    "defaultStrategy": "",
-    "image": "",
-    "note": ""
   },
   "pe": {
     "type": "anatomy",
@@ -248,7 +233,8 @@
     "type": "anatomy",
     "fullName": "Lymph Nodes",
     "aliases": [
-      "LN"
+      "LN",
+      "Nodes"
     ],
     "parents": [],
     "flowsTo": [],
@@ -1239,7 +1225,7 @@
   },
   "tmj": {
     "type": "anatomy",
-    "fullName": "temporomandibular joint",
+    "fullName": "Temporomandibular Joint",
     "aliases": [
       "TMJ"
     ],

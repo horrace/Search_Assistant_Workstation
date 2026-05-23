@@ -260,10 +260,15 @@ footer {
   margin-right: 10px;
 }
 
+#history-btn {
+  -webkit-app-region: no-drag;
+}
+
 .editor-header-center {
   display: flex;
   align-items: center;
-  margin: 0 20px;
+  gap: 8px;
+  margin: 0 12px 0 8px;
 }
 
 .editor-header-right {
@@ -1584,7 +1589,8 @@ footer {
   cursor: pointer;
   font-size: 9px;
   line-height: 1;
-  padding: 0 2px 0 0;
+  padding: 0 0 0 2px;
+  margin-left: auto;
   flex-shrink: 0;
   transition: color 0.15s;
 }
@@ -2208,6 +2214,14 @@ footer {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.library-list-item--fn-mode .library-list-alias {
+  max-width: 60%;
+}
+
+.library-list-item--fn-mode .library-list-fullname {
+  font-weight: 400;
 }
 
 .library-list-fullname {

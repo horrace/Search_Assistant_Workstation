@@ -1,19 +1,21 @@
 {
   "dataDirectory": "C:\\Users\\Jeff\\OneDrive\\Source\\PythonProjects\\SearchAssistant_Electron\\src",
   "mainWindowPosition": {
-    "x": 3098,
-    "y": 482
+    "x": 1050,
+    "y": 248
   },
   "editorWindowPosition": {
-    "x": 2724,
-    "y": 0
+    "x": 944,
+    "y": 92
   },
   "settingsWindowPosition": {
     "x": 930,
     "y": 396
   },
   "editor": {
-    "hideOutroInEditor": true
+    "hideOutroInEditor": true,
+    "sidePanelOpen": true,
+    "sidePanelTab": "coverage"
   },
   "tumbler": {
     "hideBackground": true,
@@ -22,12 +24,12 @@
     "hideViewPlaneInChapter": true
   },
   "tumblerWindowPosition": {
-    "x": 3180,
-    "y": 628
+    "x": 868,
+    "y": 576
   },
   "tumblerWindowSize": {
-    "width": 550,
-    "height": 301
+    "width": 841,
+    "height": 300
   },
   "patternSacrificed": {
     "CTA H&N": [
@@ -38,5 +40,9 @@
     ]
   },
   "schema_version": 3,
-  "transparency": 0.8
+  "transparency": 0.8,
+  "editorWindowSize": {
+    "width": 1280,
+    "height": 1164
+  }
 }
