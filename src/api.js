@@ -58,9 +58,9 @@ class SearchPatternAPI {
       console.log(`[API constructor] Packaged/Production mode detected`);
       console.log(`[API constructor] Using executable directory: ${currentDir}`);
     } else {
-      // Development mode
-      currentDir = process.cwd();
-      console.log(`[API constructor] Development mode detected, using project directory: ${currentDir}`);
+      // Development mode — data lives in data/ subdirectory relative to the project root
+      currentDir = path.join(process.cwd(), 'data');
+      console.log(`[API constructor] Development mode detected, using data directory: ${currentDir}`);
     }
     
     this.dataDir = currentDir;

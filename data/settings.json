@@ -1,21 +1,47 @@
 {
-  "dataDirectory": "D:\\PythonProjects\\SearchAssistant_Electron\\src",
-  "transparency": 1,
-  "tumbler": {},
+  "transparency": 0.8,
+  "schema_version": 3,
+  "tumbler": {
+    "hideBackground": true,
+    "showChapterAsChunk": true,
+    "inlineHeaderLayout": true,
+    "hideViewPlaneInChapter": true
+  },
+  "editor": {
+    "hideOutroInEditor": true,
+    "sidePanelOpen": true,
+    "sidePanelTab": "parts-bank"
+  },
   "mainWindowPosition": {
-    "x": 710,
-    "y": 628
+    "x": 1050,
+    "y": 248
   },
   "editorWindowPosition": {
-    "x": 486,
-    "y": 226
+    "x": 944,
+    "y": 92
+  },
+  "settingsWindowPosition": {
+    "x": 930,
+    "y": 396
   },
   "tumblerWindowPosition": {
-    "x": 710,
-    "y": 678
+    "x": 868,
+    "y": 576
   },
   "tumblerWindowSize": {
-    "width": 500,
-    "height": 301
+    "width": 841,
+    "height": 300
+  },
+  "editorWindowSize": {
+    "width": 1280,
+    "height": 1164
+  },
+  "patternSacrificed": {
+    "CTA H&N": [
+      {
+        "abbr": "Ant spfc ST",
+        "strategy": "subQ face"
+      }
+    ]
   }
 }
