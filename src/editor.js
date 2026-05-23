@@ -2665,7 +2665,7 @@ function renderPartsBank() {
         <span class="pb-region-name">${escapeHtml(label)}</span>
       </div>
       <div class="pb-region-items${collapsed ? ' pb-region-items--collapsed' : ''}">
-        ${items.map(itemHtml).join('')}
+        ${_renderNested(items, new Set(items.map(([s]) => s)), null, itemHtml, 'pb-region-children')}
       </div>
     </div>`;
   });
@@ -6369,6 +6369,26 @@ function renderLibrary(filter) {
   renderGeneralAbbrsTable(filter);
 }
 
+// Recursively build nested HTML within a region group.
+// `items`       — [slug, e][] sorted pairs for this region
+// `slugSet`     — Set of slugs in this group (parent check stays within the group)
+// `parentSlug`  — null for top-level entries, otherwise the parent being expanded
+// `itemFn`      — ([slug, e]) => string  (the leaf item HTML)
+// `childClass`  — CSS class on the wrapper div that provides indentation
+function _renderNested(items, slugSet, parentSlug, itemFn, childClass) {
+  return items
+    .filter(([slug, e]) => {
+      const inGroupParents = (e.parents || []).filter(p => slugSet.has(p));
+      return parentSlug === null ? inGroupParents.length === 0 : inGroupParents.includes(parentSlug);
+    })
+    .map(([slug, e]) => {
+      const childHtml = _renderNested(items, slugSet, slug, itemFn, childClass);
+      return itemFn([slug, e])
+        + (childHtml ? `<div class="${childClass}">${childHtml}</div>` : '');
+    })
+    .join('');
+}
+
 function _libraryListItemHtml(slug, e) {
   const isSel = slug === selectedLibrarySlug ? ' library-list-item--selected' : '';
   const typeBadge = e.type === 'task'
@@ -6445,7 +6465,7 @@ function renderLibraryList(filter) {
         <span class="library-region-count">${items.length}</span>
       </div>
       <div class="library-region-items${collapsed ? ' library-region-items--collapsed' : ''}">
-        ${items.map(([s, e]) => _libraryListItemHtml(s, e)).join('')}
+        ${_renderNested(items, new Set(items.map(([s]) => s)), null, ([s, e]) => _libraryListItemHtml(s, e), 'library-region-children')}
       </div>
     </div>`;
   });

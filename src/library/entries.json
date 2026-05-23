@@ -89,7 +89,7 @@
     "defaultStrategy": "",
     "image": "",
     "note": "",
-    "region": "Tasks",
+    "region": "Intracranial",
     "tags": []
   },
   "Salivary Glands": {
@@ -151,7 +151,7 @@
     ]
   },
   "Pulmonary Embolism": {
-    "type": "anatomy",
+    "type": "task",
     "fullName": "Pulmonary Embolism",
     "aliases": [
       "PE"
@@ -1564,7 +1564,7 @@
     "defaultStrategy": "",
     "image": "",
     "note": "",
-    "region": "Tasks",
+    "region": "Head/Neck",
     "tags": []
   },
   "Transverse Sinus": {

@@ -15,7 +15,7 @@
   "editor": {
     "hideOutroInEditor": true,
     "sidePanelOpen": true,
-    "sidePanelTab": "coverage"
+    "sidePanelTab": "parts-bank"
   },
   "tumbler": {
     "hideBackground": true,
