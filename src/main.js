@@ -1090,7 +1090,7 @@ function vcMod() {
   if (!api.vc_available || !api.vc_available()) return null;
   return api.vc_module();
 }
-function vcDir() { return api.vc_patternsDir(); }
+function vcDir() { return api.vc_dataDir(); }
 function vcWrap(fn) {
   return async (event, ...args) => {
     const vc = vcMod();
@@ -1105,19 +1105,19 @@ function vcWrap(fn) {
 
 ipcMain.handle('vc:available', async () => ({
   available: !!vcMod(),
-  patternsDir: vcDir(),
+  dataDir: vcDir(),
   isRepo: vcMod() ? await vcMod().isRepo(vcDir()) : false,
 }));
 ipcMain.handle('vc:log', vcWrap(async (vc, dir, { pattern } = {}) => {
-  if (pattern) return vc.logFile(dir, api._patternFileNameForVC ? api._patternFileNameForVC(pattern) : pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json');
+  if (pattern) return vc.logFile(dir, 'patterns/' + (api._patternFileNameForVC ? api._patternFileNameForVC(pattern) : pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json'));
   return vc.logRepo(dir);
 }));
 ipcMain.handle('vc:diff', vcWrap(async (vc, dir, { pattern, oidA, oidB }) => {
-  const rel = pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
+  const rel = 'patterns/' + pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
   return vc.diffFile(dir, oidA, oidB || 'WORKDIR', rel);
 }));
 ipcMain.handle('vc:revert', vcWrap(async (vc, dir, { pattern, oid, message }) => {
-  const rel = pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
+  const rel = 'patterns/' + pattern.replace(/[<>:"/\\|?*]/g, '_').replace(/\s+/g, '_') + '.json';
   const newOid = await vc.revertFile(dir, oid, rel, message);
   api.reload_pattern(pattern);
   if (editorWindow) editorWindow.webContents.send('pattern-changed', pattern);

@@ -10,7 +10,10 @@
       "Bash(npm start)",
       "Bash(cp:*)",
       "Bash(find /c/Users/Jeff -name \"entries.json\" -path \"*/library/*\" 2>/dev/null | head -5)",
-      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total entries: {len\\(d\\)}'\\); print\\('Types:', set\\(v.get\\(\\\\\"type\\\\\"\\) for v in d.values\\(\\)\\)\\); print\\('Entries with parents:', sum\\(1 for v in d.values\\(\\) if v.get\\(\\\\\"parents\\\\\"\\)\\)\\)\")"
+      "Bash(python3 -c \"import json,sys; d=json.load\\(sys.stdin\\); print\\(f'Total entries: {len\\(d\\)}'\\); print\\('Types:', set\\(v.get\\(\\\\\"type\\\\\"\\) for v in d.values\\(\\)\\)\\); print\\('Entries with parents:', sum\\(1 for v in d.values\\(\\) if v.get\\(\\\\\"parents\\\\\"\\)\\)\\)\")",
+      "Bash(git -C /c/Users/Jeff/OneDrive/Source/PythonProjects/SearchAssistant_Electron/data/patterns log --oneline)",
+      "Bash(rm -rf \"/c/Users/Jeff/OneDrive/Source/PythonProjects/SearchAssistant_Electron/data/patterns/.git\")",
+      "Bash(git init *)"
     ],
     "deny": []
   }

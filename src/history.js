@@ -42,7 +42,7 @@
 
     const status = await window.electronAPI.vc.available();
     if (!status?.available || !status?.isRepo) {
-      $('status').textContent = 'No git repo at data/patterns — run the setup in PATTERNS_REPO.md.';
+      $('status').textContent = 'No git repo at data/ — run the setup in PATTERNS_REPO.md.';
       $('status').style.color = '#e88';
     }
 

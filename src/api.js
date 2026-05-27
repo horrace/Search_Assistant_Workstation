@@ -122,9 +122,8 @@ class SearchPatternAPI {
     // Initialize the patterns/ directory as a git repo for in-app version
     // control (best-effort, non-fatal). See PATTERNS_REPO.md for details.
     if (vc) {
-      const patternsDir = path.join(this.dataDir, 'patterns');
-      if (fs.existsSync(patternsDir)) {
-        vc.init(patternsDir).catch(err => {
+      if (fs.existsSync(this.dataDir)) {
+        vc.init(this.dataDir).catch(err => {
           console.error('[API] VC init failed:', err.message);
         });
       }
@@ -379,7 +378,7 @@ class SearchPatternAPI {
       // Auto-commit via version control (best-effort, non-blocking).
       // commitAll() is a no-op if nothing changed.
       if (vc) {
-        vc.commitAll(patternsDir, 'Update patterns').catch(err => {
+        vc.commitAll(this.dataDir, 'Update patterns').catch(err => {
           console.error('[API] VC commitAll failed:', err.message);
         });
       }
@@ -2631,7 +2630,7 @@ class SearchPatternAPI {
 
       if (vc) {
         const msg = commitMessage || `Update pattern: ${name}`;
-        vc.commitFile(patternsDir, rel, msg).catch(err => {
+        vc.commitFile(this.dataDir, 'patterns/' + rel, msg).catch(err => {
           console.error('[API] VC commitFile failed:', err.message);
         });
       }
@@ -2657,7 +2656,7 @@ class SearchPatternAPI {
       fs.renameSync(src, dst);
       delete this.patterns[name];
       if (vc) {
-        vc.commitAll(patternsDir, `Deactivate pattern: ${name}`).catch(err => {
+        vc.commitAll(this.dataDir, `Deactivate pattern: ${name}`).catch(err => {
           console.error('[API] VC commit failed:', err.message);
         });
       }
@@ -2684,7 +2683,7 @@ class SearchPatternAPI {
         if (keys.length === 1) this.patterns[keys[0]] = raw[keys[0]];
       } catch (e) { /* leave patterns in-memory unchanged */ }
       if (vc) {
-        vc.commitAll(patternsDir, `Activate pattern: ${name}`).catch(err => {
+        vc.commitAll(this.dataDir, `Activate pattern: ${name}`).catch(err => {
           console.error('[API] VC commit failed:', err.message);
         });
       }
@@ -2742,7 +2741,7 @@ class SearchPatternAPI {
   // importing version-control.js directly.
   vc_available()    { return !!vc; }
   vc_module()       { return vc; }
-  vc_patternsDir()  { return path.join(this.dataDir, 'patterns'); }
+  vc_dataDir()      { return this.dataDir; }
 
 } // END OF SearchPatternAPI CLASS
 
