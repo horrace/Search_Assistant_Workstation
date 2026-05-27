@@ -213,15 +213,15 @@ function createEditorWindow() {
     //console.log("No saved Editor window position found, using default.");
   }
 
-  editorWindow = new BrowserWindow({
+  const editorWindowOptions = {
     x: initialX,
     y: initialY,
     width: windowWidth,
     height: windowHeight,
-    parent: mainWindow,
     modal: false,
     frame: false,
     titleBarStyle: 'hidden',
+	skipTaskbar: false,
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -229,7 +229,15 @@ function createEditorWindow() {
     },
     backgroundColor: '#303030',
     show: false
-  });
+  };
+
+  // On Windows, an owned (parented) window will not reliably get its own taskbar button.
+  // Keep editor as a top-level window there so it can appear in the taskbar.
+  if (process.platform !== 'win32') {
+    editorWindowOptions.parent = mainWindow;
+  }
+
+  editorWindow = new BrowserWindow(editorWindowOptions);
 
   editorWindow.loadFile(path.join(__dirname, 'editor.html'));
   
