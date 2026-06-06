@@ -1067,17 +1067,13 @@ ipcMain.handle('redo-last-action', async (event, pattern_name) => {
   return api.redo_last_action(pattern_name);
 });
 
-// File dialog for selecting SP list file
-ipcMain.handle('show-sp-list-file-dialog', async (event) => {
+// Folder dialog for selecting a data folder (replaces the old SP-list file picker)
+ipcMain.handle('show-data-folder-dialog', async (event) => {
   const result = await dialog.showOpenDialog({
-    title: 'Select SP List File',
-    filters: [
-      { name: 'JSON Files', extensions: ['json'] },
-      { name: 'All Files', extensions: ['*'] }
-    ],
-    properties: ['openFile']
+    title: 'Select Data Folder',
+    properties: ['openDirectory']
   });
-  
+
   return result;
 });
 

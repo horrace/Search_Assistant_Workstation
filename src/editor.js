@@ -120,7 +120,7 @@ const pathPortableExecutableDir = document.getElementById('path-portable-executa
 const pathPortableExecutableFile = document.getElementById('path-portable-executable-file');
 const pathCurrentDir = document.getElementById('path-current-dir');
 const pathFilePath = document.getElementById('path-file-path');
-const pathSpListPath = document.getElementById('path-sp-list-path');
+const pathSpListFolder = document.getElementById('path-sp-list-folder');
 const pathDataDir = document.getElementById('path-data-dir');
 const pathSettingsDataDir = document.getElementById('path-settings-data-dir');
 const pathNodeEnv = document.getElementById('path-node-env');
@@ -3280,7 +3280,7 @@ function initializeSpListMenu() {
   
   loadDifferentSpListBtn.addEventListener('click', () => {
     hideSpListDropdown();
-    openSpListFileDialog();
+    openDataFolderDialog();
   });
   
   // Close dropdown when clicking outside
@@ -3331,7 +3331,7 @@ function updateSpListDisplay() {
         pathAppPath.textContent = 'Error';
         pathCurrentDir.textContent = 'Error';
         pathFilePath.textContent = 'Error';
-        pathSpListPath.textContent = 'Error';
+        pathSpListFolder.textContent = 'Error';
         pathDataDir.textContent = 'Error';
         pathSettingsDataDir.textContent = 'Error';
         pathNodeEnv.textContent = 'Error';
@@ -3339,7 +3339,7 @@ function updateSpListDisplay() {
       } else if (data.result) {
         const info = data.result;
         // Update the display with the current SP list info
-        spListFilename.textContent = info.filename || 'sp_list.json';
+        spListFilename.textContent = info.filename || 'data';
         currentSpListPath.textContent = info.fullPath || 'Path not available';
         
         // Update all the additional path information
@@ -3350,7 +3350,7 @@ function updateSpListDisplay() {
         if (pathPortableExecutableFile) pathPortableExecutableFile.textContent = info.portableExecutableFile || 'Not available';
         pathCurrentDir.textContent = info.currentDir || 'Not available';
         pathFilePath.textContent = info.filePath || 'Not available';
-        pathSpListPath.textContent = info.spListPath || 'Not available';
+        pathSpListFolder.textContent = info.spListFolder || 'Not available';
         pathDataDir.textContent = info.dataDir || 'Not available';
         pathSettingsDataDir.textContent = info.settingsDataDirectory || 'Not set';
         pathNodeEnv.textContent = info.nodeEnv || 'Not set';
@@ -3360,37 +3360,36 @@ function updateSpListDisplay() {
   });
 }
 
-function openSpListFileDialog() {
-  // Request file dialog from main process
-  window.electronAPI.invoke('show-sp-list-file-dialog')
+function openDataFolderDialog() {
+  // Request folder dialog from main process
+  window.electronAPI.invoke('show-data-folder-dialog')
     .then((result) => {
       if (result && !result.canceled && result.filePaths && result.filePaths.length > 0) {
         const selectedPath = result.filePaths[0];
-        loadSpListFromPath(selectedPath);
+        loadDataFolderFromPath(selectedPath);
       }
     })
     .catch((error) => {
-      console.error('[SP List Menu] Error opening file dialog:', error);
+      console.error('[SP List Menu] Error opening folder dialog:', error);
     });
 }
 
-function loadSpListFromPath(filePath) {
-  // Request backend to load SP list from the specified path
-  window.electronAPI.callAPI('load_sp_list_from_path', { filePath: filePath });
-  
+function loadDataFolderFromPath(folderPath) {
+  // Request backend to switch to the selected data folder
+  window.electronAPI.callAPI('load_data_folder_from_path', { folderPath: folderPath });
+
   // Set up listener for the response
   const unsubscribe = window.electronAPI.onAPIResponse((data) => {
-    if (data && data.responseFor === 'load_sp_list_from_path') {
-      unsubscribe(); // Remove this listener
-      
+    if (data && data.responseFor === 'load_data_folder_from_path') {
+      unsubscribe();
+
       if (data.error) {
-        console.error('[SP List Menu] Error loading SP list from path:', data.error);
-        alert('Failed to load SP list: ' + data.error);
+        console.error('[SP List Menu] Error switching data folder:', data.error);
+        alert('Failed to switch data folder: ' + data.error);
       } else {
-        console.log('[SP List Menu] Successfully loaded SP list from:', filePath);
-        // Refresh the display
+        console.log('[SP List Menu] Successfully switched data folder to:', folderPath);
+        // Refresh the display and reload patterns
         updateSpListDisplay();
-        // Reload the patterns to reflect the new SP list
         loadPatterns();
       }
     }

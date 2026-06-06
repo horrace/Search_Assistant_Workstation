@@ -65,6 +65,17 @@ class SearchPatternAPI {
     
     this.dataDir = currentDir;
     this.dataLocations = [currentDir];
+
+    // defaultDataDir = the hard-coded default (never overridden by settings).
+    // Used as the anchor when saving a "redirect" after the user picks a different
+    // data folder — the redirect must live here so the constructor finds it on
+    // the next launch.
+    this.defaultDataDir = currentDir;
+
+    // originalDir = the project root in dev mode (process.cwd()), or the exe
+    // directory in portable/packaged mode.  Used to resolve relative paths in
+    // the dataDirectory setting.
+    this.originalDir = isDev ? process.cwd() : currentDir;
     
 
     // Special handling for unexpected temp directories (some packagers extract to temp)
@@ -105,13 +116,22 @@ class SearchPatternAPI {
     // Try to load existing settings first to get saved data directory
     this.load_settings();
     
-    // If settings contain a saved data directory, use that instead
-    if (this.settings && this.settings.dataDirectory && fs.existsSync(this.settings.dataDirectory)) {
-      console.log(`[API constructor] Using saved dataDirectory from settings: ${this.settings.dataDirectory}`);
-      this.dataDir = this.settings.dataDirectory;
-      
-      // Reload settings from the correct directory to get the complete settings
-      this.load_settings();
+    // If settings contain a saved data directory, use that instead.
+    // Supports relative paths (resolved against this.originalDir) so settings
+    // files are portable across machines with different absolute paths.
+    if (this.settings && this.settings.dataDirectory) {
+      const rawDataDir = this.settings.dataDirectory;
+      const resolvedDataDir = path.isAbsolute(rawDataDir)
+        ? rawDataDir
+        : path.resolve(this.originalDir, rawDataDir);
+      if (fs.existsSync(resolvedDataDir)) {
+        console.log(`[API constructor] Using saved dataDirectory from settings: ${resolvedDataDir}`);
+        this.dataDir = resolvedDataDir;
+        // Reload settings from the correct directory to get the complete settings
+        this.load_settings();
+      } else {
+        console.log(`[API constructor] dataDirectory "${rawDataDir}" → "${resolvedDataDir}" not found, using default: ${this.dataDir}`);
+      }
     } else {
       console.log(`[API constructor] Using default dataDirectory: ${this.dataDir}`);
     }
@@ -2486,30 +2506,27 @@ class SearchPatternAPI {
   }
 
   /**
-   * Get information about the currently loaded SP list file
+   * Get information about the currently active data folder and patterns location.
    */
   get_sp_list_info() {
     try {
-      const sp_list_path = path.join(this.dataDir, 'sp_list.json');
-      const filename = path.basename(sp_list_path);
-      const fullPath = sp_list_path;
-      const exists = fs.existsSync(sp_list_path);
-      
+      const sp_list_folder = path.join(this.dataDir, 'patterns');
+
       return {
         success: true,
-        filename: filename,
-        fullPath: fullPath,
-        exists: exists,
+        filename: path.basename(this.dataDir),   // data folder name shown in button header
+        fullPath: sp_list_folder,                // shown under "Patterns Folder:"
+        exists: fs.existsSync(sp_list_folder),
         directory: this.dataDir,
-        // Additional path information requested
+        // Path debug information
         processCwd: process.cwd(),
         processExecPath: process.execPath,
         appPath: app.getAppPath(),
         portableExecutableDir: process.env.PORTABLE_EXECUTABLE_DIR || null,
         portableExecutableFile: process.env.PORTABLE_EXECUTABLE_FILE || null,
         currentDir: this.dataDir,
-        filePath: fullPath,
-        spListPath: sp_list_path,
+        filePath: sp_list_folder,
+        spListFolder: sp_list_folder,
         dataDir: this.dataDir,
         settingsDataDirectory: this.settings ? this.settings.dataDirectory : null,
         nodeEnv: process.env.NODE_ENV || 'not set',
@@ -2522,81 +2539,66 @@ class SearchPatternAPI {
   }
 
   /**
-   * Load SP list from a specific file path
+   * Switch to a different data folder.
+   *
+   * The redirect (dataDirectory) is saved to defaultDataDir/settings.json —
+   * the fixed location the constructor always reads on launch — so the choice
+   * persists across restarts.  No file is written outside the data/ tree, so
+   * antivirus heuristics are not triggered.
    */
-  load_sp_list_from_path(filePath) {
+  load_data_folder_from_path(folderPath) {
     try {
-      console.log(`[API load_sp_list_from_path] Loading SP list from: ${filePath}`);
-      
-      // Validate the file exists
-      if (!fs.existsSync(filePath)) {
-        return { success: false, error: "File does not exist" };
+      console.log(`[API load_data_folder_from_path] Switching data folder to: ${folderPath}`);
+
+      if (!fs.existsSync(folderPath)) {
+        return { success: false, error: 'Folder does not exist' };
       }
-      
-      // Validate it's a JSON file
-      if (!filePath.toLowerCase().endsWith('.json')) {
-        return { success: false, error: "File must be a JSON file" };
+      if (!fs.statSync(folderPath).isDirectory()) {
+        return { success: false, error: 'Selected path is not a folder' };
       }
-      
-      // Try to parse the JSON to validate it
-      const data = fs.readFileSync(filePath, 'utf8');
-      const parsedData = JSON.parse(data);
-      
-      // Update the data directory to the directory containing the selected file
-      this.dataDir = path.dirname(filePath);
-      console.log(`[API load_sp_list_from_path] Updated dataDir to: ${this.dataDir}`);
-      
-      // Save the new data directory to settings
-      if (!this.settings) {
-        this.settings = {};
+
+      // Compute a portable relative path when the folder is inside originalDir.
+      const relPath = path.relative(this.originalDir, folderPath);
+      const dataDirectoryToSave = (!relPath.startsWith('..') && !path.isAbsolute(relPath))
+        ? relPath.replace(/\\/g, '/')   // normalize separators
+        : folderPath;                   // fall back to absolute when outside project
+
+      // Write the redirect into defaultDataDir/settings.json.
+      // This is the file the constructor reads on the next launch; saving it
+      // here (rather than in newFolder/settings.json) is what makes the change
+      // actually persist.  We read the existing content first so we don't lose
+      // unrelated settings (window positions, etc.) stored there.
+      if (!fs.existsSync(this.defaultDataDir)) {
+        fs.mkdirSync(this.defaultDataDir, { recursive: true });
       }
-      this.settings.dataDirectory = this.dataDir;
-      console.log(`[API load_sp_list_from_path] Saving new dataDirectory to settings: ${this.dataDir}`);
-      
-      // Save the updated settings to the new location
-      this.save_settings();
-      
-      // Also save a bootstrap settings file to the original directory
-      // This allows the app to find the correct data directory on next startup
-      const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
-      const portableEnvDirAtLoad = process.env.PORTABLE_EXECUTABLE_DIR || (process.env.PORTABLE_EXECUTABLE_FILE ? path.dirname(process.env.PORTABLE_EXECUTABLE_FILE) : null);
-      let originalDir;
-      
-      if (portableEnvDirAtLoad && fs.existsSync(portableEnvDirAtLoad)) {
-        originalDir = portableEnvDirAtLoad;
-      } else if (!isDev && process.execPath.toLowerCase().endsWith('.exe')) {
-        // Packaged mode without env var
-        originalDir = path.dirname(process.execPath);
-      } else {
-        // Development mode
-        originalDir = process.cwd();
-      }
-      
-      const bootstrapSettingsPath = path.join(originalDir, 'settings.json');
-      const bootstrapSettings = { dataDirectory: this.dataDir };
-      
+      const defaultSettingsPath = path.join(this.defaultDataDir, 'settings.json');
+      let defaultSettings = {};
       try {
-        fs.writeFileSync(bootstrapSettingsPath, JSON.stringify(bootstrapSettings, null, 2));
-        console.log(`[API load_sp_list_from_path] Bootstrap settings saved to: ${bootstrapSettingsPath}`);
-      } catch (error) {
-        console.error(`[API load_sp_list_from_path] Failed to save bootstrap settings: ${error.message}`);
-      }
-      
-      // Load the patterns from the new file
-      this.patterns = parsedData;
-      this.patternHistory = {}; // Reset history when loading new file
-      
-      console.log(`[API load_sp_list_from_path] Successfully loaded ${Object.keys(this.patterns).length} patterns`);
-      
+        defaultSettings = JSON.parse(fs.readFileSync(defaultSettingsPath, 'utf8'));
+      } catch (e) { /* file absent or unparseable — start fresh */ }
+      defaultSettings.dataDirectory = dataDirectoryToSave;
+      fs.writeFileSync(defaultSettingsPath, JSON.stringify(defaultSettings, null, 2));
+      console.log(`[API load_data_folder_from_path] Redirect saved to ${defaultSettingsPath}: ${dataDirectoryToSave}`);
+
+      // Switch context and reload
+      this.dataDir = folderPath;
+      this.patterns = {};
+      this.patternHistory = {};
+      this.patternRedoHistory = {};
+      this.load_settings();   // pick up settings from new location
+      this.load_patterns();
+
+      console.log(`[API load_data_folder_from_path] Loaded ${Object.keys(this.patterns).length} patterns`);
+
       return {
         success: true,
-        message: `Successfully loaded SP list from ${path.basename(filePath)}`,
+        message: `Switched to data folder: ${path.basename(folderPath)}`,
         patternCount: Object.keys(this.patterns).length,
-        filePath: filePath
+        folderPath: folderPath,
+        dataDirectory: dataDirectoryToSave
       };
-      
     } catch (error) {
-      console.error(`[API load_sp_list_from_path] Error: ${error.message}`);
+      console.error(`[API load_data_folder_from_path] Error: ${error.message}`);
       return { success: false, error: error.message };
     }
   }

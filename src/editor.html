@@ -23,10 +23,10 @@
 	<div class="editor-header-center">
 	  <button id="history-btn" class="btn btn-secondary">History</button>
 	  <div class="sp-list-menu">
-		<button id="sp-list-menu-btn" class="btn btn-secondary">SP List: <span id="sp-list-filename">Loading...</span></button>
+		<button id="sp-list-menu-btn" class="btn btn-secondary">Data Folder: <span id="sp-list-filename">Loading...</span></button>
 		<div id="sp-list-dropdown" class="dropdown-menu" style="display: none;">
 		  <div class="dropdown-item current-file">
-			<strong>Current File:</strong>
+			<strong>Patterns Folder:</strong>
 			<div id="current-sp-list-path" class="file-path">Loading...</div>
 		  </div>
 		  <div class="dropdown-divider"></div>
@@ -40,7 +40,7 @@
 			  <div class="path-item"><strong>app.getAppPath():</strong> <span id="path-app-path">Loading...</span></div>
 			  <div class="path-item"><strong>currentDir:</strong> <span id="path-current-dir">Loading...</span></div>
 			  <div class="path-item"><strong>filePath:</strong> <span id="path-file-path">Loading...</span></div>
-			  <div class="path-item"><strong>sp_list_path:</strong> <span id="path-sp-list-path">Loading...</span></div>
+			  <div class="path-item"><strong>sp_list_folder:</strong> <span id="path-sp-list-folder">Loading...</span></div>
 			  <div class="path-item"><strong>this.dataDir:</strong> <span id="path-data-dir">Loading...</span></div>
 			  <div class="path-item"><strong>this.settings.dataDirectory:</strong> <span id="path-settings-data-dir">Loading...</span></div>
 			  <div class="path-item"><strong>process.env.NODE_ENV:</strong> <span id="path-node-env">Loading...</span></div>
@@ -48,7 +48,7 @@
 			</div>
 		  </div>
 		  <div class="dropdown-divider"></div>
-		  <button id="load-different-sp-list-btn" class="dropdown-item-btn">Load Different SP List...</button>
+		  <button id="load-different-sp-list-btn" class="dropdown-item-btn">Change Data Folder...</button>
 		</div>
 	  </div>
 	</div>
